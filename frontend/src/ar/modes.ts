@@ -41,7 +41,7 @@ export function requestOrientationPermission(): Promise<boolean> {
 // ---------------------------------------------------------------- Câmera
 
 const EYE_HEIGHT = 1.45;
-const DISTANCE = 3.2;
+const DISTANCE = 3.8;
 const zee = new THREE.Vector3(0, 0, 1);
 const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const euler = new THREE.Euler();
@@ -87,7 +87,8 @@ export class CameraMode implements ArMode {
     this.hasOrientation = false;
     ctx.camera.position.set(0, 0, 0);
     ctx.camera.quaternion.identity();
-    ctx.hologram.setUserScale(1);
+    // Sem noção de chão/escala real neste modo: começa menor para caber inteiro na tela.
+    ctx.hologram.setUserScale(0.72);
     ctx.hologram.autoRotate = true;
     ctx.hologram.hide();
     this.video.hidden = false;
