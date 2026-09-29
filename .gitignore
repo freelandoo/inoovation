@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+
+# cópia antiga da pasta do frontend (substituída por frontend/)
+web/
+
+# arquivos de trabalho que não vão para o repositório público
+innovation_week_rotulo_png/
+frontend/assets-src/
+*.fbx
+*.fbm/
+WhatsApp Image*
+shots/

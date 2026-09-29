@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#030303" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Innovation Week 2026 — a identidade digital da sua embalagem. Rótulo físico, QR único e experiência em realidade aumentada." />
+    <title>Innovation Week · Identidade Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" href="/innovation-week/label/base/label-1024.webp" as="image" type="image/webp" fetchpriority="high" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <a class="skip" href="#ar">Pular para a experiência RA</a>
+
+    <!-- Camadas fixas de ambientação -->
+    <div class="bg-grid" aria-hidden="true">
+      <span class="coord coord-tl">X 000.00 / Y <b id="coord-y">0000</b></span>
+      <span class="coord coord-br">IW-26 // <b id="coord-sec">ID</b></span>
+      <i class="cross cross-1"></i><i class="cross cross-2"></i><i class="cross cross-3"></i>
+    </div>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="label-fallback" id="label-fallback" aria-hidden="true">
+      <div class="lf-card">
+        <picture>
+          <source srcset="/innovation-week/label/base/label-2048.avif" type="image/avif" />
+          <source srcset="/innovation-week/label/base/label-2048.webp" type="image/webp" />
+          <img src="/innovation-week/label/base/label-2048.jpg" alt="" width="2048" height="754" decoding="async" />
+        </picture>
+        <i class="lf-mask lf-lum"></i>
+        <i class="lf-mask lf-holo"></i>
+        <i class="lf-scan"></i>
+      </div>
+    </div>
+    <div class="fx-vignette" aria-hidden="true"></div>
+    <div class="fx-grain" aria-hidden="true"></div>
+    <div class="scanline" id="scanline" aria-hidden="true"></div>
+    <div class="dimmer" id="dimmer" aria-hidden="true"></div>
+
+    <!-- Sequência de inicialização -->
+    <div class="boot" id="boot" role="status" aria-live="polite">
+      <div class="boot-inner">
+        <p class="boot-line mono" id="boot-line">SCANNING IDENTITY…</p>
+        <div class="boot-bar"><i id="boot-bar"></i></div>
+        <p class="boot-sub mono" id="boot-sub">PHYSICAL ID // SEARCHING</p>
+      </div>
+    </div>
+
+    <!-- HUD -->
+    <header class="hud" id="hud">
+      <div class="hud-brand">
+        <span class="hud-logo">INNO<b>VA</b>TION WEEK</span>
+        <span class="mono hud-year">2026</span>
+      </div>
+      <ul class="hud-status mono" aria-label="Status do sistema">
+        <li>SYSTEM // <b>ONLINE</b></li>
+        <li>IDENTITY // <b id="hud-identity">DETECTED</b></li>
+        <li>ACCESS // <b>READY</b></li>
+        <li class="hud-extra">SESSION <b id="hud-session">00:00:00</b></li>
+        <li class="hud-extra" id="hud-unit-row" hidden>UNIT // <b id="hud-unit"></b></li>
+      </ul>
+    </header>
+
+    <nav class="progress" id="progress" aria-label="Progresso">
+      <div class="progress-track"><i id="progress-fill"></i></div>
+      <ol>
+        <li data-step="1"><a href="#hero"><b>01</b> ID</a></li>
+        <li data-step="2"><a href="#surface"><b>02</b> TRACE</a></li>
+        <li data-step="3"><a href="#identity"><b>03</b> CONNECT</a></li>
+        <li data-step="4"><a href="#ar"><b>04</b> AUGMENT</a></li>
+      </ol>
+    </nav>
+
+    <main id="story">
+      <!-- 01 HERO -->
+      <section id="hero" class="scene scene-hero" data-scene="hero" data-step="1">
+        <div class="hero-type">
+          <p class="hero-kicker mono" id="hero-kicker">PHYSICAL ID DETECTED</p>
+          <h1 class="hero-title">
+            <span class="t-innovation" id="t-innovation" aria-label="Innovation"><span aria-hidden="true">INNO<em>VA</em>TION</span></span>
+            <span class="t-week">WEEK</span>
+          </h1>
+        </div>
+        <p class="hero-tagline">
+          <span>O futuro começa</span>
+          <strong>além do conhecido</strong>
+        </p>
+        <p class="hero-verified mono" id="hero-verified">UNIQUE UNIT // <b>VERIFIED</b></p>
+        <a class="scroll-cue mono" href="#rg"><span>SCROLL TO UNLOCK</span><i></i></a>
+      </section>
+
+      <!-- RG -->
+      <section id="rg" class="scene scene-rg" data-scene="rg" data-step="1">
+        <div class="rg-lines" id="rg-lines" aria-hidden="true"></div>
+        <div class="copy copy-top">
+          <p class="kicker mono">01 // ID</p>
+          <h2 class="display">Sua embalagem<br />tem um <em>RG.</em></h2>
+        </div>
+        <div class="copy copy-bottom">
+          <p class="lead">Este rótulo não é só impressão. Cada unidade carrega uma identidade própria, e você acabou de acessá-la.</p>
+          <p class="id-inline mono" data-identity-inline></p>
+        </div>
+      </section>
+
+      <!-- SURFACE ANALYSIS -->
+      <section id="surface" class="scene scene-sticky scene-surface" data-scene="surface" data-step="2">
+        <div class="sticky">
+          <div class="copy copy-top">
+            <p class="kicker mono">02 // TRACE — SURFACE ANALYSIS</p>
+            <h2 class="display display-s">Luz rasante.<br />Superfície revelada.</h2>
+          </div>
+          <ul class="surface-tags mono" id="surface-tags" aria-label="Acabamentos detectados">
+            <li data-zone="relief"><b>RELIEF</b><span>verniz relevo</span></li>
+            <li data-zone="luminescent"><b>LUMINESCENT</b><span>verniz luminescente</span></li>
+            <li data-zone="holographic"><b>HOLOGRAPHIC</b><span>casting holográfico</span></li>
+            <li data-zone="texture"><b>TEXTURE</b><span>verniz textura</span></li>
+          </ul>
+          <p class="scan-readout mono" aria-hidden="true">SCAN <b id="scan-pct">000</b>%</p>
+        </div>
+      </section>
+
+      <!-- LIGHTS OFF -->
+      <section id="lights" class="scene scene-sticky scene-lights" data-scene="lights" data-step="2">
+        <div class="sticky">
+          <div class="copy copy-top">
+            <p class="kicker mono">LIGHT TEST // <b id="light-status">01</b></p>
+            <h2 class="display display-s">Quando a luz apaga,<br /><em>a energia fica.</em></h2>
+          </div>
+          <div class="copy copy-bottom">
+            <p class="lead lead-s">Parte do rótulo absorve luz e continua brilhando no escuro por alguns segundos.</p>
+            <ol class="light-steps mono" id="light-steps" aria-label="Etapas do teste">
+              <li data-light="charge">CHARGE</li>
+              <li data-light="dark">DARKNESS</li>
+              <li data-light="glow">AFTERGLOW</li>
+              <li data-light="done">COMPLETE</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXPLODED LABEL -->
+      <section id="layers" class="scene scene-sticky scene-layers" data-scene="layers" data-step="2">
+        <div class="sticky">
+          <div class="copy copy-top">
+            <p class="kicker mono">PHYSICAL LAYERS // DIGITAL IDENTITY</p>
+            <h2 class="display display-s">Não é apenas impressão.<br /><em>É experiência.</em></h2>
+          </div>
+          <ol class="layer-tags mono" id="layer-tags" aria-label="Camadas do rótulo"></ol>
+          <p class="footnote">Representação digital ilustrativa dos acabamentos do rótulo.</p>
+        </div>
+      </section>
+
+      <!-- QR → DATA -->
+      <section id="qr" class="scene scene-sticky scene-qr" data-scene="qr" data-step="2">
+        <div class="sticky">
+          <div class="qr-headline" aria-label="Um QR. Uma identidade. Uma experiência.">
+            <p class="display qr-line" data-qr-line="0">Um QR.</p>
+            <p class="display qr-line" data-qr-line="1">Uma identidade.</p>
+            <p class="display qr-line" data-qr-line="2"><em>Uma experiência.</em></p>
+          </div>
+          <div class="qr-viz" id="qr-viz">
+            <p class="qr-url mono" id="qr-url" aria-label="Estrutura do link do QR"></p>
+            <p class="qr-caption mono" id="qr-caption"></p>
+            <svg class="qr-links" id="qr-links" aria-hidden="true"></svg>
+            <dl class="qr-parts" id="qr-parts">
+              <div data-part="product"><dt class="mono">01 / <span data-part-value></span></dt><dd>PRODUCT</dd></div>
+              <div data-part="lot"><dt class="mono">10 / <span data-part-value></span></dt><dd>LOT</dd></div>
+              <div data-part="unit"><dt class="mono">21 / <span data-part-value></span></dt><dd>UNIT</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIGITAL IDENTITY -->
+      <section id="identity" class="scene scene-identity" data-scene="identity" data-step="3">
+        <div class="copy copy-top">
+          <p class="kicker mono">03 // CONNECT</p>
+          <h2 class="display display-s">Identidade digital<br /><em>desbloqueada.</em></h2>
+        </div>
+        <article class="passport scan-reactive" id="passport" aria-label="Passaporte digital do produto">
+          <div class="passport-inner">
+            <header class="passport-head">
+              <span class="mono">DIGITAL PRODUCT PASSPORT</span>
+              <span class="passport-chip" aria-hidden="true"></span>
+            </header>
+            <dl class="passport-grid">
+              <div><dt class="mono">PRODUCT</dt><dd data-field="product"></dd></div>
+              <div><dt class="mono">LOT</dt><dd data-field="lot"></dd></div>
+              <div><dt class="mono">UNIT</dt><dd data-field="unit"></dd></div>
+              <div><dt class="mono">STATUS</dt><dd data-field="status"></dd></div>
+            </dl>
+            <footer class="passport-foot">
+              <span class="seal mono">UNIQUE DIGITAL ID</span>
+              <span class="mono passport-meta">IW-2026 // <span id="passport-session"></span></span>
+            </footer>
+            <i class="passport-glare" aria-hidden="true"></i>
+            <i class="scan-info mono" aria-hidden="true">TRACE OK</i>
+          </div>
+        </article>
+      </section>
+
+      <!-- ORBIT CARDS -->
+      <section id="orbit" class="scene scene-orbit" data-scene="orbit" data-step="3">
+        <div class="orbit-sticky">
+          <p class="kicker mono orbit-kicker">IDENTITY ORBIT</p>
+          <ol class="orbit" id="orbit-list">
+            <li class="orbit-card scan-reactive" data-orbit="0">
+              <span class="mono orbit-num">01</span>
+              <h3>Produto</h3>
+              <p>O mesmo identificador do código de barras.</p>
+              <b class="mono orbit-val" data-field="product"></b>
+            </li>
+            <li class="orbit-card scan-reactive" data-orbit="1">
+              <span class="mono orbit-num">02</span>
+              <h3>Lote</h3>
+              <p>A produção de onde esta unidade saiu.</p>
+              <b class="mono orbit-val" data-field="lot"></b>
+            </li>
+            <li class="orbit-card scan-reactive" data-orbit="2">
+              <span class="mono orbit-num">03</span>
+              <h3>Unidade</h3>
+              <p>Só existe uma igual a esta.</p>
+              <b class="mono orbit-val" data-field="unit"></b>
+            </li>
+            <li class="orbit-card scan-reactive" data-orbit="3">
+              <span class="mono orbit-num">04</span>
+              <h3>Experiência</h3>
+              <p>O que essa identidade desbloqueia.</p>
+              <b class="mono orbit-val">AR // READY</b>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track mono">
+          <span>INNOVATION / TRACEABILITY / AUGMENTED REALITY / UNIQUE ID / EXPERIENCE / TECHNOLOGY /&nbsp;</span>
+          <span>INNOVATION / TRACEABILITY / AUGMENTED REALITY / UNIQUE ID / EXPERIENCE / TECHNOLOGY /&nbsp;</span>
+        </div>
+      </div>
+
+      <!-- PHYSICAL → DIGITAL -->
+      <section id="physical" class="scene scene-physical" data-scene="physical" data-step="3">
+        <div class="copy">
+          <h2 class="display display-s glitch-once" id="physical-title" data-text="Physical → Digital">Physical → Digital</h2>
+        </div>
+        <ol class="timeline" id="timeline">
+          <li><b class="mono">PHYSICAL</b><p>A embalagem na sua mão.</p></li>
+          <li><b class="mono">IDENTIFIED</b><p>Um QR único, só dela.</p></li>
+          <li><b class="mono">CONNECTED</b><p>Uma identidade digital reconhecida.</p></li>
+          <li><b class="mono">INTERACTIVE</b><p>Uma experiência que responde a você.</p></li>
+          <li><b class="mono">AUGMENTED</b><p>E agora, além da tela.</p></li>
+        </ol>
+        <i class="timeline-energy" id="timeline-energy" aria-hidden="true"></i>
+      </section>
+
+      <!-- TECH -->
+      <section id="tech" class="scene scene-tech" data-scene="tech" data-step="3">
+        <div class="copy">
+          <h2 class="display">Physical product.<br /><em>Digital intelligence.</em></h2>
+          <p class="lead">Cada embalagem recebe um identificador próprio. O sistema reconhece o produto, o lote e a unidade, e essa identidade conecta o objeto físico a experiências digitais.</p>
+          <ul class="tech-facts mono">
+            <li><b>01</b> Produto</li>
+            <li><b>10</b> Lote</li>
+            <li><b>21</b> Unidade</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- AR PORTAL / ÚLTIMO FRAME -->
+      <section id="ar" class="scene scene-ar" data-scene="ar" data-step="4">
+        <div class="ar-copy">
+          <p class="kicker mono">04 // AUGMENT — PRONTO PARA IR ALÉM DA REALIDADE?</p>
+          <h2 class="display display-xl">Além<br /><em>do conhecido.</em></h2>
+          <p class="lead" id="ar-lead">Sua unidade foi reconhecida. Sua identidade digital está pronta.</p>
+        </div>
+        <div class="ar-cta">
+          <button class="ar-button" id="ar-button" type="button" aria-describedby="ar-note">
+            <span class="ar-rings" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="ar-core" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+                <path d="M12 7.5 16 9.8v4.4L12 16.5 8 14.2V9.8z" />
+                <path d="M8 9.8 12 12l4-2.2M12 12v4.5" />
+              </svg>
+            </span>
+            <span class="ar-label mono">INICIAR RA</span>
+          </button>
+          <p class="ar-note" id="ar-note">Usa a câmera do seu celular. Nenhuma imagem é gravada.</p>
+          <p class="ar-error" id="ar-error" role="alert" hidden></p>
+        </div>
+      </section>
+
+      <footer class="site-foot mono">
+        <span>INNOVATION WEEK 2026</span>
+        <span>INDEMETAL GRÁFICOS</span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
