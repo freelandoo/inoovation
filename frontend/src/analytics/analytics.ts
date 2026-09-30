@@ -14,7 +14,10 @@ export type AnalyticsEvent =
   | 'ar_cta_viewed'
   | 'ar_cta_clicked'
   | 'ar_experience_started'
-  | 'ar_experience_failed';
+  | 'ar_experience_failed'
+  | 'unit_scan_opened'
+  | 'unit_scan_succeeded'
+  | 'unit_scan_failed';
 
 export type AnalyticsAdapter = (event: AnalyticsEvent, payload: Record<string, unknown>) => void;
 

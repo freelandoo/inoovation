@@ -125,13 +125,18 @@ export function createApp(db: Db, opts: AppOptions) {
         );
         unit = r.rows[0];
       }
-      const s = await tx.query<{ inserted: boolean }>(
-        `insert into sessions (id, unit_ref, source, campaign, origin, tier, device)
+      // A sessão acompanha a última unidade lida (o leitor de QR da página pode
+      // vincular uma unidade a uma sessão que começou sem nenhuma).
+      const s = await tx.query<{ prev_ref: string | null }>(
+        `with prev as (select unit_ref from sessions where id = $1)
+         insert into sessions (id, unit_ref, source, campaign, origin, tier, device)
          values ($1, $2, $3, $4, $5, $6, $7)
          on conflict (id) do update
            set last_seen_at = now(),
-               unit_ref = coalesce(sessions.unit_ref, excluded.unit_ref)
-         returning (xmax = 0) as inserted`,
+               unit_ref = coalesce(excluded.unit_ref, sessions.unit_ref),
+               origin = case when excluded.unit_ref is distinct from sessions.unit_ref and excluded.unit_ref is not null
+                             then excluded.origin else sessions.origin end
+         returning (select unit_ref from prev) as prev_ref`,
         [
           sessionId,
           unit?.id ?? null,
@@ -142,8 +147,8 @@ export function createApp(db: Db, opts: AppOptions) {
           v.deviceFromUa(c.req.header('user-agent')),
         ],
       );
-      // Conta o scan uma vez por sessão (recarregar a página não infla o número).
-      if (unit && s.rows[0]?.inserted) {
+      // Conta o scan quando a sessão passa a esta unidade (recarregar a página não infla o número).
+      if (unit && s.rows[0]?.prev_ref !== unit.id) {
         const u = await tx.query<{ scan_count: number }>(
           'update units set scan_count = scan_count + 1 where id = $1 returning scan_count',
           [unit.id],

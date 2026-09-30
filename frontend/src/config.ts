@@ -40,6 +40,12 @@ export const config = {
     modelTexture: null as string | null,
   },
 
+  scanner: {
+    /** Marca na URL de quem ativou a unidade pelo leitor de QR da página (?via=scanner). */
+    viaParam: 'via',
+    viaValue: 'scanner',
+  },
+
   /** Não repetir a sequência de inicialização completa na mesma sessão. */
   bootSeenKey: 'iw:boot-seen',
 } as const;

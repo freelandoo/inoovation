@@ -17,8 +17,8 @@ export interface ProductIdentity {
   unitId: string | null;
   source: string | null;
   campaign: string | null;
-  /** De onde vieram os ids: query, digital-link, gs1-path, route ou session. */
-  origin: 'query' | 'digital-link' | 'gs1-path' | 'route' | 'session' | 'none';
+  /** De onde vieram os ids: query, digital-link, gs1-path, route, session ou scanner (leitor da página). */
+  origin: 'query' | 'digital-link' | 'gs1-path' | 'route' | 'session' | 'scanner' | 'none';
   /** GTIN com dígito verificador válido (só informativo, nunca bloqueia). */
   productChecksumValid: boolean;
 }

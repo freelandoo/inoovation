@@ -42,6 +42,7 @@ Depois é só mandar a URL para a Realizse configurar o redirecionamento.
 | Ids mantidos na sessão e propagados à RA | `src/identity/session.ts` |
 | Ponto de integração da RA | `src/ar/launch.ts` → `launchARExperience({ productId, lotId, unitId, source, campaign })` |
 | Eventos (`innovation_page_view`, `ar_cta_clicked`…) | `src/analytics/analytics.ts`, enviados à API por `src/api/client.ts` |
+| Leitor de QR da página ("Ativar minha unidade") | `src/ui/unitScanCta.ts`, `src/scanner/` |
 | Coreografia por seção (posição do rótulo, portal, partículas) | `src/story/Director.ts` |
 | Rótulo 3D e acabamentos | `src/label/` |
 | Calibração das máscaras (scale/x/y por camada) | `src/label/labelConfig.ts` → `labelLayers` |
@@ -54,6 +55,14 @@ Qualquer um destes funciona hoje, e novos nomes de parâmetro entram em `config.
 - `?dl=<link GS1 completo>`
 - `/01/<gtin>/10/<lote>/21/<série>` ou `/innovation/<gtin>/<lote>/<série>`
 - `source`/`campaign` (ou `utm_source`/`utm_campaign`)
+
+### Sem ids no redirecionamento: leitor de QR da página
+
+Se a página abrir sem o serial, aparece **ATIVAR MINHA UNIDADE** (hero e seção 03). O botão abre a câmera
+dentro do site e lê o QR do pote, que já traz o link GS1 completo. Com a unidade lida, a página recarrega em
+`/01/<gtin>/10/<lote>/21/<série>?via=scanner` e segue o fluxo normal (a sessão fica com `origin = scanner`).
+Leitura: `BarcodeDetector` nativo quando existe (Chrome/Android) + jsQR num Web Worker (iPhone e o resto,
+inclusive QR claro sobre fundo escuro). Eventos: `unit_scan_opened`, `unit_scan_succeeded`, `unit_scan_failed`.
 
 Os valores passam por whitelist de caracteres e limite de tamanho, e só são exibidos via `textContent`.
 **Autenticidade não é verificada aqui.** Se a Realizse enviar assinatura/token, a validação deve ser feita num backend.

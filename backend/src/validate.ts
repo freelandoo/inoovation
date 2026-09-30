@@ -17,10 +17,13 @@ export const EVENT_NAMES = new Set([
   'ar_cta_clicked',
   'ar_experience_started',
   'ar_experience_failed',
+  'unit_scan_opened',
+  'unit_scan_succeeded',
+  'unit_scan_failed',
 ]);
 
 const TIERS = new Set(['high', 'medium', 'low']);
-const ORIGINS = new Set(['query', 'digital-link', 'gs1-path', 'route', 'session', 'none']);
+const ORIGINS = new Set(['query', 'digital-link', 'gs1-path', 'route', 'session', 'scanner', 'none']);
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 

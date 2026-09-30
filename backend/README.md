@@ -16,7 +16,7 @@ O corpo é aceito como JSON mesmo com `Content-Type: text/plain`: o frontend usa
 
 Sem dado pessoal: não guarda IP, user agent completo, nome ou e-mail. Ver `migrations/001_init.sql`.
 
-- `units`: uma linha por embalagem (produto+lote+unidade), com contagem de scans (uma por sessão)
+- `units`: uma linha por embalagem (produto+lote+unidade), com contagem de scans (uma por sessão e unidade; a sessão acompanha a última unidade lida)
 - `sessions`: cada abertura da página (id aleatório do navegador), origem, campanha, tipo de aparelho
 - `events`: jornada (`innovation_page_view` … `ar_experience_started`)
 - `registry_units`: lista oficial de unidades da Realizse (produto GTIN-14, lote, serial)

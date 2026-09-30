@@ -27,8 +27,23 @@ function readStored(): ProductIdentity | null {
 
 let current: ProductIdentity = EMPTY_IDENTITY;
 
+/** Veio do leitor de QR da página (?via=scanner)? Tira a marca da URL e responde. */
+function takeScannerMark(href: string): boolean {
+  try {
+    const url = new URL(href);
+    const { viaParam, viaValue } = config.scanner;
+    if (url.searchParams.get(viaParam) !== viaValue) return false;
+    url.searchParams.delete(viaParam);
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function initIdentity(href = window.location.href): ProductIdentity {
-  const fromUrl = resolveIdentity(href, config.params, config.routePrefixes);
+  let fromUrl = resolveIdentity(href, config.params, config.routePrefixes);
+  if (takeScannerMark(href) && hasIds(fromUrl)) fromUrl = { ...fromUrl, origin: 'scanner' };
   if (hasIds(fromUrl)) {
     current = fromUrl;
     try {

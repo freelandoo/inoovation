@@ -50,6 +50,36 @@ test('scan cria a unidade e conta uma vez por sessão', async () => {
   assert.equal(j.unit.scanCount, 2);
 });
 
+test('leitor de QR da página: sessão sem unidade passa a ter uma e conta o scan', async () => {
+  const s = randomUUID();
+  const other = { productId: '1845678901001', lotId: 'l1', unitId: 'QR1' };
+  let r = await post('/api/scan', { sessionId: s });
+  assert.equal(((await r.json()) as { unit: unknown }).unit, null);
+
+  r = await post('/api/scan', { sessionId: s, ...other, origin: 'scanner' });
+  let j = (await r.json()) as { unit: { scanCount: number } };
+  assert.equal(j.unit.scanCount, 1);
+
+  // recarregar com a mesma unidade não conta de novo
+  r = await post('/api/scan', { sessionId: s, ...other, origin: 'scanner' });
+  j = (await r.json()) as typeof j;
+  assert.equal(j.unit.scanCount, 1);
+
+  // recarregar sem ids (voltou para a raiz) mantém o vínculo
+  await post('/api/scan', { sessionId: s });
+  const { rows } = await db.query<{ unit_key: string; origin: string | null }>(
+    'select u.unit_key, s.origin from sessions s join units u on u.id = s.unit_ref where s.id = $1',
+    [s],
+  );
+  assert.equal(rows[0].unit_key, '1845678901001|l1|QR1');
+  assert.equal(rows[0].origin, 'scanner');
+
+  // ler outro pote na mesma sessão: a sessão passa para ele e ele conta
+  r = await post('/api/scan', { sessionId: s, ...other, unitId: 'QR2', origin: 'scanner' });
+  j = (await r.json()) as typeof j;
+  assert.equal(j.unit.scanCount, 1);
+});
+
 test('scan sem identidade registra só a sessão', async () => {
   const r = await post('/api/scan', { sessionId: randomUUID() });
   assert.equal(r.status, 200);

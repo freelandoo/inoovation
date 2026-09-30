@@ -14,6 +14,7 @@ import { initHud } from './ui/hud.ts';
 import { initSections } from './ui/sections.ts';
 import { initLabelFallback } from './ui/labelFallback.ts';
 import { initArCta } from './ui/arCta.ts';
+import { initUnitScanCta } from './ui/unitScanCta.ts';
 import { Stage } from './scene/Stage.ts';
 import { EnergyPortal } from './scene/EnergyPortal.ts';
 import { ParticleField } from './scene/ParticleField.ts';
@@ -102,18 +103,17 @@ if (stage) {
   runBoot({ identity, target: null, fast: true, reduced: perf.reducedMotion });
 }
 
-initArCta({
-  renderer: stage?.renderer ?? null,
-  portal,
-  reduced: perf.reducedMotion,
-  pauseLanding: () => stage?.stop(),
-  resumeLanding: () => {
-    if (!stage) return;
-    stage.renderer.setPixelRatio(Math.min(window.devicePixelRatio, perf.maxDpr));
-    stage.resize();
-    stage.start();
-  },
-});
+const pauseLanding = () => stage?.stop();
+const resumeLanding = () => {
+  if (!stage) return;
+  stage.renderer.setPixelRatio(Math.min(window.devicePixelRatio, perf.maxDpr));
+  stage.resize();
+  stage.start();
+};
+
+initArCta({ renderer: stage?.renderer ?? null, portal, reduced: perf.reducedMotion, pauseLanding, resumeLanding });
+// Chegou sem serial: oferece ler o QR do pote aqui mesmo.
+initUnitScanCta({ identity, pauseLanding, resumeLanding });
 
 // Loop do DOM (leve): só roda quando algo muda (scroll/resize) ou para a scanline.
 let pending = false;
