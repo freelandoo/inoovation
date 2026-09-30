@@ -173,7 +173,10 @@ export function resolveIdentity(href: string, names: ParamNames, routePrefixes: 
   return { ...build({}, q, names, 'none'), origin: 'none' };
 }
 
-/** Texto seguro para exibir (sempre string, nunca "undefined"/"null"). */
+/**
+ * Texto seguro para exibir (sempre string, nunca "undefined"/"null").
+ * Mantém a caixa: seriais GS1 diferenciam maiúsculas (7Hk e 7hk são unidades distintas).
+ */
 export function display(v: string | null, fallback: string): string {
-  return v ? v.toUpperCase() : fallback;
+  return v || fallback;
 }

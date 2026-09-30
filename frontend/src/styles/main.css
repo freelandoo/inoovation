@@ -1719,3 +1719,22 @@ html.reduced-motion .timeline li {
   opacity: 1;
   transform: none;
 }
+
+/* ---------- Identidade: caixa exata ----------
+   Seriais GS1 diferenciam maiúsculas (7Hk e 7hk são unidades distintas), então
+   os valores de lote/unidade não herdam o uppercase de .mono. */
+[data-field='lot'],
+[data-field='unit'],
+#hud-unit,
+.id-inline b,
+[data-part-value] {
+  text-transform: none;
+}
+
+/* Código fora da lista oficial: status em cinza, sem o vermelho de "verificado". */
+html[data-unit='unregistered'] .passport-grid dd[data-field='status'],
+html[data-unit='unregistered'] .hero-verified b,
+html[data-unit='unregistered'] .seal {
+  color: var(--grey);
+  border-color: var(--line);
+}

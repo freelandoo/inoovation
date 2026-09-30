@@ -63,5 +63,5 @@ test('dígito verificador GTIN', () => {
 
 test('display nunca mostra null/undefined', () => {
   assert.equal(display(null, 'UNIQUE UNIT'), 'UNIQUE UNIT');
-  assert.equal(display('l1', '—'), 'L1');
+  assert.equal(display('l1', '—'), 'l1', 'caixa preservada: seriais diferenciam maiúsculas');
 });

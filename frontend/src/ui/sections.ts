@@ -193,7 +193,7 @@ function initQr(id: ProductIdentity) {
   }
   partsEl.forEach((d) => {
     const key = d.dataset.part as keyof typeof vals;
-    d.querySelector('[data-part-value]')!.textContent = vals[key].toUpperCase();
+    d.querySelector('[data-part-value]')!.textContent = vals[key];
   });
 
   const paths = partsEl.map(() => {

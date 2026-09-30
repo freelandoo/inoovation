@@ -17,3 +17,6 @@ frontend/assets-src/
 *.fbm/
 WhatsApp Image*
 shots/
+
+# listas de IDs da Realizse (vão para o banco via npm run registry:import, nunca para o git)
+*.csv

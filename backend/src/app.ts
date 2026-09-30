@@ -106,9 +106,16 @@ export function createApp(db: Db, opts: AppOptions) {
       let unit: { id: string; status: string; scan_count: number; first_seen_at: string } | null = null;
       if (key) {
         const r = await tx.query<{ id: string; status: string; scan_count: number; first_seen_at: string }>(
-          `insert into units (product_id, lot_id, unit_id, unit_key)
-           values ($1, $2, $3, $4)
-           on conflict (unit_key) do update set last_seen_at = now()
+          // Nasce `verified` se estiver na lista oficial (registry_units); uma
+          // unidade `seen` é promovida quando a lista chega depois. `blocked` nunca muda.
+          `insert into units (product_id, lot_id, unit_id, unit_key, status)
+           values ($1::text, $2::text, $3::text, $4, case when exists (
+             select 1 from registry_units r
+             where r.product_id = lpad($1::text, 14, '0') and r.lot_id = $2::text and r.unit_id = $3::text
+           ) then 'verified' else 'seen' end)
+           on conflict (unit_key) do update
+             set last_seen_at = now(),
+                 status = case when units.status = 'seen' then excluded.status else units.status end
            returning id, status, scan_count, first_seen_at`,
           [productId, lotId, unitId, key],
         );
@@ -184,7 +191,8 @@ export function createApp(db: Db, opts: AppOptions) {
       db.query(
         `select count(*)::int as units,
                 coalesce(sum(scan_count), 0)::int as scans,
-                (count(*) filter (where status = 'verified'))::int as verified
+                (count(*) filter (where status = 'verified'))::int as verified,
+                (select count(*)::int from registry_units) as registered
          from units`,
       ),
       db.query(

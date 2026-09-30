@@ -95,7 +95,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   const { root, identity, renderer } = args;
   if (!renderer) throw new Error('WebGL indisponível');
 
-  const unit = identity.unitId ? `UNIT // ${identity.unitId.toUpperCase()}` : 'AR // LIVE';
+  const unit = identity.unitId ? `UNIT // ${identity.unitId}` : 'AR // LIVE';
   root.innerHTML = `
     <video class="arx-video" playsinline muted hidden></video>
     <div class="arx-ui">

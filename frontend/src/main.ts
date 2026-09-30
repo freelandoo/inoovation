@@ -8,7 +8,7 @@ import { initIdentity } from './identity/session.ts';
 import { hasIds } from './identity/resolver.ts';
 import { setAnalyticsIdentity, track } from './analytics/analytics.ts';
 import { connectAnalytics, registerScan } from './api/client.ts';
-import { renderIdentity } from './ui/identityView.ts';
+import { renderIdentity, renderVerification } from './ui/identityView.ts';
 import { runBoot } from './ui/boot.ts';
 import { initHud } from './ui/hud.ts';
 import { initSections } from './ui/sections.ts';
@@ -25,8 +25,17 @@ const perf = detectPerf();
 const identity = initIdentity();
 setAnalyticsIdentity(identity);
 connectAnalytics();
-registerScan(identity, perf.tier);
+const scan = registerScan(identity, perf.tier);
 renderIdentity(identity);
+// A API confere o serial na lista oficial; sem API a página não afirma nada.
+if (identity.unitId) {
+  renderVerification('pending');
+  scan.then((unit) =>
+    renderVerification(
+      !unit ? 'offline' : unit.status === 'verified' ? 'verified' : unit.status === 'blocked' ? 'blocked' : 'unregistered',
+    ),
+  );
+}
 track('innovation_page_view', { tier: perf.tier });
 if (hasIds(identity)) track('identity_detected', { origin: identity.origin });
 
