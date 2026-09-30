@@ -4,6 +4,7 @@
 //   POST /api/scan            abertura da página com a identidade da unidade
 //   POST /api/events          eventos da jornada (um ou lote de até 20)
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN)
+//   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
 //
 // O corpo é lido como texto e interpretado como JSON independentemente do
 // Content-Type: o navegador envia eventos via sendBeacon com text/plain, o que
@@ -15,8 +16,11 @@ import { timingSafeEqual } from 'node:crypto';
 import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
+import { parseRegistry, importRegistry } from './registry.ts';
 
 const MAX_BODY = 8 * 1024;
+/** Lista de IDs: ~45 bytes por link, 200 mil ≈ 9 MB. */
+const MAX_REGISTRY_BODY = 32 * 1024 * 1024;
 
 export interface AppOptions {
   allowedOrigins: string[];
@@ -181,11 +185,45 @@ export function createApp(db: Db, opts: AppOptions) {
     return c.json({ ok: true, stored });
   });
 
-  app.get('/api/stats', async (c) => {
+  /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). */
+  const adminDenied = (c: Context) => {
     if (!opts.adminToken) return c.json({ error: 'não encontrado' }, 404);
     const auth = c.req.header('authorization') ?? '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!safeEqual(token, opts.adminToken)) return c.json({ error: 'não autorizado' }, 401);
+    return null;
+  };
+
+  app.post('/api/admin/registry', async (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
+    if (Number(c.req.header('content-length') ?? 0) > MAX_REGISTRY_BODY) throw new HttpError(413, 'arquivo grande demais');
+    const text = await c.req.text();
+    if (text.length > MAX_REGISTRY_BODY) throw new HttpError(413, 'arquivo grande demais');
+
+    const report = parseRegistry(text);
+    if (!report.units.length) throw new HttpError(400, 'nenhum link GS1 válido no arquivo');
+    const lots: Record<string, number> = {};
+    for (const u of report.units) lots[`${u.productId}/${u.lotId}`] = (lots[`${u.productId}/${u.lotId}`] ?? 0) + 1;
+
+    const batch = v.tag(c.req.query('batch')) ?? `api-${new Date().toISOString().slice(0, 10)}`;
+    const result = await importRegistry(db, report.units, batch);
+    return c.json({
+      ok: true,
+      batch,
+      units: report.units.length,
+      lots,
+      duplicates: report.duplicates,
+      caseVariants: report.caseVariants,
+      invalid: report.invalid.length,
+      invalidSample: report.invalid.slice(0, 10),
+      ...result,
+    });
+  });
+
+  app.get('/api/stats', async (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
 
     const [units, sessions, events, lots, recent] = await Promise.all([
       db.query(

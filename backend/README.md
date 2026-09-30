@@ -8,6 +8,7 @@ Node 24 (TypeScript executado direto, sem build) + Hono + Postgres.
 | `POST /api/scan` | Abertura da página: `{ sessionId, productId, lotId, unitId, source, campaign, origin, tier }` |
 | `POST /api/events` | Evento ou lote (até 20): `{ sessionId, name, data }` |
 | `GET /api/stats` | Métricas. Header `Authorization: Bearer <ADMIN_TOKEN>` |
+| `POST /api/admin/registry?batch=<nome>` | Importa a lista de IDs (corpo = o arquivo). Header `Authorization: Bearer <ADMIN_TOKEN>` |
 
 O corpo é aceito como JSON mesmo com `Content-Type: text/plain`: o frontend usa `sendBeacon`, que evita preflight de CORS.
 
@@ -28,11 +29,15 @@ O serial diferencia maiúsculas de minúsculas (`7Hk` e `7hk` são unidades dist
 
 A Realizse envia um arquivo com um link GS1 por linha (`https://ri3.ai/01/<gtin>/10/<lote>/21/<serial>`):
 
+Pela API (produção; o Postgres da Railway não fica exposto na internet):
+
 ```bash
-DATABASE_URL=<url pública do Postgres> npm run registry:import -- caminho/lista.csv
+curl -X POST "https://<api>/api/admin/registry?batch=pedido-60216403"   -H "Authorization: Bearer $ADMIN_TOKEN" --data-binary @lista.csv
 ```
 
-Mostra o resumo (por produto/lote, duplicadas, inválidas) e grava em lotes. Rodar de novo o mesmo arquivo não duplica. O CSV nunca vai para o git (`*.csv` no `.gitignore`).
+Ou direto no banco (local): `DATABASE_URL=... npm run registry:import -- lista.csv`.
+
+As duas formas mostram o resumo (por produto/lote, duplicadas, inválidas) e grava em lotes. Rodar de novo o mesmo arquivo não duplica. O CSV nunca vai para o git (`*.csv` no `.gitignore`).
 
 ## Rodar local
 

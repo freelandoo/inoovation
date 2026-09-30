@@ -70,3 +70,28 @@ test('unidade bloqueada continua bloqueada', async () => {
   await db.query(`update units set status = 'blocked' where unit_id = 'qZ' and lot_id = 'W4' and product_id = $1`, [GTIN]);
   assert.equal(await scan('qZ'), 'blocked');
 });
+
+test('import pela API exige ADMIN_TOKEN e devolve o resumo', async () => {
+  const admin = createApp(db, { allowedOrigins: [], adminToken: 'test-admin-token-123456' });
+  const body = [link('Rr1'), link('Rr2'), link('Rr1'), 'lixo 9'].join('\n');
+  const send = (auth?: string) =>
+    admin.request('/api/admin/registry?batch=lote-teste', {
+      method: 'POST',
+      body,
+      headers: auth ? { Authorization: `Bearer ${auth}` } : {},
+    });
+
+  assert.equal((await send()).status, 401);
+  assert.equal((await send('errado-errado-errado')).status, 401);
+  assert.equal((await app.request('/api/admin/registry', { method: 'POST', body })).status, 404, 'sem token configurado a rota não existe');
+
+  const r = await send('test-admin-token-123456');
+  assert.equal(r.status, 200);
+  const j = (await r.json()) as Record<string, unknown>;
+  assert.equal(j.units, 2);
+  assert.equal(j.inserted, 2);
+  assert.equal(j.duplicates, 1);
+  assert.equal(j.invalid, 1);
+  assert.deepEqual(j.lots, { [`0${GTIN}/W4`]: 2 });
+  assert.equal(await scan('Rr2'), 'verified');
+});
