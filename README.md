@@ -28,7 +28,8 @@ Detalhes em [frontend/README.md](frontend/README.md) e [backend/README.md](backe
 
 O repositório é público. Por isso, estes arquivos de trabalho ficam só localmente:
 
-- `innovation_week_rotulo_png/`: pacote-fonte do rótulo (separações da gráfica)
+- `rotulo/`: pacote-fonte do rótulo (arte final 01.png + separações 02–07.png)
+- `innovation_week_rotulo_png/`: versão anterior do rótulo (não usada mais)
 - `frontend/assets-src/`: cópias dos PNGs e folha de registro das máscaras
 - modelo 3D original (`.fbx`) e referências
 

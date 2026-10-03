@@ -110,7 +110,7 @@ export class DigitalLabelTwin {
         tLum: { value: black },
         tPhoto: { value: black },
         uXf: { value: MASK_ORDER.map((k) => new THREE.Vector4(...layerUvTransform(labelLayers[k]))) },
-        uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 376) },
+        uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 381) },
         uLightPos: { value: this.lightPos },
         uLightColor: { value: new THREE.Color('#fff4f0') },
         uLightIntensity: { value: 1 },
@@ -172,7 +172,7 @@ export class DigitalLabelTwin {
         uniforms: {
           tMask: { value: black },
           uXf: { value: new THREE.Vector4(...layerUvTransform(labelLayers[key])) },
-          uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 376) },
+          uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 381) },
           uLightPos: { value: this.lightPos },
           uOpacity: { value: 0 },
           uTime: this.material.uniforms.uTime,

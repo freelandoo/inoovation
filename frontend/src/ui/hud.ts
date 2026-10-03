@@ -1,7 +1,7 @@
-// HUD (relógio de sessão, coordenadas), barra SYSTEM PROGRESS e scanline
+// HUD (relógio de sessão, coordenadas), barra de progresso e scanline
 // que revela microinformações quando cruza cards.
 
-const STEP_LABEL = ['ID', 'TRACE', 'CONNECT', 'AUGMENT'];
+const STEP_LABEL = ['ID', 'RASTRO', 'CONEXÃO', 'RA'];
 
 export function initHud(reduced: boolean) {
   const session = document.getElementById('hud-session');
@@ -11,7 +11,7 @@ export function initHud(reduced: boolean) {
     const s = Math.floor((Date.now() - t0) / 1000);
     const txt = [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map((n) => String(n).padStart(2, '0')).join(':');
     if (session) session.textContent = txt;
-    if (passportSession) passportSession.textContent = `SESSION ${txt}`;
+    if (passportSession) passportSession.textContent = `SESSÃO ${txt}`;
   };
   tickClock();
   setInterval(tickClock, 1000);

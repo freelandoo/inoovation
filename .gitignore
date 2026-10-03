@@ -12,6 +12,7 @@ web/
 
 # arquivos de trabalho que não vão para o repositório público
 innovation_week_rotulo_png/
+rotulo/
 frontend/assets-src/
 *.fbx
 *.fbm/

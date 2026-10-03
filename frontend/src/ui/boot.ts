@@ -40,7 +40,7 @@ export function runBoot(opts: { identity: ProductIdentity; target: BootTarget | 
   const finish = () => {
     html.classList.remove('intro');
     if (opts.target) opts.target.intro = 1;
-    kicker.textContent = hasUnit ? 'UNIQUE UNIT READY' : 'EXPERIENCE UNLOCKED';
+    kicker.textContent = hasUnit ? 'UNIDADE ÚNICA PRONTA' : 'EXPERIÊNCIA LIBERADA';
     markSeen();
   };
 
@@ -57,9 +57,9 @@ export function runBoot(opts: { identity: ProductIdentity; target: BootTarget | 
     html.classList.add('no-boot');
   } else {
     const steps: [string, string, number][] = [
-      ['SCANNING IDENTITY…', 'PHYSICAL ID // SEARCHING', 0.35],
-      ['IDENTITY FOUND', hasUnit ? 'LABEL ID // FOUND' : 'PHYSICAL PRODUCT // DETECTED', 0.7],
-      ['ACCESS GRANTED', 'UNIQUE UNIT // READY', 1],
+      ['LENDO IDENTIDADE…', 'ID FÍSICO // BUSCANDO', 0.35],
+      ['IDENTIDADE ENCONTRADA', hasUnit ? 'ID DO RÓTULO // ENCONTRADO' : 'PRODUTO FÍSICO // DETECTADO', 0.7],
+      ['ACESSO LIBERADO', 'UNIDADE ÚNICA // PRONTA', 1],
     ];
     steps.forEach(([l, s, p], i) => {
       tl.call(
@@ -81,8 +81,8 @@ export function runBoot(opts: { identity: ProductIdentity; target: BootTarget | 
   if (opts.target) tl.to(opts.target, { intro: 1, duration: dur, ease: 'none' }, start);
   else tl.to({}, { duration: dur }, start);
 
-  tl.call(() => (kicker.textContent = 'PHYSICAL PRODUCT DETECTED'), [], start);
-  tl.call(() => (kicker.textContent = 'LABEL ID FOUND'), [], start + dur * 0.45);
+  tl.call(() => (kicker.textContent = 'PRODUTO FÍSICO DETECTADO'), [], start);
+  tl.call(() => (kicker.textContent = 'ID DO RÓTULO ENCONTRADO'), [], start + dur * 0.45);
   tl.call(
     () => {
       html.classList.remove('intro');

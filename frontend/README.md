@@ -69,11 +69,13 @@ Os valores passam por whitelist de caracteres e limite de tamanho, e só são ex
 
 ## Rótulo: assets
 
-- Fonte original (não modificar, fora do Git): `../innovation_week_rotulo_png/`
+- Fonte original (não modificar, fora do Git): `../rotulo/`, todos 1920x714 e já recortados na faca
+  - `01.png` arte final · `02` calço branco · `03` verniz relevo · `04` casting holográfico
+  - `05` verniz luminescente · `06` verniz fotoluminescente · `07` verniz textura
+  - nas separações (RGBA), pixel opaco = área com acabamento
 - Cópias dos PNGs usados (fora do Git): `assets-src/innovation-week/label/`
 - Derivados web: `public/innovation-week/label/base` (WebP 2048/1024, AVIF + JPG para o fallback) e `.../masks`
-- Regerar: `npm run assets:label` (recorta cada arquivo pela linha de corte ciano, remove as guias e gera a folha
-  `assets-src/.../debug/registration.jpg` para conferir o alinhamento)
+- Regerar: `npm run assets:label` (gera também a folha `assets-src/.../debug/registration.jpg` para conferir o alinhamento)
 
 Para trocar pelos arquivos finais da gráfica: exportar em alta resolução com a mesma faca de corte (ou ajustar
 `scripts/build_label_assets.py`), rodar o script e calibrar `labelLayers`, se necessário. Os shaders usam UV 0..1

@@ -95,7 +95,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   const { root, identity, renderer } = args;
   if (!renderer) throw new Error('WebGL indisponível');
 
-  const unit = identity.unitId ? `UNIT // ${identity.unitId}` : 'AR // LIVE';
+  const unit = identity.unitId ? `UNIDADE // ${identity.unitId}` : 'RA // AO VIVO';
   root.innerHTML = `
     <video class="arx-video" playsinline muted hidden></video>
     <div class="arx-ui">
@@ -107,7 +107,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
       <footer class="arx-bottom">
         <button class="arx-icon" data-a="recenter" aria-label="Reposicionar holograma">⟲</button>
         <button class="arx-shutter" data-a="photo" aria-label="Tirar foto"></button>
-        <a class="arx-native" data-a="native" hidden>AR nativo</a>
+        <a class="arx-native" data-a="native" hidden>RA nativa</a>
       </footer>
     </div>
     <div class="arx-loading"><i></i><span>CARREGANDO HOLOGRAMA…</span></div>`;
@@ -127,7 +127,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   if (isIOS()) {
     nativeLink.rel = 'ar';
     nativeLink.href = config.ar.modelUsdz;
-    nativeLink.innerHTML = '<img alt="" width="1" height="1" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="/>AR nativo';
+    nativeLink.innerHTML = '<img alt="" width="1" height="1" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="/>RA nativa';
     nativeLink.hidden = false;
   } else if (/Android/i.test(navigator.userAgent)) {
     const glb = new URL(config.ar.modelGlb, location.href).href;
@@ -255,5 +255,5 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   // 3) Prévia 3D
   root.dataset.mode = 'preview';
   setMode(new PreviewMode());
-  setHint('Câmera indisponível. Veja o holograma aqui ou use o AR nativo.');
+  setHint('Câmera indisponível. Veja o holograma aqui ou use a RA nativa.');
 }

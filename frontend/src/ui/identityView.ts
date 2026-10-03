@@ -4,9 +4,9 @@
 import { display, hasIds, type ProductIdentity } from '../identity/resolver.ts';
 
 const GENERIC = {
-  product: 'PRODUCT DETECTED',
-  lot: 'LOT VERIFIED',
-  unit: 'UNIQUE UNIT',
+  product: 'PRODUTO DETECTADO',
+  lot: 'LOTE VERIFICADO',
+  unit: 'UNIDADE ÚNICA',
 };
 
 export function renderIdentity(id: ProductIdentity) {
@@ -15,7 +15,7 @@ export function renderIdentity(id: ProductIdentity) {
     product: { text: id.productId ?? GENERIC.product, generic: !id.productId },
     lot: { text: display(id.lotId, GENERIC.lot), generic: !id.lotId },
     unit: { text: display(id.unitId, GENERIC.unit), generic: !id.unitId },
-    status: { text: known ? 'IDENTIFIED' : 'EXPERIENCE UNLOCKED', generic: false },
+    status: { text: known ? 'IDENTIFICADA' : 'EXPERIÊNCIA LIBERADA', generic: false },
   };
 
   document.querySelectorAll<HTMLElement>('[data-field]').forEach((el) => {
@@ -27,7 +27,7 @@ export function renderIdentity(id: ProductIdentity) {
 
   // HUD
   const hudId = document.getElementById('hud-identity');
-  if (hudId) hudId.textContent = known ? 'DETECTED' : 'STANDBY';
+  if (hudId) hudId.textContent = known ? 'DETECTADA' : 'EM ESPERA';
   const unitRow = document.getElementById('hud-unit-row');
   const unit = document.getElementById('hud-unit');
   if (unitRow && unit && id.unitId) {
@@ -40,9 +40,9 @@ export function renderIdentity(id: ProductIdentity) {
   if (inline) {
     inline.replaceChildren();
     const parts: [string, string | null][] = [
-      ['PRODUCT', id.productId],
-      ['LOT', id.lotId],
-      ['UNIT', id.unitId],
+      ['PRODUTO', id.productId],
+      ['LOTE', id.lotId],
+      ['UNIDADE', id.unitId],
     ];
     const shown = parts.filter(([, v]) => v);
     if (shown.length) {
@@ -61,7 +61,7 @@ export function renderIdentity(id: ProductIdentity) {
 
   const heroVerified = document.getElementById('hero-verified');
   if (heroVerified && !known) {
-    heroVerified.replaceChildren('EXPERIENCE // ', Object.assign(document.createElement('b'), { textContent: 'UNLOCKED' }));
+    heroVerified.replaceChildren('EXPERIÊNCIA // ', Object.assign(document.createElement('b'), { textContent: 'LIBERADA' }));
   }
 }
 
@@ -77,38 +77,38 @@ export type Verification = 'pending' | 'verified' | 'unregistered' | 'blocked' |
 
 const VERIFICATION: Record<Verification, { status: string; hero: string; hud: string; seal: string; lead: string }> = {
   pending: {
-    status: 'VERIFYING',
-    hero: 'VERIFYING',
-    hud: 'CHECKING',
-    seal: 'UNIQUE DIGITAL ID',
+    status: 'VERIFICANDO',
+    hero: 'VERIFICANDO',
+    hud: 'CONSULTANDO',
+    seal: 'ID DIGITAL ÚNICO',
     lead: 'Verificando sua unidade…',
   },
   verified: {
-    status: 'VERIFIED',
-    hero: 'VERIFIED',
-    hud: 'VERIFIED',
-    seal: 'OFFICIAL UNIT',
+    status: 'VERIFICADA',
+    hero: 'VERIFICADA',
+    hud: 'VERIFICADA',
+    seal: 'UNIDADE OFICIAL',
     lead: 'Sua unidade foi reconhecida. Sua identidade digital está pronta.',
   },
   unregistered: {
-    status: 'NOT RECOGNIZED',
-    hero: 'NOT RECOGNIZED',
-    hud: 'UNKNOWN',
-    seal: 'UNREGISTERED ID',
+    status: 'NÃO RECONHECIDA',
+    hero: 'NÃO RECONHECIDA',
+    hud: 'DESCONHECIDA',
+    seal: 'ID NÃO CADASTRADO',
     lead: 'Não encontramos este código na base oficial da campanha. A experiência continua liberada.',
   },
   blocked: {
-    status: 'BLOCKED',
-    hero: 'BLOCKED',
-    hud: 'BLOCKED',
-    seal: 'BLOCKED ID',
+    status: 'BLOQUEADA',
+    hero: 'BLOQUEADA',
+    hud: 'BLOQUEADA',
+    seal: 'ID BLOQUEADO',
     lead: 'Este código foi bloqueado na base oficial da campanha.',
   },
   offline: {
-    status: 'IDENTIFIED',
-    hero: 'DETECTED',
-    hud: 'DETECTED',
-    seal: 'UNIQUE DIGITAL ID',
+    status: 'IDENTIFICADA',
+    hero: 'DETECTADA',
+    hud: 'DETECTADA',
+    seal: 'ID DIGITAL ÚNICO',
     lead: 'Sua identidade digital está pronta.',
   },
 };

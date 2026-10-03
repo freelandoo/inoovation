@@ -6,8 +6,9 @@
 // `npm run assets:label` (ou apontar o caminho aqui) e, se preciso, calibrar
 // scale/x/y da camada abaixo.
 
-export const LABEL_MM = { width: 300, height: 110 } as const;
-export const LABEL_ASPECT = LABEL_MM.width / LABEL_MM.height; // ≈ 2.727
+// Proporção da arte final (rotulo/01.png, 1920x714 px).
+export const LABEL_MM = { width: 300, height: 111.6 } as const;
+export const LABEL_ASPECT = LABEL_MM.width / LABEL_MM.height; // ≈ 2.689
 
 /** Tamanho em unidades de mundo (1 unidade = 100 mm). */
 export const LABEL_WORLD = {
@@ -47,9 +48,9 @@ export interface LayerTransform {
 }
 
 /**
- * Calibração de registro por camada. As máscaras atuais foram recortadas pela linha
- * de corte ciano de cada separação e já caem alinhadas (ver debug/registration.jpg);
- * por isso tudo começa neutro. Ajuste aqui quando chegarem os arquivos finais.
+ * Calibração de registro por camada. As separações de ../rotulo/ têm o mesmo tamanho
+ * da arte e já vêm recortadas na faca, então caem alinhadas (ver debug/registration.jpg);
+ * por isso tudo começa neutro. Ajuste aqui se chegarem arquivos com outro enquadramento.
  */
 export const labelLayers: Record<LayerKey, LayerTransform> = {
   underprint: { scale: 1, x: 0, y: 0 },
@@ -60,30 +61,30 @@ export const labelLayers: Record<LayerKey, LayerTransform> = {
   photoluminescent: { scale: 1, x: 0, y: 0 },
 };
 
-/** Ordem da vista explodida (da base para frente) e rótulos exibidos. */
+/** Ordem da vista explodida (da base para frente), nome da camada e onde ela aparece no rótulo. */
 export const explodedOrder: { key: LayerKey | 'base'; label: string; tech: string }[] = [
-  { key: 'base', label: 'BASE ART', tech: 'Arte impressa' },
-  { key: 'underprint', label: 'WHITE UNDERPRINT', tech: 'Calço branco' },
-  { key: 'texture', label: 'TEXTURE', tech: 'Verniz textura' },
-  { key: 'relief', label: 'RELIEF', tech: 'Verniz relevo' },
-  { key: 'holographic', label: 'HOLOGRAPHIC', tech: 'Casting holográfico bolha' },
-  { key: 'luminescent', label: 'LUMINESCENT', tech: 'Verniz luminescente' },
-  { key: 'photoluminescent', label: 'PHOTOLUMINESCENT', tech: 'Verniz fotoluminescente' },
+  { key: 'base', label: 'ARTE IMPRESSA', tech: 'Astronauta, planeta e nave' },
+  { key: 'underprint', label: 'CALÇO BRANCO', tech: 'Base dos logos, textos e QR' },
+  { key: 'texture', label: 'VERNIZ TEXTURA', tech: 'Estrutura metálica da nave' },
+  { key: 'relief', label: 'VERNIZ RELEVO', tech: 'Molduras e placas da armadura' },
+  { key: 'holographic', label: 'CASTING HOLOGRÁFICO', tech: 'Céu, planeta e solo' },
+  { key: 'luminescent', label: 'VERNIZ LUMINESCENTE', tech: 'Padrão INNOVATION WAY' },
+  { key: 'photoluminescent', label: 'VERNIZ FOTOLUMINESCENTE', tech: 'Logos e armadura no escuro' },
 ];
 
 /** Região do QR impresso na arte (UV, origem embaixo à esquerda). Só narrativa: nunca decodificado. */
-export const QR_UV = { x0: 0.914, y0: 0.064, x1: 0.981, y1: 0.231 } as const;
+export const QR_UV = { x0: 0.902, y0: 0.173, x1: 0.953, y1: 0.309 } as const;
 
 /**
- * Faixas horizontais (UV x) onde cada acabamento se concentra, usadas para
- * acender os rótulos "RELIEF / TEXTURE / HOLOGRAPHIC / LUMINESCENT" quando o
- * scanner passa. Medidas a partir das máscaras atuais.
+ * Posição horizontal (UV x) em que o scanner da seção "Análise de superfície" acende
+ * cada etiqueta de acabamento. Medidas a partir das máscaras atuais (ponto em que a
+ * camada começa a ganhar massa da esquerda para a direita).
  */
 export const SURFACE_ZONES: { key: LayerKey; label: string; at: number }[] = [
-  { key: 'relief', label: 'RELIEF', at: 0.1 },
-  { key: 'luminescent', label: 'LUMINESCENT', at: 0.2 },
-  { key: 'holographic', label: 'HOLOGRAPHIC', at: 0.42 },
-  { key: 'texture', label: 'TEXTURE', at: 0.62 },
+  { key: 'luminescent', label: 'VERNIZ LUMINESCENTE', at: 0.06 },
+  { key: 'relief', label: 'VERNIZ RELEVO', at: 0.16 },
+  { key: 'holographic', label: 'CASTING HOLOGRÁFICO', at: 0.28 },
+  { key: 'texture', label: 'VERNIZ TEXTURA', at: 0.5 },
 ];
 
 export function layerUvTransform(t: LayerTransform): [number, number, number, number] {

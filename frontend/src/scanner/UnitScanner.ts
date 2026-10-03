@@ -91,8 +91,8 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
 
   const top = el('div', 'usc-top');
   const chip = el('span', 'usc-chip mono');
-  const chipState = el('b', '', 'STARTING');
-  chip.append('UNIT SCAN // ', chipState);
+  const chipState = el('b', '', 'INICIANDO');
+  chip.append('LEITURA DA UNIDADE // ', chipState);
   const closeBtn = el('button', 'usc-icon', '✕');
   closeBtn.type = 'button';
   closeBtn.setAttribute('aria-label', 'Fechar leitor');
@@ -137,7 +137,7 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
 
   const setState = (s: 'starting' | 'live' | 'locked' | 'error') => {
     root.dataset.state = s;
-    chipState.textContent = { starting: 'STARTING', live: 'LIVE', locked: 'LOCKED', error: 'OFFLINE' }[s];
+    chipState.textContent = { starting: 'INICIANDO', live: 'AO VIVO', locked: 'LIDO', error: 'INDISPONÍVEL' }[s];
   };
   setState('starting');
 

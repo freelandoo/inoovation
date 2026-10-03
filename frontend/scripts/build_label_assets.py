@@ -1,16 +1,16 @@
 """
 Gera os derivados web do rótulo Innovation Week a partir do pacote de origem.
 
-Origem (NÃO é modificada): ../innovation_week_rotulo_png/
+Origem (NÃO é modificada): ../rotulo/
+  01.png         arte final colorida (RGB, já recortada na faca)
+  02.png..07.png separações de acabamento (RGBA: pixel opaco = área com acabamento)
 Saídas:
-  web/assets-src/innovation-week/label/   cópia dos PNGs usados (fonte, não publicada)
-  web/public/innovation-week/label/base/  arte base (WebP 2048/1024 + AVIF para fallback DOM)
-  web/public/innovation-week/label/masks/ máscaras em escala de cinza (branco = efeito ativo)
-  web/assets-src/innovation-week/label/debug/ sobreposições para conferir o registro
+  public/innovation-week/label/base/   arte base (WebP 2048/1024 + AVIF/JPG para o fallback DOM)
+  public/innovation-week/label/masks/  máscaras em escala de cinza (branco = efeito ativo)
+  assets-src/innovation-week/label/    cópia dos PNGs usados + debug/registration.jpg (fora do Git)
 
-Registro: cada arquivo tem as linhas-guia ciano de corte. Recortamos todos pela
-linha de corte EXTERNA, então UV 0..1 = faca de corte em todas as camadas.
-As linhas-guia são removidas (não são impressas).
+Registro: todos os arquivos têm o mesmo tamanho (1920x714) e já vêm recortados na
+faca, então UV 0..1 = faca de corte em todas as camadas sem recorte adicional.
 Ajustes finos de alinhamento ficam em src/label/labelConfig.ts, não aqui.
 
 Uso: python scripts/build_label_assets.py
@@ -22,45 +22,24 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT.parent / "innovation_week_rotulo_png"  # pacote-fonte (fora do Git)
+SRC = ROOT.parent / "rotulo"  # pacote-fonte (fora do Git)
 PUB = ROOT / "public" / "innovation-week" / "label"
 KEEP = ROOT / "assets-src" / "innovation-week" / "label"
 
-BASE = SRC / "03_mascaras_web" / "rotulo_principal_colorido__web.png"
-# polaridade escolhida: dark_active (preto na separação = área com acabamento)
+BASE = SRC / "01.png"
+# arquivo de separação -> acabamento (identificado pela forma de cada camada)
 MASKS = {
-    "luminescent": "verniz_luminescente",
-    "photoluminescent": "verniz_fotoluminescente",
-    "holographic": "casting_holografico_bolha",
-    "relief": "verniz_relevo",
-    "texture": "verniz_textura",
-    "underprint": "calco_branco",
+    "underprint": "02.png",  # calço branco: logos, textos, astronauta, QR
+    "relief": "03.png",  # verniz relevo: molduras das janelas, console, placas da armadura
+    "holographic": "04.png",  # casting holográfico: céu, planeta e solo da janela central
+    "luminescent": "05.png",  # verniz luminescente: padrão INNOVATION WAY nas laterais
+    "photoluminescent": "06.png",  # verniz fotoluminescente: logos, armadura, brilho do planeta
+    "texture": "07.png",  # verniz textura: estrutura metálica da nave
 }
-POLARITY = "dark_active"
+MASK_W = 1024
 
 
-def cyan_mask(rgb: np.ndarray) -> np.ndarray:
-    r, g, b = (rgb[..., i].astype(int) for i in range(3))
-    return (g > 110) & (b > 110) & (r < g - 35) & (r < b - 35)
-
-
-def cut_box(cyan: np.ndarray):
-    """Retângulo da linha de corte externa (linhas ciano quase contínuas)."""
-    h, w = cyan.shape
-    rows = [y for y in range(h) if cyan[y].sum() > w * 0.4]
-    cols = [x for x in range(w) if cyan[:, x].sum() > h * 0.4]
-    return cols[0], rows[0], cols[-1], rows[-1]
-
-
-def dilate(m: np.ndarray, n: int = 1) -> np.ndarray:
-    out = m.copy()
-    for _ in range(n):
-        p = np.pad(out, 1)
-        out = p[1:-1, 1:-1] | p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]
-    return out
-
-
-def inpaint(img: np.ndarray, hole: np.ndarray, iters: int = 40) -> np.ndarray:
+def inpaint(img: np.ndarray, hole: np.ndarray, iters: int = 60) -> np.ndarray:
     """Preenche pixels marcados com a média dos vizinhos válidos (difusão simples)."""
     img = img.astype(np.float32).copy()
     known = ~hole
@@ -73,18 +52,26 @@ def inpaint(img: np.ndarray, hole: np.ndarray, iters: int = 40) -> np.ndarray:
         for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)):
             k = np.roll(known, (dy, dx), (0, 1))
             v = np.roll(img, (dy, dx), (0, 1))
-            if img.ndim == 3:
-                acc += v * k[..., None]
-            else:
-                acc += v * k
+            acc += v * k[..., None]
             cnt += k
         fill = (~known) & (cnt > 0)
-        if img.ndim == 3:
-            img[fill] = acc[fill] / cnt[fill][:, None]
-        else:
-            img[fill] = acc[fill] / cnt[fill]
+        img[fill] = acc[fill] / cnt[fill][:, None]
         known = known | fill
     return img
+
+
+def corner_hole(rgb: np.ndarray, size: int = 48) -> np.ndarray:
+    """Cantos arredondados brancos fora da faca (a geometria 3D já arredonda os cantos)."""
+    h, w = rgb.shape[:2]
+    white = rgb.min(-1) > 225
+    hole = np.zeros((h, w), bool)
+    for ys, xs in ((slice(0, size), slice(0, size)), (slice(0, size), slice(w - size, w)),
+                   (slice(h - size, h), slice(0, size)), (slice(h - size, h), slice(w - size, w))):
+        hole[ys, xs] = white[ys, xs]
+    # borda de 1-2 px clara em volta do rótulo
+    edge = np.zeros_like(hole)
+    edge[:2], edge[-2:], edge[:, :2], edge[:, -2:] = True, True, True, True
+    return hole | (edge & (rgb.min(-1) > 150))
 
 
 def save_webp(im: Image.Image, path: Path, quality=90, lossless=False):
@@ -101,19 +88,14 @@ def main():
 
     # ---------- base ----------
     rgb = np.array(Image.open(BASE).convert("RGB"))
-    cy = cyan_mask(rgb)
-    x0, y0, x1, y1 = cut_box(cy)
-    print(f"base: corte em ({x0},{y0})-({x1},{y1}) -> proporção {(x1 - x0) / (y1 - y0):.3f}")
-    clean = inpaint(rgb, dilate(cy, 2)).clip(0, 255).astype(np.uint8)
-    crop = Image.fromarray(clean).crop((x0, y0, x1 + 1, y1 + 1))
-    # cantos: a borda interna do corte ainda pode ter resíduo claro; escurece 3px da moldura
-    arr = np.array(crop)
-    arr[:3], arr[-3:], arr[:, :3], arr[:, -3:] = 18, 18, 18, 18
-    crop = Image.fromarray(arr)
+    H, W = rgb.shape[:2]
+    print(f"base: {W}x{H} -> proporção {W / H:.3f}")
+    clean = inpaint(rgb, corner_hole(rgb)).clip(0, 255).astype(np.uint8)
+    crop = Image.fromarray(clean)
 
     base_sizes = {}
     for w in (2048, 1024):
-        h = round(w * crop.size[1] / crop.size[0])
+        h = round(w * H / W)
         im = crop.resize((w, h), Image.LANCZOS)
         if w == 2048:
             im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=60, threshold=2))
@@ -135,34 +117,28 @@ def main():
     shutil.copy2(BASE, KEEP / BASE.name)
 
     # ---------- máscaras ----------
+    mask_h = round(MASK_W * H / W)
     overlay_rows = []
     for key, name in MASKS.items():
-        sep_path = SRC / "02_separacoes_tecnicas" / f"{name}.png"
-        mask_path = SRC / "03_mascaras_web" / f"{name}__{POLARITY}.png"
-        sep = np.array(Image.open(sep_path).convert("RGB"))
-        cy = cyan_mask(sep)
-        x0, y0, x1, y1 = cut_box(cy)
-        alpha = np.array(Image.open(mask_path))[..., 3].astype(np.float32)  # dark_active: alfa = 255 - luminância
-        alpha[dilate(cy, 2)] = 0  # linhas-guia não são acabamento
-        m = Image.fromarray(alpha.clip(0, 255).astype(np.uint8)).crop((x0, y0, x1 + 1, y1 + 1))
-        # remove moldura externa ao corte
-        a = np.array(m)
-        a[:4], a[-4:], a[:, :4], a[:, -4:] = 0, 0, 0, 0
-        m = Image.fromarray(a)
-        m = m.resize((1024, round(1024 * m.size[1] / m.size[0])), Image.LANCZOS)
-        m = m.resize((1024, 376), Image.LANCZOS)  # mesma grade para todas
+        src = SRC / name
+        im = Image.open(src).convert("RGBA")
+        assert im.size == (W, H), f"{name}: {im.size} difere da arte base {(W, H)}"
+        alpha = np.array(im)[..., 3]
+        m = Image.fromarray(alpha).resize((MASK_W, mask_h), Image.LANCZOS)
         save_webp(m.convert("RGB"), PUB / "masks" / f"{key}.webp", quality=92)
         if key == "relief":
-            h = m.filter(ImageFilter.GaussianBlur(2.2))
-            save_webp(h.convert("RGB"), PUB / "masks" / "relief-height.webp", quality=92)
-        shutil.copy2(mask_path, KEEP / mask_path.name)
-        shutil.copy2(sep_path, KEEP / sep_path.name)
-        print(f"{key}: corte ({x0},{y0})-({x1},{y1}) proporção {(x1 - x0) / (y1 - y0):.3f}, cobertura {np.array(m).mean() / 2.55:.1f}%")
+            hgt = m.filter(ImageFilter.GaussianBlur(2.2))
+            save_webp(hgt.convert("RGB"), PUB / "masks" / "relief-height.webp", quality=92)
+        shutil.copy2(src, KEEP / name)
+        a = np.array(m).astype(np.float32) / 255
+        cols = a.mean(0)
+        cum = np.cumsum(cols) / max(cols.sum(), 1e-6)
+        print(f"{key} ({name}): cobertura {a.mean() * 100:.1f}%, "
+              f"massa em x: 10% {np.searchsorted(cum, 0.1) / MASK_W:.2f} / 50% {np.searchsorted(cum, 0.5) / MASK_W:.2f}")
 
         # debug: arte base escurecida + máscara em vermelho
-        b = np.array(base_sizes[1024].resize((1024, 376))).astype(np.float32) * 0.45
-        mm = np.array(m).astype(np.float32)[..., None] / 255
-        dbg = b * (1 - mm) + np.array([255, 30, 30]) * mm
+        b = np.array(base_sizes[1024].resize((MASK_W, mask_h))).astype(np.float32) * 0.45
+        dbg = b * (1 - a[..., None]) + np.array([255, 30, 30]) * a[..., None]
         overlay_rows.append(dbg.clip(0, 255).astype(np.uint8))
 
     sheet = Image.fromarray(np.vstack(overlay_rows))

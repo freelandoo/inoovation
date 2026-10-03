@@ -95,7 +95,7 @@ function initLights() {
       li.classList.toggle('on', i === idx);
       li.classList.toggle('past', i < idx);
     });
-    if (status) status.textContent = idx === 3 ? 'COMPLETE' : '01';
+    if (status) status.textContent = idx === 3 ? 'CONCLUÍDO' : '01';
   };
 }
 

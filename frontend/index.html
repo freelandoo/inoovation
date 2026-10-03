@@ -32,7 +32,7 @@
         <picture>
           <source srcset="/innovation-week/label/base/label-2048.avif" type="image/avif" />
           <source srcset="/innovation-week/label/base/label-2048.webp" type="image/webp" />
-          <img src="/innovation-week/label/base/label-2048.jpg" alt="" width="2048" height="754" decoding="async" />
+          <img src="/innovation-week/label/base/label-2048.jpg" alt="" width="2048" height="762" decoding="async" />
         </picture>
         <i class="lf-mask lf-lum"></i>
         <i class="lf-mask lf-holo"></i>
@@ -47,9 +47,9 @@
     <!-- Sequência de inicialização -->
     <div class="boot" id="boot" role="status" aria-live="polite">
       <div class="boot-inner">
-        <p class="boot-line mono" id="boot-line">SCANNING IDENTITY…</p>
+        <p class="boot-line mono" id="boot-line">LENDO IDENTIDADE…</p>
         <div class="boot-bar"><i id="boot-bar"></i></div>
-        <p class="boot-sub mono" id="boot-sub">PHYSICAL ID // SEARCHING</p>
+        <p class="boot-sub mono" id="boot-sub">ID FÍSICO // BUSCANDO</p>
       </div>
     </div>
 
@@ -60,11 +60,11 @@
         <span class="mono hud-year">2026</span>
       </div>
       <ul class="hud-status mono" aria-label="Status do sistema">
-        <li>SYSTEM // <b>ONLINE</b></li>
-        <li>IDENTITY // <b id="hud-identity">DETECTED</b></li>
-        <li>ACCESS // <b>READY</b></li>
-        <li class="hud-extra">SESSION <b id="hud-session">00:00:00</b></li>
-        <li class="hud-extra" id="hud-unit-row" hidden>UNIT // <b id="hud-unit"></b></li>
+        <li>SISTEMA // <b>ATIVO</b></li>
+        <li>IDENTIDADE // <b id="hud-identity">DETECTADA</b></li>
+        <li>ACESSO // <b>LIBERADO</b></li>
+        <li class="hud-extra">SESSÃO <b id="hud-session">00:00:00</b></li>
+        <li class="hud-extra" id="hud-unit-row" hidden>UNIDADE // <b id="hud-unit"></b></li>
       </ul>
     </header>
 
@@ -72,9 +72,9 @@
       <div class="progress-track"><i id="progress-fill"></i></div>
       <ol>
         <li data-step="1"><a href="#hero"><b>01</b> ID</a></li>
-        <li data-step="2"><a href="#surface"><b>02</b> TRACE</a></li>
-        <li data-step="3"><a href="#identity"><b>03</b> CONNECT</a></li>
-        <li data-step="4"><a href="#ar"><b>04</b> AUGMENT</a></li>
+        <li data-step="2"><a href="#surface"><b>02</b> RASTRO</a></li>
+        <li data-step="3"><a href="#identity"><b>03</b> CONEXÃO</a></li>
+        <li data-step="4"><a href="#ar"><b>04</b> RA</a></li>
       </ol>
     </nav>
 
@@ -82,7 +82,7 @@
       <!-- 01 HERO -->
       <section id="hero" class="scene scene-hero" data-scene="hero" data-step="1">
         <div class="hero-type">
-          <p class="hero-kicker mono" id="hero-kicker">PHYSICAL ID DETECTED</p>
+          <p class="hero-kicker mono" id="hero-kicker">ID FÍSICO DETECTADO</p>
           <h1 class="hero-title">
             <span class="t-innovation" id="t-innovation" aria-label="Innovation"><span aria-hidden="true">INNO<em>VA</em>TION</span></span>
             <span class="t-week">WEEK</span>
@@ -90,14 +90,14 @@
         </div>
         <p class="hero-tagline">
           <span>O futuro começa</span>
-          <strong>além do conhecido</strong>
+          <strong>além do conhecimento</strong>
         </p>
-        <p class="hero-verified mono" id="hero-verified">UNIQUE UNIT // <b>VERIFIED</b></p>
+        <p class="hero-verified mono" id="hero-verified">UNIDADE ÚNICA // <b>VERIFICADA</b></p>
         <button class="scan-cta scan-cta-hero mono" type="button" data-unit-scan hidden>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" /><rect x="7" y="7" width="4" height="4" /><rect x="13" y="7" width="4" height="4" /><rect x="7" y="13" width="4" height="4" /><path d="M13 13h1.5M17 13v1.5M13 16.5V17h4" /></svg>
           <span>ATIVAR MINHA UNIDADE</span>
         </button>
-        <a class="scroll-cue mono" href="#rg"><span>SCROLL TO UNLOCK</span><i></i></a>
+        <a class="scroll-cue mono" href="#rg"><span>ROLE PARA DESBLOQUEAR</span><i></i></a>
       </section>
 
       <!-- RG -->
@@ -113,47 +113,47 @@
         </div>
       </section>
 
-      <!-- SURFACE ANALYSIS -->
+      <!-- ANÁLISE DE SUPERFÍCIE -->
       <section id="surface" class="scene scene-sticky scene-surface" data-scene="surface" data-step="2">
         <div class="sticky">
           <div class="copy copy-top">
-            <p class="kicker mono">02 // TRACE — SURFACE ANALYSIS</p>
+            <p class="kicker mono">02 // RASTRO — ANÁLISE DE SUPERFÍCIE</p>
             <h2 class="display display-s">Luz rasante.<br />Superfície revelada.</h2>
           </div>
           <ul class="surface-tags mono" id="surface-tags" aria-label="Acabamentos detectados">
-            <li data-zone="relief"><b>RELIEF</b><span>verniz relevo</span></li>
-            <li data-zone="luminescent"><b>LUMINESCENT</b><span>verniz luminescente</span></li>
-            <li data-zone="holographic"><b>HOLOGRAPHIC</b><span>casting holográfico</span></li>
-            <li data-zone="texture"><b>TEXTURE</b><span>verniz textura</span></li>
+            <li data-zone="luminescent"><b>LUMINESCENTE</b><span>padrão INNOVATION WAY</span></li>
+            <li data-zone="relief"><b>RELEVO</b><span>molduras e armadura</span></li>
+            <li data-zone="holographic"><b>HOLOGRÁFICO</b><span>céu, planeta e solo</span></li>
+            <li data-zone="texture"><b>TEXTURA</b><span>estrutura da nave</span></li>
           </ul>
-          <p class="scan-readout mono" aria-hidden="true">SCAN <b id="scan-pct">000</b>%</p>
+          <p class="scan-readout mono" aria-hidden="true">VARREDURA <b id="scan-pct">000</b>%</p>
         </div>
       </section>
 
-      <!-- LIGHTS OFF -->
+      <!-- LUZES APAGADAS -->
       <section id="lights" class="scene scene-sticky scene-lights" data-scene="lights" data-step="2">
         <div class="sticky">
           <div class="copy copy-top">
-            <p class="kicker mono">LIGHT TEST // <b id="light-status">01</b></p>
+            <p class="kicker mono">TESTE DE LUZ // <b id="light-status">01</b></p>
             <h2 class="display display-s">Quando a luz apaga,<br /><em>a energia fica.</em></h2>
           </div>
           <div class="copy copy-bottom">
             <p class="lead lead-s">Parte do rótulo absorve luz e continua brilhando no escuro por alguns segundos.</p>
             <ol class="light-steps mono" id="light-steps" aria-label="Etapas do teste">
-              <li data-light="charge">CHARGE</li>
-              <li data-light="dark">DARKNESS</li>
-              <li data-light="glow">AFTERGLOW</li>
-              <li data-light="done">COMPLETE</li>
+              <li data-light="charge">CARGA</li>
+              <li data-light="dark">ESCURO</li>
+              <li data-light="glow">BRILHO RESIDUAL</li>
+              <li data-light="done">CONCLUÍDO</li>
             </ol>
           </div>
         </div>
       </section>
 
-      <!-- EXPLODED LABEL -->
+      <!-- RÓTULO EXPLODIDO -->
       <section id="layers" class="scene scene-sticky scene-layers" data-scene="layers" data-step="2">
         <div class="sticky">
           <div class="copy copy-top">
-            <p class="kicker mono">PHYSICAL LAYERS // DIGITAL IDENTITY</p>
+            <p class="kicker mono">CAMADAS FÍSICAS // IDENTIDADE DIGITAL</p>
             <h2 class="display display-s">Não é apenas impressão.<br /><em>É experiência.</em></h2>
           </div>
           <ol class="layer-tags mono" id="layer-tags" aria-label="Camadas do rótulo"></ol>
@@ -174,38 +174,38 @@
             <p class="qr-caption mono" id="qr-caption"></p>
             <svg class="qr-links" id="qr-links" aria-hidden="true"></svg>
             <dl class="qr-parts" id="qr-parts">
-              <div data-part="product"><dt class="mono">01 / <span data-part-value></span></dt><dd>PRODUCT</dd></div>
-              <div data-part="lot"><dt class="mono">10 / <span data-part-value></span></dt><dd>LOT</dd></div>
-              <div data-part="unit"><dt class="mono">21 / <span data-part-value></span></dt><dd>UNIT</dd></div>
+              <div data-part="product"><dt class="mono">01 / <span data-part-value></span></dt><dd>PRODUTO</dd></div>
+              <div data-part="lot"><dt class="mono">10 / <span data-part-value></span></dt><dd>LOTE</dd></div>
+              <div data-part="unit"><dt class="mono">21 / <span data-part-value></span></dt><dd>UNIDADE</dd></div>
             </dl>
           </div>
         </div>
       </section>
 
-      <!-- DIGITAL IDENTITY -->
+      <!-- IDENTIDADE DIGITAL -->
       <section id="identity" class="scene scene-identity" data-scene="identity" data-step="3">
         <div class="copy copy-top">
-          <p class="kicker mono">03 // CONNECT</p>
+          <p class="kicker mono">03 // CONEXÃO</p>
           <h2 class="display display-s">Identidade digital<br /><em>desbloqueada.</em></h2>
         </div>
         <article class="passport scan-reactive" id="passport" aria-label="Passaporte digital do produto">
           <div class="passport-inner">
             <header class="passport-head">
-              <span class="mono">DIGITAL PRODUCT PASSPORT</span>
+              <span class="mono">PASSAPORTE DIGITAL DO PRODUTO</span>
               <span class="passport-chip" aria-hidden="true"></span>
             </header>
             <dl class="passport-grid">
-              <div><dt class="mono">PRODUCT</dt><dd data-field="product"></dd></div>
-              <div><dt class="mono">LOT</dt><dd data-field="lot"></dd></div>
-              <div><dt class="mono">UNIT</dt><dd data-field="unit"></dd></div>
-              <div><dt class="mono">STATUS</dt><dd data-field="status"></dd></div>
+              <div><dt class="mono">PRODUTO</dt><dd data-field="product"></dd></div>
+              <div><dt class="mono">LOTE</dt><dd data-field="lot"></dd></div>
+              <div><dt class="mono">UNIDADE</dt><dd data-field="unit"></dd></div>
+              <div><dt class="mono">SITUAÇÃO</dt><dd data-field="status"></dd></div>
             </dl>
             <footer class="passport-foot">
-              <span class="seal mono">UNIQUE DIGITAL ID</span>
+              <span class="seal mono">ID DIGITAL ÚNICO</span>
               <span class="mono passport-meta">IW-2026 // <span id="passport-session"></span></span>
             </footer>
             <i class="passport-glare" aria-hidden="true"></i>
-            <i class="scan-info mono" aria-hidden="true">TRACE OK</i>
+            <i class="scan-info mono" aria-hidden="true">RASTRO OK</i>
           </div>
         </article>
         <div class="scan-link" data-unit-scan-block hidden>
@@ -217,10 +217,10 @@
         </div>
       </section>
 
-      <!-- ORBIT CARDS -->
+      <!-- CARDS EM ÓRBITA -->
       <section id="orbit" class="scene scene-orbit" data-scene="orbit" data-step="3">
         <div class="orbit-sticky">
-          <p class="kicker mono orbit-kicker">IDENTITY ORBIT</p>
+          <p class="kicker mono orbit-kicker">ÓRBITA DA IDENTIDADE</p>
           <ol class="orbit" id="orbit-list">
             <li class="orbit-card scan-reactive" data-orbit="0">
               <span class="mono orbit-num">01</span>
@@ -244,7 +244,7 @@
               <span class="mono orbit-num">04</span>
               <h3>Experiência</h3>
               <p>O que essa identidade desbloqueia.</p>
-              <b class="mono orbit-val">AR // READY</b>
+              <b class="mono orbit-val">RA // PRONTA</b>
             </li>
           </ol>
         </div>
@@ -252,30 +252,30 @@
 
       <div class="marquee" aria-hidden="true">
         <div class="marquee-track mono">
-          <span>INNOVATION / TRACEABILITY / AUGMENTED REALITY / UNIQUE ID / EXPERIENCE / TECHNOLOGY /&nbsp;</span>
-          <span>INNOVATION / TRACEABILITY / AUGMENTED REALITY / UNIQUE ID / EXPERIENCE / TECHNOLOGY /&nbsp;</span>
+          <span>INOVAÇÃO / RASTREABILIDADE / REALIDADE AUMENTADA / ID ÚNICO / EXPERIÊNCIA / TECNOLOGIA /&nbsp;</span>
+          <span>INOVAÇÃO / RASTREABILIDADE / REALIDADE AUMENTADA / ID ÚNICO / EXPERIÊNCIA / TECNOLOGIA /&nbsp;</span>
         </div>
       </div>
 
-      <!-- PHYSICAL → DIGITAL -->
+      <!-- FÍSICO → DIGITAL -->
       <section id="physical" class="scene scene-physical" data-scene="physical" data-step="3">
         <div class="copy">
-          <h2 class="display display-s glitch-once" id="physical-title" data-text="Physical → Digital">Physical → Digital</h2>
+          <h2 class="display display-s glitch-once" id="physical-title" data-text="Físico → Digital">Físico → Digital</h2>
         </div>
         <ol class="timeline" id="timeline">
-          <li><b class="mono">PHYSICAL</b><p>A embalagem na sua mão.</p></li>
-          <li><b class="mono">IDENTIFIED</b><p>Um QR único, só dela.</p></li>
-          <li><b class="mono">CONNECTED</b><p>Uma identidade digital reconhecida.</p></li>
-          <li><b class="mono">INTERACTIVE</b><p>Uma experiência que responde a você.</p></li>
-          <li><b class="mono">AUGMENTED</b><p>E agora, além da tela.</p></li>
+          <li><b class="mono">FÍSICO</b><p>A embalagem na sua mão.</p></li>
+          <li><b class="mono">IDENTIFICADO</b><p>Um QR único, só dela.</p></li>
+          <li><b class="mono">CONECTADO</b><p>Uma identidade digital reconhecida.</p></li>
+          <li><b class="mono">INTERATIVO</b><p>Uma experiência que responde a você.</p></li>
+          <li><b class="mono">AUMENTADO</b><p>E agora, além da tela.</p></li>
         </ol>
         <i class="timeline-energy" id="timeline-energy" aria-hidden="true"></i>
       </section>
 
-      <!-- TECH -->
+      <!-- TECNOLOGIA -->
       <section id="tech" class="scene scene-tech" data-scene="tech" data-step="3">
         <div class="copy">
-          <h2 class="display">Physical product.<br /><em>Digital intelligence.</em></h2>
+          <h2 class="display">Produto físico.<br /><em>Inteligência digital.</em></h2>
           <p class="lead">Cada embalagem recebe um identificador próprio. O sistema reconhece o produto, o lote e a unidade, e essa identidade conecta o objeto físico a experiências digitais.</p>
           <ul class="tech-facts mono">
             <li><b>01</b> Produto</li>
@@ -288,8 +288,8 @@
       <!-- AR PORTAL / ÚLTIMO FRAME -->
       <section id="ar" class="scene scene-ar" data-scene="ar" data-step="4">
         <div class="ar-copy">
-          <p class="kicker mono">04 // AUGMENT — PRONTO PARA IR ALÉM DA REALIDADE?</p>
-          <h2 class="display display-xl">Além<br /><em>do conhecido.</em></h2>
+          <p class="kicker mono">04 // RA — PRONTO PARA IR ALÉM DA REALIDADE?</p>
+          <h2 class="display display-xl">Além<br /><em>do conhecimento.</em></h2>
           <p class="lead" id="ar-lead">Sua unidade foi reconhecida. Sua identidade digital está pronta.</p>
         </div>
         <div class="ar-cta">
