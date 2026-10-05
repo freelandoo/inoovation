@@ -16,6 +16,7 @@ import { initLabelFallback } from './ui/labelFallback.ts';
 import { initArCta } from './ui/arCta.ts';
 import { initUnitScanCta } from './ui/unitScanCta.ts';
 import { initActivation } from './ui/activation.ts';
+import { initSfx, soundToggle } from './audio/sfx.ts';
 import { Stage } from './scene/Stage.ts';
 import { EnergyPortal } from './scene/EnergyPortal.ts';
 import { ParticleField } from './scene/ParticleField.ts';
@@ -24,6 +25,8 @@ import { DigitalLabelTwin } from './label/DigitalLabelTwin.ts';
 import { Director } from './story/Director.ts';
 
 const perf = detectPerf();
+initSfx();
+document.body.appendChild(soundToggle('sfx-fixed mono'));
 const identity = initIdentity();
 setAnalyticsIdentity(identity);
 connectAnalytics();

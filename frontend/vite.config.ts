@@ -10,5 +10,14 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2022',
     assetsInlineLimit: 0,
+    // Páginas: experiência (QR), área do membro, telão do evento e privacidade.
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        membro: 'membro.html',
+        telao: 'telao.html',
+        privacidade: 'privacidade.html',
+      },
+    },
   },
 }));

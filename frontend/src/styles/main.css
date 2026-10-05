@@ -1817,3 +1817,39 @@ html.unit-unlinked .scene-identity {
     white-space: nowrap;
   }
 }
+
+/* ---------- Som (src/audio/sfx.ts) ---------- */
+.sfx-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: rgba(3, 3, 3, 0.6);
+  color: var(--grey);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out);
+}
+.sfx-toggle[aria-pressed='true'] svg {
+  color: var(--red-hot);
+}
+.sfx-toggle:hover,
+.sfx-toggle:focus-visible {
+  color: var(--white);
+  border-color: rgba(245, 245, 243, 0.3);
+}
+.sfx-fixed {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(var(--safe-bottom) + 16px);
+  z-index: 11;
+}
+html.intro .sfx-fixed,
+html.ar-open .sfx-fixed {
+  opacity: 0;
+  pointer-events: none;
+}

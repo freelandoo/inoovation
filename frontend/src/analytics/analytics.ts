@@ -20,7 +20,9 @@ export type AnalyticsEvent =
   | 'unit_scan_failed'
   | 'signup_viewed'
   | 'signup_submitted'
-  | 'signup_dismissed';
+  | 'signup_dismissed'
+  | 'member_viewed'
+  | 'member_link_shared';
 
 export type AnalyticsAdapter = (event: AnalyticsEvent, payload: Record<string, unknown>) => void;
 

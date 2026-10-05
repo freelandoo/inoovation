@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Innovation Week · Telão</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="tv">
+    <div class="tv-bg" aria-hidden="true"><i class="tv-glow"></i><i class="tv-scan"></i></div>
+    <div class="tv-dust" id="tv-dust" aria-hidden="true"></div>
+
+    <header class="tv-top">
+      <span class="tv-logo">INNO<b>VA</b>TION WEEK <em class="mono">2026</em></span>
+      <span class="tv-live mono"><i></i>AO VIVO // <b id="tv-clock">00:00:00</b></span>
+    </header>
+
+    <main class="tv-main">
+      <section class="tv-count">
+        <p class="tv-kicker mono">TRIPULAÇÃO // <b>ATIVADA</b></p>
+        <div class="tv-odo" id="tv-odo" aria-live="polite"></div>
+        <p class="tv-sub">tripulantes já ativaram sua unidade</p>
+        <dl class="tv-stats mono">
+          <div><dt>UNIDADES VERIFICADAS</dt><dd id="tv-units">0</dd></div>
+          <div><dt>HOLOGRAMAS EM RA</dt><dd id="tv-ar">0</dd></div>
+        </dl>
+      </section>
+
+      <section class="tv-feed">
+        <p class="tv-kicker mono">ÚLTIMOS TRIPULANTES</p>
+        <ol class="tv-list" id="tv-list"></ol>
+      </section>
+    </main>
+
+    <footer class="tv-ticker mono" aria-hidden="true">
+      <div class="tv-ticker-track" id="tv-ticker"></div>
+    </footer>
+
+    <!-- chegada de novo tripulante -->
+    <div class="tv-arrival" id="tv-arrival" aria-live="assertive" hidden>
+      <i class="tv-laser tv-laser-1"></i><i class="tv-laser tv-laser-2"></i><i class="tv-laser tv-laser-3"></i>
+      <div class="tv-arrival-ring"><i></i><i></i></div>
+      <p class="tv-kicker mono">NOVO TRIPULANTE // <b>A BORDO</b></p>
+      <p class="tv-arrival-name" id="tv-arrival-name"></p>
+      <p class="tv-arrival-num mono">Nº <b id="tv-arrival-num"></b></p>
+    </div>
+
+    <!-- início (libera som e tela cheia) -->
+    <div class="tv-start" id="tv-start">
+      <button class="tv-start-btn mono" type="button" id="tv-start-btn">INICIAR TELÃO</button>
+      <p class="mono">CLIQUE PARA LIGAR O SOM E A TELA CHEIA</p>
+    </div>
+
+    <script type="module" src="/src/screen/main.ts"></script>
+  </body>
+</html>

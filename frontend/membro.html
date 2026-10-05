@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR" data-state="loading">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f4f1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Innovation Week · Perfil de membro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" href="/innovation-week/label/base/label-1024.webp" as="image" type="image/webp" />
+  </head>
+  <body class="mb">
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="mb-grid" aria-hidden="true"></div>
+
+    <header class="mb-head">
+      <a class="mb-logo" href="/" aria-label="Innovation Week">INNO<b>VA</b>TION WEEK <span class="mono">2026</span></a>
+      <div class="mb-head-right" id="mb-head-right">
+        <span class="mb-live mono"><i></i>ÁREA DO MEMBRO</span>
+      </div>
+    </header>
+
+    <!-- carregando -->
+    <section class="mb-loading" aria-live="polite">
+      <div class="mb-seal mb-seal-spin" aria-hidden="true">
+        <svg viewBox="0 0 120 120"><circle class="mb-ticks" cx="60" cy="60" r="56" /><circle class="mb-ring" cx="60" cy="60" r="46" pathLength="100" /></svg>
+      </div>
+      <p class="mono">CARREGANDO PERFIL…</p>
+    </section>
+
+    <!-- link inválido -->
+    <section class="mb-error">
+      <p class="mono mb-kicker">ACESSO // <b>NEGADO</b></p>
+      <h1 class="mb-h1">Link de membro<br />não encontrado.</h1>
+      <p class="mb-lead">Confira se o endereço está completo. O link de membro é enviado depois do cadastro da sua unidade.</p>
+      <a class="mb-btn" href="/">VOLTAR À EXPERIÊNCIA</a>
+    </section>
+
+    <main class="mb-main" id="mb-main">
+      <!-- identidade -->
+      <section class="mb-id" data-reveal>
+        <p class="mono mb-kicker">PERFIL DE MEMBRO // <b>ATIVO</b></p>
+        <h1 class="mb-crew">
+          <span class="mb-crew-label">TRIPULANTE</span>
+          <span class="mb-crew-num mono">Nº <b data-m="crew">0000</b></span>
+        </h1>
+        <p class="mb-name" data-m="name"></p>
+        <dl class="mb-meta mono">
+          <div><dt>MEMBRO DESDE</dt><dd data-m="since"></dd></div>
+          <div><dt>CONTATO</dt><dd data-m="email"></dd></div>
+        </dl>
+      </section>
+
+      <!-- suplemento ativado -->
+      <section class="mb-card mb-supp" data-reveal>
+        <i class="mb-corner mb-tl"></i><i class="mb-corner mb-tr"></i><i class="mb-corner mb-bl"></i><i class="mb-corner mb-br"></i>
+        <header class="mb-card-head">
+          <div>
+            <p class="mono mb-kicker">SUPLEMENTO // <b data-m="status-word">ATIVADO</b></p>
+            <h2 class="mb-h2">Unidade oficial<br />registrada no seu nome.</h2>
+          </div>
+          <div class="mb-seal" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle class="mb-ticks" cx="60" cy="60" r="56" />
+              <circle class="mb-track" cx="60" cy="60" r="46" />
+              <circle class="mb-ring" cx="60" cy="60" r="46" pathLength="100" />
+              <circle class="mb-core" cx="60" cy="60" r="36" />
+              <path class="mb-check" d="M44 61l11 11 22-24" pathLength="100" />
+              <g class="mb-orbit"><circle cx="60" cy="4" r="2.6" /></g>
+            </svg>
+          </div>
+        </header>
+
+        <div class="mb-label" id="mb-label">
+          <picture>
+            <source srcset="/innovation-week/label/base/label-1024.webp" type="image/webp" />
+            <img src="/innovation-week/label/base/label-2048.jpg" alt="Rótulo Innovation Week da sua unidade" width="1024" height="381" decoding="async" />
+          </picture>
+          <i class="mb-sheen" aria-hidden="true"></i>
+          <i class="mb-scan" aria-hidden="true"></i>
+          <span class="mb-stamp mono" aria-hidden="true">ATIVADO</span>
+        </div>
+
+        <dl class="mb-data mono">
+          <div><dt>GTIN</dt><dd data-m="product"></dd></div>
+          <div><dt>LOTE</dt><dd data-m="lot"></dd></div>
+          <div><dt>SERIAL</dt><dd data-m="unit" class="red"></dd></div>
+          <div><dt>STATUS</dt><dd data-m="status"></dd></div>
+          <div><dt>LEITURAS</dt><dd data-m="scans"></dd></div>
+          <div><dt>1ª LEITURA</dt><dd data-m="first"></dd></div>
+        </dl>
+      </section>
+
+      <!-- missão -->
+      <section class="mb-mission" data-reveal>
+        <p class="mono mb-kicker">MISSÃO // <b data-m="mission-pct">0%</b></p>
+        <ol class="mb-steps">
+          <li data-step="verified"><i></i><div><b>Unidade verificada</b><span class="mono" data-m="step-verified"></span></div></li>
+          <li data-step="crew"><i></i><div><b>Tripulante registrado</b><span class="mono" data-m="step-crew"></span></div></li>
+          <li data-step="ar"><i></i><div><b>Holograma ativado em RA</b><span class="mono" data-m="step-ar">PENDENTE</span></div></li>
+        </ol>
+        <div class="mb-progress"><i id="mb-progress"></i></div>
+      </section>
+
+      <!-- RA -->
+      <section class="mb-ar" data-reveal>
+        <div class="mb-ar-copy">
+          <p class="mono mb-kicker">04 // RA</p>
+          <h2 class="mb-h2">Seu holograma<br /><em>espera por você.</em></h2>
+          <p class="mb-lead">Aponte a câmera e coloque o astronauta da Innovation Week no seu espaço.</p>
+        </div>
+        <button class="mb-ar-btn" id="mb-ar-btn" type="button" aria-describedby="mb-ar-note">
+          <span class="mb-ar-rings" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="mb-ar-core" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+              <path d="M12 7.5 16 9.8v4.4L12 16.5 8 14.2V9.8z" />
+              <path d="M8 9.8 12 12l4-2.2M12 12v4.5" />
+            </svg>
+          </span>
+          <span class="mb-ar-label mono">INICIAR RA</span>
+        </button>
+        <p class="mb-note" id="mb-ar-note">Usa a câmera do seu celular. Nenhuma imagem é gravada.</p>
+        <p class="mb-ar-error" id="mb-ar-error" role="alert" hidden></p>
+      </section>
+
+      <!-- guardar o link -->
+      <section class="mb-keep" data-reveal>
+        <div>
+          <p class="mono mb-kicker">ACESSO // <b>PESSOAL</b></p>
+          <p class="mb-lead">Este é o seu link de membro. Guarde-o para voltar ao seu perfil em qualquer aparelho.</p>
+        </div>
+        <button class="mb-btn mb-btn-ghost" id="mb-share" type="button">SALVAR MEU LINK</button>
+      </section>
+
+      <footer class="mb-foot mono">
+        <span>INNOVATION WEEK 2026</span>
+        <span>DADOS TRATADOS POR TENKAGROUP · <a href="/privacidade">PRIVACIDADE</a></span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/member/main.ts"></script>
+  </body>
+</html>

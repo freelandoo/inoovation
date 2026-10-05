@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { launchARExperience, prepareAR, type LaunchOptions } from '../ar/launch.ts';
 import { getIdentity } from '../identity/session.ts';
 import { track } from '../analytics/analytics.ts';
+import { play } from '../audio/sfx.ts';
 import type { EnergyPortal } from '../scene/EnergyPortal.ts';
 
 export function initArCta(opts: LaunchOptions & { portal: EnergyPortal | null; reduced: boolean }) {
@@ -36,6 +37,8 @@ export function initArCta(opts: LaunchOptions & { portal: EnergyPortal | null; r
     busy = true;
     err.hidden = true;
     btn.classList.add('firing');
+    play('laser');
+    play('charge', 0.1);
 
     // Pede permissões dentro do gesto; a animação de colapso roda em paralelo.
     const launching = launchARExperience(getIdentity(), {

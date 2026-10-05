@@ -446,6 +446,14 @@ html.act-open {
 .act-check-row input:checked + i::after {
   transform: rotate(45deg) scale(1);
 }
+.act-check-row a {
+  color: var(--white);
+  text-underline-offset: 2px;
+}
+.act-check-row b {
+  color: var(--white);
+  font-weight: 600;
+}
 .act-check-row input:focus-visible + i {
   outline: 2px solid var(--white);
   outline-offset: 2px;
@@ -509,6 +517,18 @@ html.act-open {
 }
 .act-submit:active {
   transform: translateY(1px);
+}
+.act-submit-link {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+.act-submit-link[hidden] {
+  display: none;
+}
+.act-done .act-later {
+  display: block;
+  margin: 8px auto 0;
 }
 .act-submit:disabled {
   cursor: progress;

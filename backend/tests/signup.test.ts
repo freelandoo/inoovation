@@ -72,3 +72,35 @@ test('valida nome, e-mail, WhatsApp e consentimento', async () => {
     assert.equal(((await r.json()) as { error: string }).error, msg);
   }
 });
+
+test('link de membro: o cadastro devolve um token que abre a área do membro', async () => {
+  const r = await post('/api/signup', form({ email: 'bia@example.com', name: 'Beatriz Lima', consent: '2026-10-v2' }));
+  const j = (await r.json()) as { crew: number; member: string };
+  assert.match(j.member, /^[A-Za-z0-9_-]{24}$/);
+
+  // repetir o cadastro mantém o mesmo link
+  const again = (await (await post('/api/signup', form({ email: 'bia@example.com', name: 'Beatriz Lima' }))).json()) as { member: string };
+  assert.equal(again.member, j.member);
+
+  const m = await app.request(`/api/member/${j.member}`);
+  assert.equal(m.status, 200);
+  assert.equal(m.headers.get('cache-control'), 'no-store');
+  const body = (await m.json()) as { crew: number; name: string; email: string; unit: { unitId: string; status: string } };
+  assert.equal(body.crew, j.crew);
+  assert.equal(body.name, 'Beatriz Lima');
+  assert.equal(body.email, 'bi•@example.com');
+  assert.deepEqual([body.unit.unitId, body.unit.status], ['1Gp', 'verified']);
+
+  assert.equal((await app.request('/api/member/nao-existe-mas-tem-formato-ok')).status, 404);
+  assert.equal((await app.request('/api/member/x')).status, 404);
+});
+
+test('telão: totais e últimos tripulantes só com o primeiro nome', async () => {
+  const r = await app.request('/api/live');
+  assert.equal(r.status, 200);
+  const j = (await r.json()) as { crew: number; units: number; recent: { crew: number; name: string }[] };
+  assert.ok(j.crew >= 2);
+  assert.ok(j.units >= 1);
+  assert.equal(j.recent[0].name, 'BEATRIZ');
+  assert.ok(j.recent.every((x) => !x.name.includes(' ') && !('email' in x)));
+});

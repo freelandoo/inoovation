@@ -23,10 +23,18 @@ export const EVENT_NAMES = new Set([
   'signup_viewed',
   'signup_submitted',
   'signup_dismissed',
+  'member_viewed',
+  'member_link_shared',
 ]);
 
-/** Versão do texto de consentimento mostrado no modal de cadastro. */
-export const CONSENT_VERSIONS = new Set(['2026-10-v1']);
+/** Versões do texto de consentimento do modal de cadastro (v2: TENKAGROUP + telão). */
+export const CONSENT_VERSIONS = new Set(['2026-10-v1', '2026-10-v2']);
+
+/** Token do link de membro (base64url). */
+export const memberToken = (v: unknown) => (/^[A-Za-z0-9_-]{20,64}$/.test(str(v)) ? str(v) : null);
+
+/** Primeiro nome para exibição pública (telão). */
+export const firstName = (name: string) => name.split(' ')[0].toLocaleUpperCase('pt-BR');
 
 const TIERS = new Set(['high', 'medium', 'low']);
 const ORIGINS = new Set(['query', 'digital-link', 'gs1-path', 'route', 'session', 'scanner', 'none']);

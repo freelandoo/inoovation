@@ -4,6 +4,7 @@
 
 import { gsap } from 'gsap';
 import { config } from '../config.ts';
+import { play } from '../audio/sfx.ts';
 import type { ProductIdentity } from '../identity/resolver.ts';
 
 export interface BootTarget {
@@ -51,6 +52,7 @@ export function runBoot(opts: { identity: ProductIdentity; target: BootTarget | 
   }
 
   html.classList.add('intro');
+  play('boot');
   const tl = gsap.timeline({ onComplete: finish });
 
   if (skipOverlay) {

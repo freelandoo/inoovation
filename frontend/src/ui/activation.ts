@@ -9,11 +9,12 @@
 import { gsap } from 'gsap';
 import { track } from '../analytics/analytics.ts';
 import { submitSignup, type UnitInfo } from '../api/client.ts';
+import { play } from '../audio/sfx.ts';
 import type { ProductIdentity } from '../identity/resolver.ts';
 import './activation.css';
 
 /** Versão do texto de consentimento abaixo (o backend aceita só versões conhecidas). */
-const CONSENT_VERSION = '2026-10-v1';
+const CONSENT_VERSION = '2026-10-v2';
 const GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
 
 export interface ActivationOptions {
@@ -27,7 +28,11 @@ export interface ActivationOptions {
 interface Registered {
   crew: number;
   name: string;
+  /** Token do link secreto da área do membro. */
+  member?: string;
 }
+
+export const memberUrl = (token: string) => `/membro/${encodeURIComponent(token)}`;
 
 const unitKey = (id: ProductIdentity) => `${id.productId ?? ''}|${id.lotId ?? ''}|${id.unitId ?? ''}`;
 const crewLabel = (n: number) => String(n).padStart(4, '0');
@@ -103,7 +108,7 @@ const TEMPLATE = `
         <label class="act-check-row">
           <input name="consent" type="checkbox" required />
           <i aria-hidden="true"></i>
-          <span>Autorizo o uso dos meus dados para registrar esta unidade e receber contato sobre a campanha Innovation Week, conforme a LGPD.</span>
+          <span>Autorizo a <b>TENKAGROUP</b> a usar meus dados para registrar esta unidade, mostrar meu primeiro nome no telão do evento e falar comigo sobre a campanha Innovation Week, conforme a LGPD. <a href="/privacidade" target="_blank" rel="noopener">Política de privacidade</a></span>
         </label>
         <label class="act-check-row">
           <input name="marketing" type="checkbox" />
@@ -119,8 +124,9 @@ const TEMPLATE = `
     <section class="act-step act-done" data-step="done" hidden>
       <p class="act-crew mono">TRIPULANTE Nº <b data-act="crew"></b></p>
       <p class="act-welcome">Bem-vindo(a) a bordo, <b data-act="first-name"></b>.</p>
-      <p class="act-lead">Esta unidade agora está registrada no seu nome. Sua missão continua no holograma.</p>
-      <button class="act-submit" type="button" data-go-ar><span class="act-submit-label">VER O HOLOGRAMA EM RA</span></button>
+      <p class="act-lead">Esta unidade agora está registrada no seu nome. Seu perfil de membro já está no ar.</p>
+      <a class="act-submit act-submit-link" data-member-link href="#"><span class="act-submit-label">ABRIR MEU PERFIL DE MEMBRO</span></a>
+      <button class="act-later mono" type="button" data-go-ar>VER O HOLOGRAMA EM RA</button>
     </section>
   </div>
 `;
@@ -146,7 +152,7 @@ function validate(f: FormData): { name: string; email: string; phone: string } |
 }
 
 /** Texto "decodificando": caracteres aleatórios que assentam da esquerda para a direita. */
-function decode(el: HTMLElement, text: string, delay: number, reduced: boolean) {
+function decode(el: HTMLElement, text: string, delay: number, reduced: boolean, sound = true) {
   if (reduced) {
     el.textContent = text;
     return;
@@ -160,6 +166,7 @@ function decode(el: HTMLElement, text: string, delay: number, reduced: boolean) 
     let out = text.slice(0, settled);
     if (now >= start) for (let i = settled; i < text.length; i++) out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
     el.textContent = out;
+    if (sound && now >= start && p < 1) play('tick');
     if (p < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -185,7 +192,7 @@ export function initActivation(opts: ActivationOptions) {
     const dot = document.createElement('i');
     dot.className = 'act-dot';
     const label = document.createElement('span');
-    label.textContent = reg ? `TRIPULANTE Nº ${crewLabel(reg.crew)}` : 'REGISTRAR MINHA UNIDADE';
+    label.textContent = reg ? `TRIPULANTE Nº ${crewLabel(reg.crew)} // PERFIL` : 'REGISTRAR MINHA UNIDADE';
     heroBtn.append(dot, label);
     heroBtn.classList.toggle('is-registered', !!reg);
   };
@@ -230,7 +237,7 @@ export function initActivation(opts: ActivationOptions) {
     }
     if (e.key !== 'Tab') return;
     // Foco preso dentro do modal.
-    const items = [...root.querySelectorAll<HTMLElement>('button, input, [tabindex="-1"]')].filter(
+    const items = [...root.querySelectorAll<HTMLElement>('button, input, a[href], [tabindex="-1"]')].filter(
       (n) => !n.closest('[hidden]') && n.tabIndex >= 0,
     );
     if (!items.length) return;
@@ -271,6 +278,9 @@ export function initActivation(opts: ActivationOptions) {
     $('[data-go-ar]').addEventListener('click', () => close('ar'));
     document.addEventListener('keydown', onKey, true);
     phone.addEventListener('input', () => (phone.value = formatPhone(phone.value)));
+    el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((cb) =>
+      cb.addEventListener('change', () => play(cb.checked ? 'beep' : 'unbeep')),
+    );
 
     const sparks = $('.act-sparks');
     for (let i = 0; i < 14; i++) sparks.appendChild(document.createElement('i'));
@@ -284,6 +294,7 @@ export function initActivation(opts: ActivationOptions) {
       const v = validate(new FormData(form));
       if (typeof v === 'string') {
         error.textContent = v;
+        play('error');
         if (!reduced) gsap.fromTo(card, { x: -6 }, { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
         return;
       }
@@ -291,6 +302,7 @@ export function initActivation(opts: ActivationOptions) {
       submit.disabled = true;
       el.dataset.state = 'sending';
       $('.act-submit-label').textContent = 'TRANSMITINDO…';
+      play('transmit');
       const fd = new FormData(form);
       const res = await submitSignup(identity, {
         ...v,
@@ -303,10 +315,11 @@ export function initActivation(opts: ActivationOptions) {
       $('.act-submit-label').textContent = 'REGISTRAR MINHA UNIDADE';
       if (!res.ok) {
         error.textContent = res.error;
+        play('error');
         return;
       }
       track('signup_submitted', { marketing: fd.get('marketing') === 'on', phone: !!v.phone });
-      const done = { crew: res.crew, name: v.name.split(' ')[0] };
+      const done = { crew: res.crew, name: v.name.split(' ')[0], member: res.member };
       writeStore(() => localStorage, regKey, done);
       showDone(done, true);
     });
@@ -314,6 +327,9 @@ export function initActivation(opts: ActivationOptions) {
     function showDone(r: Registered, animate: boolean) {
       $('[data-act="crew"]').textContent = crewLabel(r.crew);
       $('[data-act="first-name"]').textContent = r.name;
+      const link = $<HTMLAnchorElement>('[data-member-link]');
+      if (r.member) link.href = memberUrl(r.member);
+      else link.hidden = true;
       $('.act-kicker b').textContent = 'REGISTRADA';
       const formStep = $('[data-step="form"]');
       const doneStep = $('[data-step="done"]');
@@ -329,6 +345,7 @@ export function initActivation(opts: ActivationOptions) {
           formStep.hidden = true;
           doneStep.hidden = false;
           burst();
+          play('success');
           decode($('[data-act="crew"]'), crewLabel(r.crew), 0, false);
         })
         .fromTo(doneStep.children, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power3.out' });
@@ -366,7 +383,11 @@ export function initActivation(opts: ActivationOptions) {
     // Sequência: rasgo de luz → selo carrega → check → título → ids decodificam → formulário.
     const lines = el.querySelectorAll('.act-line');
     tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.fromTo($('.act-backdrop'), { opacity: 0 }, { opacity: 1, duration: 0.5 })
+    tl.call(() => play('whoosh'), [], 0)
+      .call(() => play('charge'), [], 0.5)
+      .call(() => play('lock'), [], 1.4)
+      .call(() => play('sparkle'), [], 1.5)
+      .fromTo($('.act-backdrop'), { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0)
       .fromTo(card, { clipPath: 'inset(49.5% 0 49.5% 0)', opacity: 1 }, { clipPath: 'inset(0% 0 0% 0)', duration: 0.7, ease: 'expo.inOut' }, 0.1)
       .fromTo(el.querySelectorAll('.act-corner'), { scale: 2.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, stagger: 0.05 }, 0.45)
       .fromTo($('.act-sweep'), { xPercent: -120, opacity: 1 }, { xPercent: 120, duration: 1.1, ease: 'power2.inOut' }, 0.5)
@@ -393,7 +414,11 @@ export function initActivation(opts: ActivationOptions) {
     if (reg) tl.call(() => decode($('[data-act="crew"]'), crewLabel(reg.crew), 0, false), [], 1.9);
   };
 
-  heroBtn.addEventListener('click', open);
+  heroBtn.addEventListener('click', () => {
+    const reg = readStore<Registered>(() => localStorage, regKey);
+    if (reg?.member) window.location.href = memberUrl(reg.member);
+    else open();
+  });
 
   // Abre sozinho: só depois da entrada do hero, uma vez por sessão, e se ninguém
   // estiver com a RA ou o leitor abertos.

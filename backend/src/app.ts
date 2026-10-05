@@ -3,7 +3,9 @@
 //   GET  /api/health          saúde (inclui ping no banco)
 //   POST /api/scan            abertura da página com a identidade da unidade
 //   POST /api/events          eventos da jornada (um ou lote de até 20)
-//   POST /api/signup          cadastro de quem ativou uma unidade verificada
+//   POST /api/signup          cadastro de quem ativou uma unidade verificada (devolve o link de membro)
+//   GET  /api/member/:token   área do membro (link secreto)
+//   GET  /api/live            números e últimos tripulantes, para o telão (só primeiro nome)
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN)
 //   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
 //
@@ -13,7 +15,7 @@
 
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
-import { timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
@@ -212,19 +214,83 @@ export function createApp(db: Db, opts: AppOptions) {
     const unit = await db.query<{ id: string }>(`select id from units where unit_key = $1 and status = 'verified'`, [key]);
     if (!unit.rows[0]) return c.json({ error: 'unidade não verificada' }, 409);
 
-    const r = await db.query<{ id: string }>(
-      `insert into signups (unit_ref, session_id, name, email, phone, consent_version, marketing_opt_in)
-       values ($1, (select id from sessions where id = $2), $3, $4, $5, $6, $7)
+    const r = await db.query<{ id: string; member_token: string }>(
+      `insert into signups (unit_ref, session_id, name, email, phone, consent_version, marketing_opt_in, member_token)
+       values ($1, (select id from sessions where id = $2), $3, $4, $5, $6, $7, $8)
        on conflict (unit_ref, email) do update
          set name = excluded.name,
              phone = coalesce(excluded.phone, signups.phone),
              consent_version = excluded.consent_version,
              marketing_opt_in = excluded.marketing_opt_in,
              updated_at = now()
-       returning id`,
-      [unit.rows[0].id, sessionId, name, email, phone, consent, body.marketing === true],
+       returning id, member_token`,
+      [unit.rows[0].id, sessionId, name, email, phone, consent, body.marketing === true, randomBytes(18).toString('base64url')],
     );
-    return c.json({ ok: true, crew: Number(r.rows[0].id) });
+    return c.json({ ok: true, crew: Number(r.rows[0].id), member: r.rows[0].member_token });
+  });
+
+  app.get('/api/member/:token', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    c.header('Cache-Control', 'no-store');
+    const token = v.memberToken(c.req.param('token'));
+    if (!token) return c.json({ error: 'não encontrado' }, 404);
+    const r = await db.query<{
+      id: string;
+      name: string;
+      email: string;
+      created_at: string;
+      product_id: string | null;
+      lot_id: string | null;
+      unit_id: string | null;
+      status: string;
+      scan_count: number;
+      first_seen_at: string;
+      ar_started: boolean;
+    }>(
+      `select s.id, s.name, s.email, s.created_at,
+              u.product_id, u.lot_id, u.unit_id, u.status, u.scan_count, u.first_seen_at,
+              exists (select 1 from events e where e.unit_ref = u.id and e.name = 'ar_experience_started') as ar_started
+       from signups s join units u on u.id = s.unit_ref
+       where s.member_token = $1`,
+      [token],
+    );
+    const m = r.rows[0];
+    if (!m) return c.json({ error: 'não encontrado' }, 404);
+    const [user, domain] = m.email.split('@');
+    return c.json({
+      crew: Number(m.id),
+      name: m.name,
+      email: `${user.slice(0, 2)}${'•'.repeat(Math.max(1, user.length - 2))}@${domain}`,
+      memberSince: m.created_at,
+      arStarted: m.ar_started,
+      unit: {
+        productId: m.product_id,
+        lotId: m.lot_id,
+        unitId: m.unit_id,
+        status: m.status,
+        scanCount: Number(m.scan_count),
+        firstSeenAt: m.first_seen_at,
+      },
+    });
+  });
+
+  app.get('/api/live', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    const [totals, recent] = await Promise.all([
+      db.query<{ crew: number; units: number; ar: number }>(
+        `select (select count(*)::int from signups) as crew,
+                (select count(*)::int from units where status = 'verified') as units,
+                (select count(distinct session_id)::int from events where name = 'ar_experience_started') as ar`,
+      ),
+      db.query<{ id: string; name: string; created_at: string }>(
+        'select id, name, created_at from signups order by id desc limit 12',
+      ),
+    ]);
+    c.header('Cache-Control', 'public, max-age=2');
+    return c.json({
+      ...totals.rows[0],
+      recent: recent.rows.map((r) => ({ crew: Number(r.id), name: v.firstName(r.name), at: r.created_at })),
+    });
   });
 
   /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). */
