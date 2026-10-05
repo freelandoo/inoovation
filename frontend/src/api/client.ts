@@ -80,6 +80,34 @@ export function registerScan(id: ProductIdentity, tier: string): Promise<UnitInf
   return req;
 }
 
+export interface SignupForm {
+  name: string;
+  email: string;
+  phone: string;
+  consent: string;
+  marketing: boolean;
+}
+
+export type SignupResult = { ok: true; crew: number } | { ok: false; error: string };
+
+/** Cadastro de quem ativou uma unidade verificada. */
+export async function submitSignup(id: ProductIdentity, form: SignupForm): Promise<SignupResult> {
+  if (!base) return { ok: false, error: 'Cadastro indisponível no momento.' };
+  try {
+    const r = await fetch(`${base}/api/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify({ sessionId: sessionId(), productId: id.productId, lotId: id.lotId, unitId: id.unitId, ...form }),
+    });
+    const j = (await r.json().catch(() => ({}))) as { crew?: number; error?: string };
+    if (r.ok && typeof j.crew === 'number') return { ok: true, crew: j.crew };
+    if (r.status === 429) return { ok: false, error: 'Muitas tentativas. Aguarde um minuto.' };
+    return { ok: false, error: j.error ? j.error.charAt(0).toUpperCase() + j.error.slice(1) + '.' : 'Não foi possível enviar.' };
+  } catch {
+    return { ok: false, error: 'Sem conexão. Tente de novo.' };
+  }
+}
+
 /** Liga o analytics da página à API (só se VITE_API_URL estiver definida). */
 export function connectAnalytics() {
   if (!base) return;

@@ -20,7 +20,13 @@ export const EVENT_NAMES = new Set([
   'unit_scan_opened',
   'unit_scan_succeeded',
   'unit_scan_failed',
+  'signup_viewed',
+  'signup_submitted',
+  'signup_dismissed',
 ]);
+
+/** Versão do texto de consentimento mostrado no modal de cadastro. */
+export const CONSENT_VERSIONS = new Set(['2026-10-v1']);
 
 const TIERS = new Set(['high', 'medium', 'low']);
 const ORIGINS = new Set(['query', 'digital-link', 'gs1-path', 'route', 'session', 'scanner', 'none']);
@@ -33,6 +39,24 @@ export const tag = (v: unknown) => (RE_TAG.test(str(v)) ? str(v) : null);
 export const uuid = (v: unknown) => (RE_UUID.test(str(v)) ? str(v).toLowerCase() : null);
 export const tier = (v: unknown) => (TIERS.has(str(v)) ? str(v) : null);
 export const origin = (v: unknown) => (ORIGINS.has(str(v)) ? str(v) : null);
+
+// Cadastro (dado pessoal): formato estrito e tamanho limitado.
+const RE_NAME = /^[\p{L}][\p{L}\p{M} '.-]{1,79}$/u;
+const RE_EMAIL = /^[^\s@<>()[\],;:"]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+export const personName = (v: unknown) => {
+  const s = str(v).replace(/\s+/g, ' ');
+  return RE_NAME.test(s) ? s : null;
+};
+export const email = (v: unknown) => {
+  const s = str(v).toLowerCase();
+  return s.length <= 120 && RE_EMAIL.test(s) ? s : null;
+};
+/** Telefone brasileiro: só dígitos, com DDD (10–11) e opcionalmente o 55. */
+export const phone = (v: unknown) => {
+  const d = str(v).replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
+  return /^[1-9]{2}\d{8,9}$/.test(d) ? d : null;
+};
 
 /** Chave única da unidade; null se nenhum id veio. */
 export function unitKey(p: string | null, l: string | null, u: string | null): string | null {

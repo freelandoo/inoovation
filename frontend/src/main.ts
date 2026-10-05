@@ -15,6 +15,7 @@ import { initSections } from './ui/sections.ts';
 import { initLabelFallback } from './ui/labelFallback.ts';
 import { initArCta } from './ui/arCta.ts';
 import { initUnitScanCta } from './ui/unitScanCta.ts';
+import { initActivation } from './ui/activation.ts';
 import { Stage } from './scene/Stage.ts';
 import { EnergyPortal } from './scene/EnergyPortal.ts';
 import { ParticleField } from './scene/ParticleField.ts';
@@ -31,11 +32,13 @@ renderIdentity(identity);
 // A API confere o serial na lista oficial; sem API a página não afirma nada.
 if (identity.unitId) {
   renderVerification('pending');
-  scan.then((unit) =>
+  scan.then((unit) => {
     renderVerification(
       !unit ? 'offline' : unit.status === 'verified' ? 'verified' : unit.status === 'blocked' ? 'blocked' : 'unregistered',
-    ),
-  );
+    );
+    // Unidade oficial: modal de ativação com cadastro.
+    if (unit?.status === 'verified') initActivation({ identity, unit, reduced: perf.reducedMotion, pauseLanding, resumeLanding });
+  });
 }
 track('innovation_page_view', { tier: perf.tier });
 if (hasIds(identity)) track('identity_detected', { origin: identity.origin });

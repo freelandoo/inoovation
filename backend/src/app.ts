@@ -3,6 +3,7 @@
 //   GET  /api/health          saúde (inclui ping no banco)
 //   POST /api/scan            abertura da página com a identidade da unidade
 //   POST /api/events          eventos da jornada (um ou lote de até 20)
+//   POST /api/signup          cadastro de quem ativou uma unidade verificada
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN)
 //   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
 //
@@ -190,6 +191,42 @@ export function createApp(db: Db, opts: AppOptions) {
     return c.json({ ok: true, stored });
   });
 
+  // Cadastro do modal "Unidade ativada". Só para unidade verificada (está na
+  // lista oficial), o que impede cadastro com ids inventados.
+  app.post('/api/signup', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const sessionId = v.uuid(body?.sessionId);
+    const key = v.unitKey(v.product(body?.productId), v.code(body?.lotId), v.code(body?.unitId));
+    if (!sessionId || !key) throw new HttpError(400, 'unidade inválida');
+    const name = v.personName(body.name);
+    if (!name) throw new HttpError(400, 'nome inválido');
+    const email = v.email(body.email);
+    if (!email) throw new HttpError(400, 'e-mail inválido');
+    const hasPhone = typeof body.phone === 'string' && body.phone.trim() !== '';
+    const phone = hasPhone ? v.phone(body.phone) : null;
+    if (hasPhone && !phone) throw new HttpError(400, 'WhatsApp inválido');
+    const consent = typeof body.consent === 'string' && v.CONSENT_VERSIONS.has(body.consent) ? body.consent : null;
+    if (!consent) throw new HttpError(400, 'consentimento obrigatório');
+
+    const unit = await db.query<{ id: string }>(`select id from units where unit_key = $1 and status = 'verified'`, [key]);
+    if (!unit.rows[0]) return c.json({ error: 'unidade não verificada' }, 409);
+
+    const r = await db.query<{ id: string }>(
+      `insert into signups (unit_ref, session_id, name, email, phone, consent_version, marketing_opt_in)
+       values ($1, (select id from sessions where id = $2), $3, $4, $5, $6, $7)
+       on conflict (unit_ref, email) do update
+         set name = excluded.name,
+             phone = coalesce(excluded.phone, signups.phone),
+             consent_version = excluded.consent_version,
+             marketing_opt_in = excluded.marketing_opt_in,
+             updated_at = now()
+       returning id`,
+      [unit.rows[0].id, sessionId, name, email, phone, consent, body.marketing === true],
+    );
+    return c.json({ ok: true, crew: Number(r.rows[0].id) });
+  });
+
   /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). */
   const adminDenied = (c: Context) => {
     if (!opts.adminToken) return c.json({ error: 'não encontrado' }, 404);
@@ -235,7 +272,8 @@ export function createApp(db: Db, opts: AppOptions) {
         `select count(*)::int as units,
                 coalesce(sum(scan_count), 0)::int as scans,
                 (count(*) filter (where status = 'verified'))::int as verified,
-                (select count(*)::int from registry_units) as registered
+                (select count(*)::int from registry_units) as registered,
+                (select count(*)::int from signups) as signups
          from units`,
       ),
       db.query(

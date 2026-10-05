@@ -17,7 +17,10 @@ export type AnalyticsEvent =
   | 'ar_experience_failed'
   | 'unit_scan_opened'
   | 'unit_scan_succeeded'
-  | 'unit_scan_failed';
+  | 'unit_scan_failed'
+  | 'signup_viewed'
+  | 'signup_submitted'
+  | 'signup_dismissed';
 
 export type AnalyticsAdapter = (event: AnalyticsEvent, payload: Record<string, unknown>) => void;
 
