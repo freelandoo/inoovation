@@ -30,6 +30,9 @@ export const config = {
     externalUrl: null as string | null,
     modelGlb: '/models/spacesuit.glb',
     modelUsdz: '/models/spacesuit.usdz',
+    /** Rastreamento do rótulo (MindAR, MIT) e alvos gerados por scripts/build_ar_target.mjs. */
+    trackingLib: '/ar/mindar/mindar-image.prod.js',
+    trackingTargets: '/ar/label.mind',
     heightMeters: 1.8,
     color: '#ff1a1a',
     accent: '#ffd2cc',

@@ -14,7 +14,7 @@ os identificadores, conta a história do rótulo e abre a experiência de realid
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm run dev:phone    # https://<ip-da-máquina>:5173 (câmera/WebXR no celular exigem HTTPS)
+npm run dev:phone    # https://<ip-da-máquina>:5173 (a câmera no celular exige HTTPS)
 npm run check        # typecheck + lint + testes + build
 npm run build        # gera dist/ (site estático)
 ```
@@ -41,6 +41,7 @@ Depois é só mandar a URL para a Realizse configurar o redirecionamento.
 | Leitura/validação dos ids (ProductIdentityResolver) | `src/identity/resolver.ts` (+ testes em `tests/`) |
 | Ids mantidos na sessão e propagados à RA | `src/identity/session.ts` |
 | Ponto de integração da RA | `src/ar/launch.ts` → `launchARExperience({ productId, lotId, unitId, source, campaign })` |
+| Rastreamento do rótulo na RA (posição/tamanho do astronauta) | `src/ar/modes.ts` → `ImageTrackingMode` |
 | Eventos (`innovation_page_view`, `ar_cta_clicked`…) | `src/analytics/analytics.ts`, enviados à API por `src/api/client.ts` |
 | Leitor de QR da página ("Ativar minha unidade") | `src/ui/unitScanCta.ts`, `src/scanner/` |
 | Coreografia por seção (posição do rótulo, portal, partículas) | `src/story/Director.ts` |
@@ -80,3 +81,13 @@ Os valores passam por whitelist de caracteres e limite de tamanho, e só são ex
 Para trocar pelos arquivos finais da gráfica: exportar em alta resolução com a mesma faca de corte (ou ajustar
 `scripts/build_label_assets.py`), rodar o script e calibrar `labelLayers`, se necessário. Os shaders usam UV 0..1
 e não dependem do tamanho dos arquivos.
+
+## RA: rastreamento do rótulo
+
+O astronauta só aparece quando a câmera reconhece o rótulo e fica ancorado nele (some quando o rótulo sai
+do quadro). Nada do rótulo é desenhado por cima do vídeo. Sem câmera (negada/desktop), cai na prévia 3D.
+
+- Biblioteca: MindAR 1.2.5 (MIT), copiada em `public/ar/mindar/` e baixada só quando a RA abre.
+- Alvos: `public/ar/label.mind`, gerado de `label-2048.jpg` (rótulo inteiro + 4 faixas sobrepostas, para o
+  rótulo curvo no pote; QR e número de série mascarados porque mudam por unidade).
+- Regerar depois de trocar a arte: `node scripts/build_ar_target.mjs`.

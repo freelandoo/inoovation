@@ -22,7 +22,7 @@
       "destination": "/privacidade.html"
     },
     {
-      "source": "/((?!assets/|models/|innovation-week/|membro|telao|privacidade).*)",
+      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade).*)",
       "destination": "/index.html"
     }
   ],
@@ -37,7 +37,7 @@
       ]
     },
     {
-      "source": "/(models|innovation-week)/(.*)",
+      "source": "/(models|innovation-week|ar)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

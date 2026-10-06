@@ -1,23 +1,21 @@
 // Módulo RA embutido (carregado sob demanda). Reaproveita o renderer da página.
 //
 // Ordem de tentativa:
-//   1. WebXR immersive-ar (Android/Chrome): holograma ancorado no chão.
-//   2. Câmera + giroscópio (iPhone e demais): holograma sobre o vídeo.
-//   3. Prévia 3D sem câmera (desktop, câmera negada): holograma na tela.
-// Sempre oferece também o AR nativo (Quick Look no iPhone, Scene Viewer no Android).
+//   1. Rastreamento do rótulo: o astronauta só aparece quando a câmera reconhece o
+//      rótulo e fica ancorado nele (some quando o rótulo sai do quadro).
+//   2. Prévia 3D sem câmera (desktop, câmera negada, sem suporte): holograma na tela,
+//      com o AR nativo (Quick Look no iPhone, Scene Viewer no Android) como alternativa.
 
 import * as THREE from 'three';
 import './ar.css';
 import { config } from '../config.ts';
 import { Hologram } from './hologram.ts';
-import { CameraMode, WebXRMode, type ArCtx, type ArMode, type XrState } from './modes.ts';
+import { ImageTrackingMode, type ArCtx, type ArMode } from './modes.ts';
 import type { ArIdentity, LaunchOptions } from './launch.ts';
 
 interface OpenArgs extends LaunchOptions {
   identity: ArIdentity;
   root: HTMLElement;
-  sessionPromise: Promise<XRSession> | null;
-  orientationPromise: Promise<boolean> | null;
 }
 
 class PreviewMode implements ArMode {
@@ -38,6 +36,8 @@ class PreviewMode implements ArMode {
     const H = this.ctx.hologram.heightMeters;
     const cam = this.ctx.camera;
     cam.fov = 40;
+    cam.near = 0.01;
+    cam.far = 60;
     const dist = w / h < 1 ? H * 2.9 : H * 2.2;
     cam.position.set(0, H * 0.55, dist);
     cam.lookAt(0, H * 0.48, 0);
@@ -103,9 +103,10 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
         <button class="arx-icon" data-a="close" aria-label="Fechar experiência">✕</button>
         <span class="arx-chip"></span>
       </header>
+      <div class="arx-frame" aria-hidden="true" hidden><i></i><i></i><i></i><i></i></div>
       <p class="arx-hint" aria-live="polite"></p>
       <footer class="arx-bottom">
-        <button class="arx-icon" data-a="recenter" aria-label="Reposicionar holograma">⟲</button>
+        <span></span>
         <button class="arx-shutter" data-a="photo" aria-label="Tirar foto"></button>
         <a class="arx-native" data-a="native" hidden>RA nativa</a>
       </footer>
@@ -119,22 +120,23 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   const hint = root.querySelector<HTMLElement>('.arx-hint')!;
   const loading = root.querySelector<HTMLElement>('.arx-loading')!;
   const photoBtn = root.querySelector<HTMLButtonElement>('[data-a="photo"]')!;
-  const recenterBtn = root.querySelector<HTMLButtonElement>('[data-a="recenter"]')!;
+  const frame = root.querySelector<HTMLElement>('.arx-frame')!;
   const nativeLink = root.querySelector<HTMLAnchorElement>('[data-a="native"]')!;
   const setHint = (s: string) => (hint.textContent = s);
 
-  // AR nativo como alternativa.
-  if (isIOS()) {
-    nativeLink.rel = 'ar';
-    nativeLink.href = config.ar.modelUsdz;
-    nativeLink.innerHTML = '<img alt="" width="1" height="1" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="/>RA nativa';
-    nativeLink.hidden = false;
-  } else if (/Android/i.test(navigator.userAgent)) {
-    const glb = new URL(config.ar.modelGlb, location.href).href;
-    nativeLink.href = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glb)}&mode=ar_preferred&title=Innovation%20Week#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(location.href)};end;`;
-    nativeLink.hidden = false;
-  }
-  root.querySelectorAll('button, a').forEach((b) => b.addEventListener('beforexrselect', (e) => e.preventDefault()));
+  // AR nativo como alternativa (só na prévia: não depende do rótulo).
+  const offerNativeAr = () => {
+    if (isIOS()) {
+      nativeLink.rel = 'ar';
+      nativeLink.href = config.ar.modelUsdz;
+      nativeLink.innerHTML = '<img alt="" width="1" height="1" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="/>RA nativa';
+      nativeLink.hidden = false;
+    } else if (/Android/i.test(navigator.userAgent)) {
+      const glb = new URL(config.ar.modelGlb, location.href).href;
+      nativeLink.href = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glb)}&mode=ar_preferred&title=Innovation%20Week#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(location.href)};end;`;
+      nativeLink.hidden = false;
+    }
+  };
 
   args.pauseLanding();
   const scene = new THREE.Scene();
@@ -150,7 +152,6 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   const hologramP = getHologram();
 
   const resize = () => {
-    if (renderer.xr.isPresenting) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
     renderer.setSize(w, h, false);
@@ -166,7 +167,6 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     mode?.exit();
     renderer.setAnimationLoop(null);
     window.removeEventListener('resize', resize);
-    renderer.xr.enabled = false;
     renderer.toneMapping = prevTone;
     renderer.setClearColor(0x000000, prevClear);
     hologramP.then((h) => scene.remove(h.group)).catch(() => {});
@@ -185,7 +185,6 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     throw e;
   }
   scene.add(hologram.group);
-  loading.hidden = true;
   const ctx: ArCtx = { renderer, scene, camera, hologram };
   attachGestures(root, (r) => hologram.rotateBy(r), (f) => hologram.scaleBy(f));
 
@@ -196,45 +195,35 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     resize();
   };
 
-  renderer.setAnimationLoop((_t, frame) => {
+  renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.1);
-    mode?.update(dt, frame);
+    mode?.update(dt);
     hologram.update(dt);
     renderer.render(scene, camera);
   });
 
-  // 1) WebXR
-  if (args.sessionPromise) {
-    try {
-      const session = await args.sessionPromise;
-      const xr = new WebXRMode({
-        overlayRoot: root,
-        color: config.ar.color,
-        onState: (s: XrState) =>
-          setHint(s === 'searching' ? 'Mova o celular devagar para encontrar o chão' : s === 'ready' ? 'Toque para projetar o holograma' : 'Arraste para girar · pinça para ampliar'),
-        onEnd: close,
-      });
-      root.dataset.mode = 'xr';
-      await xr.attach(ctx, session);
-      setMode(xr);
-      recenterBtn.onclick = () => xr.reposition();
-      return;
-    } catch {
-      /* cai para o modo câmera */
-    }
-  }
-
-  // 2) Câmera
-  const cam = new CameraMode(video);
+  // 1) Rastreamento do rótulo
+  loading.querySelector('span')!.textContent = 'PREPARANDO A CÂMERA…';
+  const track = new ImageTrackingMode(video, {
+    libUrl: config.ar.trackingLib,
+    targetsUrl: config.ar.trackingTargets,
+    heightMeters: config.ar.heightMeters,
+    onState: (st) => {
+      frame.hidden = st !== 'scanning';
+      setHint(st === 'scanning' ? 'Aponte a câmera para o rótulo' : 'Arraste para girar · pinça para ampliar');
+    },
+  });
   try {
-    const granted = (await args.orientationPromise) ?? false;
-    await cam.start(granted);
-    root.dataset.mode = 'camera';
-    setMode(cam);
-    setHint('Arraste para girar · pinça para ampliar');
-    recenterBtn.onclick = () => cam.recenter();
+    await track.start();
+    if (closed) {
+      track.exit();
+      return;
+    }
+    loading.hidden = true;
+    root.dataset.mode = 'track';
+    setMode(track);
     photoBtn.onclick = async () => {
-      const blob = await cam.capture(renderer.domElement, () => renderer.render(scene, camera));
+      const blob = await track.capture(renderer.domElement, () => renderer.render(scene, camera));
       if (!blob) return;
       const file = new File([blob], 'innovation-week.jpg', { type: 'image/jpeg' });
       if (navigator.canShare?.({ files: [file] })) {
@@ -249,11 +238,14 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     };
     return;
   } catch {
-    /* câmera negada ou indisponível */
+    track.exit();
+    loading.hidden = true;
+    if (closed) return;
   }
 
-  // 3) Prévia 3D
+  // 2) Prévia 3D
   root.dataset.mode = 'preview';
   setMode(new PreviewMode());
+  offerNativeAr();
   setHint('Câmera indisponível. Veja o holograma aqui ou use a RA nativa.');
 }
