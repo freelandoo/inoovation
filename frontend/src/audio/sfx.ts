@@ -38,6 +38,16 @@ function readEnabled(): boolean {
 
 function setup(): AudioContext | null {
   if (ctx) return ctx;
+  try {
+    return createContext();
+  } catch {
+    ctx = null;
+    master = null;
+    return null;
+  }
+}
+
+function createContext(): AudioContext | null {
   const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC) return null;
   ctx = new AC();
@@ -53,21 +63,30 @@ function setup(): AudioContext | null {
   return ctx;
 }
 
+let unlockFn: (() => void) | null = null;
+
 /** Liga o áudio no primeiro gesto da pessoa (exigência dos navegadores). */
 export function initSfx() {
   const unlock = () => {
-    const c = setup();
-    if (c && c.state !== 'running') c.resume().catch(() => {});
-    // iOS: um buffer vazio tocado dentro do gesto destrava a saída.
-    if (c) {
-      const s = c.createBufferSource();
-      s.buffer = c.createBuffer(1, 1, 22050);
-      s.connect(c.destination);
-      s.start(0);
-    }
+    // Som desligado: nem cria o áudio (o botão de som chama de novo ao religar).
+    if (!enabled) return;
     window.removeEventListener('pointerdown', unlock, true);
     window.removeEventListener('keydown', unlock, true);
+    try {
+      const c = setup();
+      if (c && c.state !== 'running') c.resume().catch(() => {});
+      // iOS: um buffer vazio tocado dentro do gesto destrava a saída.
+      if (c) {
+        const s = c.createBufferSource();
+        s.buffer = c.createBuffer(1, 1, 22050);
+        s.connect(c.destination);
+        s.start(0);
+      }
+    } catch {
+      /* sem áudio: a página segue muda */
+    }
   };
+  unlockFn = unlock;
   window.addEventListener('pointerdown', unlock, true);
   window.addEventListener('keydown', unlock, true);
 }
@@ -240,7 +259,11 @@ const SOUNDS: Record<Sfx, (c: AudioContext, t: number) => void> = {
 
 export function play(name: Sfx, delay = 0) {
   if (!enabled || !ctx || ctx.state !== 'running' || !master) return;
-  SOUNDS[name](ctx, ctx.currentTime + delay);
+  try {
+    SOUNDS[name](ctx, ctx.currentTime + delay);
+  } catch {
+    /* som é enfeite: nunca derruba a interação */
+  }
 }
 
 /** Botão de som (ícone de alto-falante). */
@@ -259,6 +282,7 @@ export function soundToggle(className = ''): HTMLButtonElement {
   onSoundChange(render);
   b.addEventListener('click', () => {
     setSound(!enabled);
+    if (enabled && !ctx) unlockFn?.();
     if (enabled) play('beep');
   });
   return b;

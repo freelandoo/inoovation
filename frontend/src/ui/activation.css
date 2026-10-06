@@ -657,6 +657,31 @@ html.act-open {
   }
 }
 
+/* Celular/toque: sem efeitos que redesenham camadas grandes a cada quadro. No iPhone,
+   a borda cônica girando (máscara do tamanho do cartão) + backdrop-filter de tela cheia
+   + o canvas 3D por trás estouravam a GPU e o Safari derrubava a página. */
+@media (max-width: 560px), (pointer: coarse) {
+  html.act-open #stage {
+    visibility: hidden;
+  }
+  .act-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background:
+      radial-gradient(60% 50% at 50% 42%, rgba(255, 22, 22, 0.22), transparent 70%),
+      rgba(3, 3, 3, 0.94);
+  }
+  .act-backdrop::after {
+    animation: none;
+  }
+  .act-card {
+    border-color: rgba(255, 48, 48, 0.45);
+  }
+  .act-card::before {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .act *,
   .act *::before,
