@@ -8,6 +8,7 @@
 
 import { gsap } from 'gsap';
 import { track } from '../analytics/analytics.ts';
+import { config } from '../config.ts';
 import { submitSignup, type UnitInfo } from '../api/client.ts';
 import { play } from '../audio/sfx.ts';
 import type { ProductIdentity } from '../identity/resolver.ts';
@@ -45,6 +46,28 @@ function readStore<T>(store: () => Storage, key: string): T | null {
     return null;
   }
 }
+function removeStore(store: () => Storage, key: string) {
+  try {
+    store().removeItem(key);
+  } catch {
+    /* storage indisponível */
+  }
+}
+
+/**
+ * O cadastro salvo no aparelho só vale se o perfil ainda existir na API (o banco pode
+ * ter sido zerado ou o cadastro removido). Sem rede, mantém o que está salvo.
+ */
+async function storedStillValid(reg: Registered): Promise<boolean> {
+  if (!reg.member || !config.api.baseUrl) return !!reg.member;
+  try {
+    const r = await fetch(`${config.api.baseUrl}/api/member/${encodeURIComponent(reg.member)}`);
+    return r.status !== 404;
+  } catch {
+    return true;
+  }
+}
+
 function writeStore(store: () => Storage, key: string, value: unknown) {
   try {
     store().setItem(key, JSON.stringify(value));
@@ -422,7 +445,6 @@ export function initActivation(opts: ActivationOptions) {
 
   // Abre sozinho: só depois da entrada do hero, uma vez por sessão, e se ninguém
   // estiver com a RA ou o leitor abertos.
-  if (readStore(() => localStorage, regKey) || readStore(() => sessionStorage, dismissKey)) return;
   const tryOpen = () => {
     if (html.classList.contains('intro') || html.classList.contains('ar-open') || html.classList.contains('usc-open')) {
       window.setTimeout(tryOpen, 400);
@@ -430,5 +452,14 @@ export function initActivation(opts: ActivationOptions) {
     }
     window.setTimeout(open, reduced ? 0 : 700);
   };
-  tryOpen();
+  const stored = readStore<Registered>(() => localStorage, regKey);
+  (stored ? storedStillValid(stored) : Promise.resolve(false)).then((valid) => {
+    if (stored && !valid) {
+      removeStore(() => localStorage, regKey);
+      removeStore(() => sessionStorage, dismissKey);
+      renderHero();
+    }
+    if (valid || readStore(() => sessionStorage, dismissKey)) return;
+    tryOpen();
+  });
 }
