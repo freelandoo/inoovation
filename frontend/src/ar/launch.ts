@@ -19,6 +19,11 @@ export interface LaunchOptions {
   /** Pausa o palco da página enquanto a RA usa o renderer. */
   pauseLanding: () => void;
   resumeLanding: () => void;
+  /**
+   * Área do membro: mostra COLECIONAR (o holograma vira sólido) e depois PEGAR, que
+   * fecha a RA e chama onTake (o personagem vai para a vitrine).
+   */
+  collect?: { onTake: () => void };
 }
 
 let modulePromise: Promise<typeof import('./ArExperience.ts')> | null = null;

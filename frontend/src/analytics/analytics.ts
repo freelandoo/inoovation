@@ -22,7 +22,10 @@ export type AnalyticsEvent =
   | 'signup_submitted'
   | 'signup_dismissed'
   | 'member_viewed'
-  | 'member_link_shared';
+  | 'member_link_shared'
+  | 'character_collected'
+  | 'collection_viewed'
+  | 'character_viewed';
 
 export type AnalyticsAdapter = (event: AnalyticsEvent, payload: Record<string, unknown>) => void;
 

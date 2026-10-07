@@ -10,7 +10,8 @@ import * as THREE from 'three';
 import './ar.css';
 import { config } from '../config.ts';
 import { Hologram } from './hologram.ts';
-import { ImageTrackingMode, type ArCtx, type ArMode } from './modes.ts';
+import { ImageTrackingMode, type ArCtx, type ArMode, type TrackState } from './modes.ts';
+import { play } from '../audio/sfx.ts';
 import type { ArIdentity, LaunchOptions } from './launch.ts';
 
 interface OpenArgs extends LaunchOptions {
@@ -105,6 +106,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
       </header>
       <div class="arx-frame" aria-hidden="true" hidden><i></i><i></i><i></i><i></i></div>
       <p class="arx-hint" aria-live="polite"></p>
+      <button class="arx-collect" data-a="collect" type="button" hidden><span>COLECIONAR</span></button>
       <footer class="arx-bottom">
         <span></span>
         <button class="arx-shutter" data-a="photo" aria-label="Tirar foto"></button>
@@ -121,6 +123,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
   const loading = root.querySelector<HTMLElement>('.arx-loading')!;
   const photoBtn = root.querySelector<HTMLButtonElement>('[data-a="photo"]')!;
   const frame = root.querySelector<HTMLElement>('.arx-frame')!;
+  const collectBtn = root.querySelector<HTMLButtonElement>('[data-a="collect"]')!;
   const nativeLink = root.querySelector<HTMLAnchorElement>('[data-a="native"]')!;
   const setHint = (s: string) => (hint.textContent = s);
 
@@ -185,6 +188,7 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     throw e;
   }
   scene.add(hologram.group);
+  hologram.resetSolid();
   const ctx: ArCtx = { renderer, scene, camera, hologram };
   attachGestures(root, (r) => hologram.rotateBy(r), (f) => hologram.scaleBy(f));
 
@@ -210,8 +214,49 @@ export async function openArExperience(args: OpenArgs): Promise<void> {
     heightMeters: config.ar.heightMeters,
     onState: (st) => {
       frame.hidden = st !== 'scanning';
-      setHint(st === 'scanning' ? 'Aponte a câmera para o rótulo' : 'Arraste para girar · pinça para ampliar');
+      trackState = st;
+      if (collect) syncCollect();
+      else setHint(st === 'scanning' ? 'Aponte a câmera para o rótulo' : 'Arraste para girar · pinça para ampliar');
     },
+  });
+
+  // Colecionar → (linha sobe, vira sólido) → Pegar → fecha e vai para a vitrine.
+  const collect = args.collect;
+  let trackState: TrackState = 'scanning';
+  let stage: 'idle' | 'solidifying' | 'ready' | 'taking' = 'idle';
+  const syncCollect = () => {
+    const found = trackState === 'found';
+    const label = collectBtn.querySelector('span')!;
+    collectBtn.hidden = !found || stage === 'solidifying' || stage === 'taking';
+    collectBtn.classList.toggle('take', stage === 'ready');
+    label.textContent = stage === 'ready' ? 'PEGAR' : 'COLECIONAR';
+    if (!found) setHint('Aponte a câmera para o rótulo');
+    else if (stage === 'idle') setHint('Seu personagem chegou. Toque em COLECIONAR para materializá-lo.');
+    else if (stage === 'solidifying') setHint('Materializando…');
+    else if (stage === 'ready') setHint('Ele é seu. Toque em PEGAR para guardar na sua coleção.');
+  };
+  collectBtn.addEventListener('click', async () => {
+    if (!collect || trackState !== 'found') return;
+    if (stage === 'idle') {
+      stage = 'solidifying';
+      syncCollect();
+      play('charge');
+      await hologram.solidify();
+      if (closed) return;
+      play('lock');
+      navigator.vibrate?.([20, 40, 20]);
+      stage = 'ready';
+      syncCollect();
+    } else if (stage === 'ready') {
+      stage = 'taking';
+      syncCollect();
+      setHint('');
+      play('success');
+      await hologram.take();
+      navigator.vibrate?.(40);
+      close();
+      collect.onTake();
+    }
   });
   try {
     await track.start();

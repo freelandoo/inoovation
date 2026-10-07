@@ -246,10 +246,13 @@ export function createApp(db: Db, opts: AppOptions) {
       scan_count: number;
       first_seen_at: string;
       ar_started: boolean;
+      collection: { character: string; collectedAt: string }[];
     }>(
       `select s.id, s.name, s.email, s.created_at,
               u.product_id, u.lot_id, u.unit_id, u.status, u.scan_count, u.first_seen_at,
-              exists (select 1 from events e where e.unit_ref = u.id and e.name = 'ar_experience_started') as ar_started
+              exists (select 1 from events e where e.unit_ref = u.id and e.name = 'ar_experience_started') as ar_started,
+              coalesce((select json_agg(json_build_object('character', k.character, 'collectedAt', k.collected_at) order by k.collected_at)
+                        from collectibles k where k.signup_ref = s.id), '[]'::json) as collection
        from signups s join units u on u.id = s.unit_ref
        where s.member_token = $1`,
       [token],
@@ -263,6 +266,7 @@ export function createApp(db: Db, opts: AppOptions) {
       email: `${user.slice(0, 2)}${'•'.repeat(Math.max(1, user.length - 2))}@${domain}`,
       memberSince: m.created_at,
       arStarted: m.ar_started,
+      collection: m.collection,
       unit: {
         productId: m.product_id,
         lotId: m.lot_id,
@@ -272,6 +276,28 @@ export function createApp(db: Db, opts: AppOptions) {
         firstSeenAt: m.first_seen_at,
       },
     });
+  });
+
+  // "Pegar" o personagem na RA: entra na coleção do membro (repetir não duplica).
+  app.post('/api/member/:token/collect', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    const token = v.memberToken(c.req.param('token'));
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const character = v.character(body?.character);
+    if (!token) return c.json({ error: 'não encontrado' }, 404);
+    if (!character) throw new HttpError(400, 'personagem inválido');
+    const r = await db.query<{ collected_at: string; created: boolean }>(
+      `with m as (select id from signups where member_token = $1),
+            ins as (insert into collectibles (signup_ref, character) select id, $2 from m
+                    on conflict do nothing returning collected_at)
+       select collected_at, true as created from ins
+       union all
+       select k.collected_at, false from collectibles k join m on k.signup_ref = m.id where k.character = $2`,
+      [token, character],
+    );
+    const row = r.rows[0];
+    if (!row) return c.json({ error: 'não encontrado' }, 404);
+    return c.json({ ok: true, character, collectedAt: row.collected_at, new: row.created });
   });
 
   app.get('/api/live', async (c) => {

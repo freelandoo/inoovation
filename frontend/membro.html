@@ -104,7 +104,7 @@
         <ol class="mb-steps">
           <li data-step="verified"><i></i><div><b>Unidade verificada</b><span class="mono" data-m="step-verified"></span></div></li>
           <li data-step="crew"><i></i><div><b>Tripulante registrado</b><span class="mono" data-m="step-crew"></span></div></li>
-          <li data-step="ar"><i></i><div><b>Holograma ativado em RA</b><span class="mono" data-m="step-ar">PENDENTE</span></div></li>
+          <li data-step="ar"><i></i><div><b>Primeiro personagem coletado</b><span class="mono" data-m="step-ar">PENDENTE</span></div></li>
         </ol>
         <div class="mb-progress"><i id="mb-progress"></i></div>
       </section>
@@ -112,9 +112,9 @@
       <!-- RA -->
       <section class="mb-ar" data-reveal>
         <div class="mb-ar-copy">
-          <p class="mono mb-kicker">04 // RA</p>
-          <h2 class="mb-h2">Seu holograma<br /><em>espera por você.</em></h2>
-          <p class="mb-lead">Aponte a câmera e coloque o astronauta da Innovation Week no seu espaço.</p>
+          <p class="mono mb-kicker">04 // <b>COLEÇÃO</b></p>
+          <h2 class="mb-h2">Seu personagem colecionável<br /><em>espera por você.</em></h2>
+          <p class="mb-lead">Comece a jornada e colete personagens exclusivos para a sua coleção. O primeiro já está liberado para você: aponte a câmera para o rótulo e materialize-o.</p>
         </div>
         <button class="mb-ar-btn" id="mb-ar-btn" type="button" aria-describedby="mb-ar-note">
           <span class="mb-ar-rings" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -127,8 +127,9 @@
           </span>
           <span class="mb-ar-label mono">INICIAR RA</span>
         </button>
-        <p class="mb-note" id="mb-ar-note">Usa a câmera do seu celular. Nenhuma imagem é gravada.</p>
+        <p class="mb-note" id="mb-ar-note">Só quem tem uma unidade oficial pode coletar. Usa a câmera do celular; nenhuma imagem é gravada.</p>
         <p class="mb-ar-error" id="mb-ar-error" role="alert" hidden></p>
+        <a class="mb-btn mb-btn-ghost mb-vault-link" href="#colecao">MINHA COLEÇÃO <span class="mono" data-m="vault-count">0/6</span></a>
       </section>
 
       <!-- guardar o link -->
@@ -145,6 +146,35 @@
         <span>DADOS TRATADOS POR TENKAGROUP · <a href="/privacidade">PRIVACIDADE</a></span>
       </footer>
     </main>
+
+    <!-- vitrine da coleção (#colecao) -->
+    <section class="vault" id="vault" hidden aria-labelledby="vault-title">
+      <header class="vault-head">
+        <a class="vault-back mono" href="#">‹ PERFIL</a>
+        <span class="mono vault-count"><b data-m="vault-have">0</b>/<span data-m="vault-total">6</span> COLETADOS</span>
+      </header>
+      <div class="vault-intro">
+        <p class="mono mb-kicker">COLEÇÃO // <b>INNOVATION WEEK</b></p>
+        <h1 class="mb-h1" id="vault-title">Sua vitrine</h1>
+        <p class="mb-lead" data-m="vault-lead"></p>
+      </div>
+      <ol class="vault-grid" id="vault-grid"></ol>
+    </section>
+
+    <!-- personagem na câmara branca (#colecao/<id>) -->
+    <section class="cv" id="cv" hidden aria-labelledby="cv-name">
+      <canvas class="cv-canvas" aria-label="Personagem em 3D. Arraste para girar."></canvas>
+      <header class="cv-head">
+        <a class="cv-back mono" href="#colecao">‹ COLEÇÃO</a>
+        <span class="mono cv-date" data-cv="date"></span>
+      </header>
+      <div class="cv-info">
+        <p class="mono mb-kicker"><span data-cv="number"></span> // <b data-cv="rarity"></b></p>
+        <h2 class="cv-name" id="cv-name" data-cv="name"></h2>
+        <p class="cv-title" data-cv="title"></p>
+      </div>
+      <p class="cv-hint mono">TOQUE E ARRASTE PARA GIRAR</p>
+    </section>
 
     <script type="module" src="/src/member/main.ts"></script>
   </body>

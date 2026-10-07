@@ -25,10 +25,17 @@ export const EVENT_NAMES = new Set([
   'signup_dismissed',
   'member_viewed',
   'member_link_shared',
+  'character_collected',
+  'collection_viewed',
+  'character_viewed',
 ]);
 
 /** Versões do texto de consentimento do modal de cadastro (v2: TENKAGROUP + telão). */
 export const CONSENT_VERSIONS = new Set(['2026-10-v1', '2026-10-v2']);
+
+/** Personagens colecionáveis que existem hoje (frontend: src/collection/catalog.ts). */
+export const CHARACTERS = new Set(['astronauta']);
+export const character = (v: unknown) => (CHARACTERS.has(str(v)) ? str(v) : null);
 
 /** Token do link de membro (base64url). */
 export const memberToken = (v: unknown) => (/^[A-Za-z0-9_-]{20,64}$/.test(str(v)) ? str(v) : null);

@@ -1,5 +1,6 @@
 // Área do membro (/membro/<token>): identidade branca. Mostra o tripulante, o
-// suplemento ativado (unidade verificada), a missão e o botão da RA.
+// suplemento ativado (unidade verificada), a missão, a RA que coleta o personagem
+// e a vitrine da coleção (#colecao).
 
 import { gsap } from 'gsap';
 import type * as THREE from 'three';
@@ -9,6 +10,8 @@ import { connectAnalytics } from '../api/client.ts';
 import { initSfx, play, soundToggle } from '../audio/sfx.ts';
 import { launchARExperience, prepareAR } from '../ar/launch.ts';
 import { EMPTY_IDENTITY, type ProductIdentity } from '../identity/resolver.ts';
+import { COLLECTION_SLOTS, latestCharacter } from '../collection/catalog.ts';
+import { initCollection, type Collected } from './collection.ts';
 import './member.css';
 
 interface Member {
@@ -17,6 +20,7 @@ interface Member {
   email: string;
   memberSince: string;
   arStarted: boolean;
+  collection?: Collected[];
   unit: {
     productId: string | null;
     lotId: string | null;
@@ -63,15 +67,6 @@ function decode(el: HTMLElement, text: string, delay = 0) {
   requestAnimationFrame(tick);
 }
 
-const AR_DONE_KEY = 'iw:ar-done';
-function arDoneLocally(key: string) {
-  try {
-    return localStorage.getItem(`${AR_DONE_KEY}:${key}`) === '1';
-  } catch {
-    return false;
-  }
-}
-
 async function load() {
   const token = tokenFromUrl();
   const base = config.api.baseUrl;
@@ -105,9 +100,7 @@ function render(m: Member, token: string) {
   connectAnalytics();
   track('member_viewed');
 
-  const unitKey = `${m.unit.productId}|${m.unit.lotId}|${m.unit.unitId}`;
   const verified = m.unit.status === 'verified';
-  const arDone = m.arStarted || arDoneLocally(unitKey);
 
   field('name').textContent = m.name;
   field('since').textContent = fmtDate(m.memberSince);
@@ -120,15 +113,18 @@ function render(m: Member, token: string) {
   field('step-crew').textContent = `Nº ${String(m.crew).padStart(4, '0')} · ${fmtDate(m.memberSince)}`;
   html.classList.toggle('mb-unverified', !verified);
 
-  const setMission = (ar: boolean) => {
-    const steps = [verified, true, ar];
+  const setMission = (collected: number) => {
+    const steps = [verified, true, collected > 0];
     document.querySelectorAll<HTMLElement>('.mb-steps li').forEach((li, i) => li.classList.toggle('done', steps[i]));
-    if (ar) field('step-ar').textContent = 'CONCLUÍDO';
+    field('step-ar').textContent = collected > 0 ? `${collected}/${COLLECTION_SLOTS} NA COLEÇÃO` : 'PENDENTE';
+    field('vault-count').textContent = `${collected}/${COLLECTION_SLOTS}`;
     const pct = Math.round((steps.filter(Boolean).length / steps.length) * 100);
     field('mission-pct').textContent = `${pct}%`;
+    $('#mb-progress').style.transform = `scaleX(${pct / 100})`;
     return pct;
   };
-  const pct = setMission(arDone);
+  const collection = initCollection({ token, server: m.collection ?? [], reduced, onChange: setMission });
+  const pct = setMission(collection.count());
 
   html.dataset.state = 'ready';
 
@@ -171,13 +167,13 @@ function render(m: Member, token: string) {
     label.addEventListener('pointerleave', () => gsap.to(label, { rotateY: 0, rotateX: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)' }));
   }
 
-  initAr(identity, unitKey, () => setMission(true));
+  initAr(identity, (id) => collection.collect(id));
   initShare(token);
 }
 
 // ---------------------------------------------------------------- RA
 
-function initAr(identity: ProductIdentity, unitKey: string, onDone: () => void) {
+function initAr(identity: ProductIdentity, onCollect: (id: string) => void) {
   const btn = $<HTMLButtonElement>('#mb-ar-btn');
   const err = $('#mb-ar-error');
   const canvas = $<HTMLCanvasElement>('#stage');
@@ -217,15 +213,8 @@ function initAr(identity: ProductIdentity, unitKey: string, onDone: () => void) 
         btn.classList.remove('firing');
         busy = false;
       },
+      collect: { onTake: () => onCollect(latestCharacter().id) },
     })
-      .then(() => {
-        try {
-          localStorage.setItem(`${AR_DONE_KEY}:${unitKey}`, '1');
-        } catch {
-          /* ignore */
-        }
-        onDone();
-      })
       .catch(() => {
         err.textContent = 'Não foi possível iniciar a RA neste aparelho. Tente no celular, pelo navegador padrão.';
         err.hidden = false;

@@ -1,5 +1,7 @@
 // Holograma do astronauta para a RA: shader próprio (fresnel, scanlines, glitch
 // ocasional, materialização de baixo para cima) + base emissora, feixe e partículas.
+// "Colecionar": uma linha sobe pelo corpo e, abaixo dela, o holograma vira o modelo
+// sólido com textura (solidify); "pegar" encolhe o personagem para dentro da coleção (take).
 // Unidade interna: modelo normalizado para 1 de altura, pés em y=0.
 
 import * as THREE from 'three';
@@ -34,6 +36,7 @@ const figureFragment = /* glsl */ `
   uniform vec3 uAccent;
   uniform float uTime;
   uniform float uReveal;
+  uniform float uSolid;
   uniform float uOpacity;
   uniform float uGlitch;
   varying vec3 vNormalW;
@@ -41,7 +44,7 @@ const figureFragment = /* glsl */ `
   varying vec2 vUv;
   varying float vLocalY;
   void main() {
-    if (vLocalY > uReveal) discard;
+    if (vLocalY > uReveal || vLocalY < uSolid) discard;
     vec3 V = normalize(cameraPosition - vPosW);
     vec3 N = normalize(vNormalW);
     float fres = pow(1.0 - clamp(abs(dot(N, V)), 0.0, 1.0), 2.2);
@@ -49,7 +52,8 @@ const figureFragment = /* glsl */ `
     float scan = 0.72 + 0.28 * sin(vLocalY * 420.0 - uTime * 7.0);
     float sweep = exp(-pow((vLocalY - fract(uTime * 0.28) * 1.3 + 0.15) * 22.0, 2.0));
     float flicker = 0.93 + 0.07 * sin(uTime * 41.0) * sin(uTime * 17.0) - uGlitch * 0.25;
-    float edge = (1.0 - step(0.999, uReveal)) * smoothstep(uReveal - 0.025, uReveal, vLocalY);
+    float edge = (1.0 - step(0.999, uReveal)) * smoothstep(uReveal - 0.025, uReveal, vLocalY)
+               + step(0.001, uSolid) * smoothstep(uSolid + 0.03, uSolid, vLocalY);
     vec3 col = uColor * (0.35 + 1.1 * lum) * scan + uAccent * (fres * 1.3 + sweep * 0.9 + edge * 3.0);
     float alpha = (0.28 + 0.55 * lum * scan + fres * 0.9 + sweep * 0.45 + edge) * flicker * uOpacity;
     gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
@@ -149,6 +153,13 @@ export class Hologram {
   private beamMat: THREE.ShaderMaterial;
   private particlesMat: THREE.ShaderMaterial;
   private figureMat: THREE.ShaderMaterial | null = null;
+  /** Altura (0..1) até onde o personagem já é sólido. Compartilhado pelos dois materiais. */
+  private solidLine = { value: 0 };
+  private solidTarget = 0;
+  private solidDone: (() => void) | null = null;
+  private lights = new THREE.Group();
+  private takeT = -1;
+  private takeDone: (() => void) | null = null;
 
   constructor(opts: { color: string; accent: string; heightMeters: number }) {
     this.heightMeters = opts.heightMeters;
@@ -227,7 +238,14 @@ export class Hologram {
       .multiply(new THREE.Matrix4().makeTranslation(-center.x, -box.min.y, -center.z));
 
     const mat = new THREE.ShaderMaterial({
-      uniforms: { ...this.uniforms, uMap: { value: null }, uReveal: { value: 0 }, uOpacity: { value: 1 }, uGlitch: { value: 0 } },
+      uniforms: {
+        ...this.uniforms,
+        uMap: { value: null },
+        uReveal: { value: 0 },
+        uSolid: this.solidLine,
+        uOpacity: { value: 1 },
+        uGlitch: { value: 0 },
+      },
       vertexShader: figureVertex,
       fragmentShader: figureFragment,
       transparent: true,
@@ -252,7 +270,9 @@ export class Hologram {
       depth.renderOrder = 0;
       const holo = new THREE.Mesh(geo, mat);
       holo.renderOrder = 1;
-      this.figure.add(depth, holo);
+      const solid = new THREE.Mesh(geo, this.solidMaterial(src, mat.uniforms.uReveal));
+      solid.renderOrder = 0;
+      this.figure.add(depth, holo, solid);
     });
     if (!mat.uniforms.uMap.value) {
       const white = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
@@ -260,6 +280,91 @@ export class Hologram {
       mat.uniforms.uMap.value = white;
     }
     this.figureMat = mat;
+  }
+
+  /** Material original do modelo (textura, relevo), visível só abaixo da linha de solidificação. */
+  private solidMaterial(src: THREE.MeshStandardMaterial, reveal: { value: number }) {
+    const m = src.clone();
+    m.transparent = false;
+    m.depthWrite = true;
+    m.side = THREE.FrontSide;
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uSolid = this.solidLine;
+      sh.uniforms.uReveal = reveal;
+      sh.uniforms.uAccent = this.uniforms.uAccent;
+      sh.uniforms.uColor = this.uniforms.uColor;
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', `#include <common>
+varying float vLocalY;`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+vLocalY = position.y;`);
+      sh.fragmentShader = sh.fragmentShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+varying float vLocalY;
+uniform float uSolid;
+uniform float uReveal;
+uniform vec3 uAccent;
+uniform vec3 uColor;`,
+        )
+        .replace(
+          '#include <clipping_planes_fragment>',
+          `#include <clipping_planes_fragment>
+if (vLocalY > uSolid || vLocalY > uReveal) discard;`,
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          float seam = (1.0 - step(1.0, uSolid)) * smoothstep(uSolid - 0.06, uSolid, vLocalY);
+          totalEmissiveRadiance += mix(uColor, uAccent, seam) * seam * 2.5;`,
+        );
+    };
+    m.customProgramCacheKey = () => 'iw-solid';
+    return m;
+  }
+
+  /** Luz para o modelo sólido (o holograma não precisa de luz). */
+  private ensureLights() {
+    if (this.lights.parent) return;
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x404040, 3);
+    // Posições pensadas com +z = em direção à câmera; desfaz o giro aplicado ao grupo.
+    const undo = -this.group.rotation.y;
+    const key = new THREE.DirectionalLight(0xffffff, 2.8);
+    key.position.set(0.6, 1.6, 1.4).applyAxisAngle(THREE.Object3D.DEFAULT_UP, undo);
+    key.target = this.figure;
+    const rim = new THREE.DirectionalLight(0xff3030, 0.7);
+    rim.position.set(-1, 1.2, -1).applyAxisAngle(THREE.Object3D.DEFAULT_UP, undo);
+    rim.target = this.figure;
+    this.lights.add(hemi, key, rim);
+    this.group.add(this.lights);
+  }
+
+  get isSolid() {
+    return this.solidLine.value >= 1;
+  }
+
+  /** "Colecionar": a linha sobe e o holograma vira sólido. */
+  solidify(): Promise<void> {
+    this.ensureLights();
+    this.solidTarget = 1.02;
+    if (this.isSolid) return Promise.resolve();
+    return new Promise((r) => (this.solidDone = r));
+  }
+
+  /** "Pegar": o personagem gira, encolhe e some para dentro da coleção. */
+  take(): Promise<void> {
+    this.takeT = 0;
+    return new Promise((r) => (this.takeDone = r));
+  }
+
+  /** Volta ao holograma (cada abertura da RA começa do zero). */
+  resetSolid() {
+    this.solidLine.value = 0;
+    this.solidTarget = 0;
+    this.takeT = -1;
+    this.figure.scale.setScalar(1);
+    this.lights.removeFromParent();
   }
 
   appear() {
@@ -302,8 +407,9 @@ export class Hologram {
     const baseIn = easeOutCubic(Math.min(t / 0.5, 1));
     this.base.scale.setScalar(0.2 + 0.8 * baseIn);
     this.baseMat.uniforms.uOpacity.value = baseIn;
-    this.beamMat.uniforms.uOpacity.value = clamp01((t - 0.3) / 0.6);
-    this.particlesMat.uniforms.uOpacity.value = clamp01((t - 0.5) / 0.8);
+    const solid = Math.min(1, this.solidLine.value);
+    this.beamMat.uniforms.uOpacity.value = clamp01((t - 0.3) / 0.6) * (1 - solid);
+    this.particlesMat.uniforms.uOpacity.value = clamp01((t - 0.5) / 0.8) * (1 - 0.6 * solid);
     if (this.figureMat) {
       this.figureMat.uniforms.uReveal.value = t < 0.6 ? 0 : easeOutCubic(Math.min((t - 0.6) / 2.2, 1)) * 1.01;
       this.glitchTimer -= dt;
@@ -314,8 +420,29 @@ export class Hologram {
       this.glitch = Math.max(0, this.glitch - dt * 6);
       this.figureMat.uniforms.uGlitch.value = this.glitch;
     }
+    if (this.solidLine.value < this.solidTarget) {
+      this.solidLine.value = Math.min(this.solidTarget, this.solidLine.value + dt * 0.42);
+      if (this.solidLine.value >= this.solidTarget) {
+        this.solidDone?.();
+        this.solidDone = null;
+      }
+    }
     this.figure.position.y = FIGURE_LIFT + Math.sin(this.t * 1.3) * 0.012;
     if (this.autoRotate) this.userRotation += dt * 0.35;
     this.figure.rotation.y = this.userRotation;
+    if (this.takeT >= 0) {
+      this.takeT += dt;
+      const p = Math.min(1, this.takeT / 0.8);
+      const e = p * p * p;
+      this.figure.scale.setScalar(Math.max(0.001, 1 - e));
+      this.figure.position.y += e * 0.5;
+      this.figure.rotation.y += e * Math.PI * 4;
+      if (p >= 1) {
+        this.takeT = -1;
+        this.hide();
+        this.takeDone?.();
+        this.takeDone = null;
+      }
+    }
   }
 }

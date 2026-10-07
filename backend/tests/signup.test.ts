@@ -104,3 +104,22 @@ test('telão: totais e últimos tripulantes só com o primeiro nome', async () =
   assert.equal(j.recent[0].name, 'BEATRIZ');
   assert.ok(j.recent.every((x) => !x.name.includes(' ') && !('email' in x)));
 });
+
+test('coleção: pegar o personagem entra na vitrine do membro, sem duplicar', async () => {
+  const j = (await (await post('/api/signup', form({ email: 'cora@example.com', name: 'Cora Dias' }))).json()) as { member: string };
+  const before = (await (await app.request(`/api/member/${j.member}`)).json()) as { collection: unknown[] };
+  assert.deepEqual(before.collection, []);
+
+  const first = await post(`/api/member/${j.member}/collect`, { character: 'astronauta' });
+  assert.equal(first.status, 200);
+  assert.equal(((await first.json()) as { new: boolean }).new, true);
+  const again = (await (await post(`/api/member/${j.member}/collect`, { character: 'astronauta' })).json()) as { new: boolean };
+  assert.equal(again.new, false);
+
+  const after = (await (await app.request(`/api/member/${j.member}`)).json()) as { collection: { character: string; collectedAt: string }[] };
+  assert.deepEqual(after.collection.map((k) => k.character), ['astronauta']);
+  assert.ok(after.collection[0].collectedAt);
+
+  assert.equal((await post(`/api/member/${j.member}/collect`, { character: 'dragao' })).status, 400);
+  assert.equal((await post('/api/member/nao-existe-mas-tem-formato-ok/collect', { character: 'astronauta' })).status, 404);
+});

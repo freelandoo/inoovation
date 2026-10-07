@@ -123,6 +123,47 @@ html.ar-open #stage {
 .arx-hint:empty {
   opacity: 0;
 }
+/* Área do membro: COLECIONAR / PEGAR, acima do obturador. */
+.arx-collect {
+  align-self: center;
+  margin: 0 0 18px;
+  min-width: 220px;
+  padding: 16px 28px;
+  border: 1px solid rgba(255, 210, 204, 0.7);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff2a2a, #c40d0d);
+  box-shadow:
+    0 0 0 4px rgba(255, 22, 22, 0.18),
+    0 10px 30px rgba(255, 22, 22, 0.45);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  cursor: pointer;
+  animation: arx-call 1.6s ease-in-out infinite;
+}
+.arx-collect[hidden] {
+  display: none;
+}
+.arx-collect.take {
+  background: #fff;
+  color: #c40d0d;
+  border-color: #fff;
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.25),
+    0 10px 34px rgba(255, 255, 255, 0.5);
+}
+@keyframes arx-call {
+  50% {
+    transform: scale(1.05);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arx-collect {
+    animation: none;
+  }
+}
 .arx-bottom {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
