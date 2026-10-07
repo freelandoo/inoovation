@@ -680,6 +680,16 @@ html.act-open {
   .act-card::before {
     display: none;
   }
+  .act *,
+  .act *::before,
+  .act *::after {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+  }
+  .act-check-row input:checked + i {
+    box-shadow: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

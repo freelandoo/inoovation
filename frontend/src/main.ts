@@ -55,7 +55,8 @@ if (identity.unitId) {
       !unit ? 'offline' : unit.status === 'verified' ? 'verified' : unit.status === 'blocked' ? 'blocked' : 'unregistered',
     );
     // Unidade oficial: modal de ativação com cadastro.
-    if (unit?.status === 'verified') initActivation({ identity, unit, reduced: perf.reducedMotion, pauseLanding, resumeLanding });
+    if (unit?.status === 'verified')
+      initActivation({ identity, unit, reduced: perf.reducedMotion, pauseLanding: releaseLanding, resumeLanding });
   });
 }
 track('innovation_page_view', { tier: perf.tier });
@@ -130,6 +131,12 @@ const resumeLanding = () => {
   stage.renderer.setPixelRatio(Math.min(window.devicePixelRatio, perf.maxDpr));
   stage.resize();
   stage.start();
+};
+// Modal de cadastro no celular: além de parar, reduz o canvas 3D a 1×1 para liberar
+// memória de vídeo (resumeLanding devolve o tamanho certo).
+const releaseLanding = () => {
+  stage?.stop();
+  if (perf.mobile) stage?.renderer.setSize(1, 1, false);
 };
 
 initArCta({ renderer: stage?.renderer ?? null, portal, reduced: perf.reducedMotion, pauseLanding, resumeLanding });

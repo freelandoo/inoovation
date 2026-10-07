@@ -28,6 +28,11 @@ let enabled = readEnabled();
 let lastTick = 0;
 const listeners = new Set<Listener>();
 
+// iPhone: o Safari derrubava a página ao marcar os checks do modal de cadastro. Com o
+// modal aberto em tela de toque, nada de áudio (nem criar o AudioContext).
+const quietModal = () =>
+  document.documentElement.classList.contains('act-open') && window.matchMedia('(pointer: coarse)').matches;
+
 function readEnabled(): boolean {
   try {
     return localStorage.getItem(KEY) !== 'off';
@@ -68,6 +73,7 @@ let unlockFn: (() => void) | null = null;
 /** Liga o áudio no primeiro gesto da pessoa (exigência dos navegadores). */
 export function initSfx() {
   const unlock = () => {
+    if (quietModal()) return;
     // Som desligado: nem cria o áudio (o botão de som chama de novo ao religar).
     if (!enabled) return;
     window.removeEventListener('pointerdown', unlock, true);
@@ -258,6 +264,7 @@ const SOUNDS: Record<Sfx, (c: AudioContext, t: number) => void> = {
 };
 
 export function play(name: Sfx, delay = 0) {
+  if (quietModal()) return;
   if (!enabled || !ctx || ctx.state !== 'running' || !master) return;
   try {
     SOUNDS[name](ctx, ctx.currentTime + delay);
