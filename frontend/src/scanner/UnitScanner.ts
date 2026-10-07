@@ -133,7 +133,24 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
   let torchOn = false;
   const canvas = document.createElement('canvas');
   const ctx2d = canvas.getContext('2d', { willReadFrequently: true });
-  const worker = new Worker(new URL('./qrWorker.ts', import.meta.url), { type: 'module' });
+  // jsQR num worker; se o worker não abrir ou quebrar (visto no iPhone), lê na thread principal.
+  let worker: Worker | null = null;
+  let decodeMain: ((data: Uint8ClampedArray, w: number, h: number) => string | null) | null = null;
+  const useMainThread = () => {
+    worker?.terminate();
+    worker = null;
+    workerBusy = false;
+    import('jsqr')
+      .then(({ default: jsQR }) => {
+        decodeMain = (data, w, h) => jsQR(data, w, h, { inversionAttempts: 'attemptBoth' })?.data || null;
+      })
+      .catch(() => {});
+  };
+  try {
+    worker = new Worker(new URL('./qrWorker.ts', import.meta.url), { type: 'module' });
+  } catch {
+    worker = null;
+  }
 
   const setState = (s: 'starting' | 'live' | 'locked' | 'error') => {
     root.dataset.state = s;
@@ -162,7 +179,7 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
     done = true;
     clearTimeout(hintTimer);
     stopCamera();
-    worker.terminate();
+    worker?.terminate();
     setState('locked');
     title.textContent = 'Unidade lida';
     hint.textContent = `${unit.lotId ? `LOTE ${unit.lotId} · ` : ''}UNIDADE ${unit.unitId}. Carregando sua identidade…`;
@@ -171,13 +188,15 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
     opts.onUnit(unit, detector);
   };
 
-  worker.onmessage = (e: MessageEvent<{ id: number; text: string | null }>) => {
-    workerBusy = false;
-    if (e.data.text) handle(e.data.text, 'jsqr');
-  };
-  worker.onerror = () => {
-    workerBusy = true; // worker quebrado: segue só com o nativo
-  };
+  if (worker) {
+    worker.onmessage = (e: MessageEvent<{ id: number; text: string | null }>) => {
+      workerBusy = false;
+      if (e.data.text) handle(e.data.text, 'jsqr');
+    };
+    worker.onerror = useMainThread;
+  } else {
+    useMainThread();
+  }
 
   const tick = () => {
     if (closed || done) return;
@@ -194,7 +213,7 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
         .finally(() => (nativeBusy = false));
     }
 
-    if (ctx2d && !workerBusy && (!native || tickN % 3 === 0)) {
+    if (ctx2d && !workerBusy && (worker || decodeMain) && (!native || tickN % 3 === 0)) {
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       const side = Math.round(Math.min(vw, vh) * CROP);
@@ -202,8 +221,18 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
       canvas.width = canvas.height = out;
       ctx2d.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, out, out);
       const img = ctx2d.getImageData(0, 0, out, out);
-      workerBusy = true;
-      worker.postMessage({ id: tickN, width: out, height: out, data: img.data.buffer }, [img.data.buffer]);
+      if (worker) {
+        workerBusy = true;
+        worker.postMessage({ id: tickN, width: out, height: out, data: img.data.buffer }, [img.data.buffer]);
+      } else {
+        let text: string | null = null;
+        try {
+          text = decodeMain!(img.data, out, out);
+        } catch {
+          /* quadro inválido */
+        }
+        if (text) handle(text, 'jsqr');
+      }
     }
   };
 
@@ -262,7 +291,7 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
     closed = true;
     clearTimeout(hintTimer);
     stopCamera();
-    worker.terminate();
+    worker?.terminate();
     document.removeEventListener('keydown', onKey);
     root.remove();
     html.classList.remove('usc-open');

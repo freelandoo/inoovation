@@ -16,6 +16,8 @@ export interface UnitScanCtaOptions {
 }
 
 const loadScanner = () => import('../scanner/UnitScanner.ts');
+const RELOADED_KEY = 'iw:scanner-reloaded';
+const errText = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e)).slice(0, 120);
 
 function unitUrl(unit: ScannedUnit, id: ProductIdentity): string {
   const q = new URLSearchParams({ [config.scanner.viaParam]: config.scanner.viaValue });
@@ -48,7 +50,9 @@ export function initUnitScanCta(opts: UnitScanCtaOptions) {
       open = false;
       opts.resumeLanding();
     };
+    // Uma nova tentativa se o módulo não carregar (rede instável no evento).
     loadScanner()
+      .catch(() => loadScanner())
       .then((m) =>
         m.openUnitScanner({
           stream,
@@ -61,10 +65,22 @@ export function initUnitScanCta(opts: UnitScanCtaOptions) {
           onClose: done,
         }),
       )
-      .catch(() => {
+      .catch((e: unknown) => {
         stream.then((s) => s.getTracks().forEach((t) => t.stop())).catch(() => {});
-        track('unit_scan_failed', { reason: 'load_error' });
+        track('unit_scan_failed', { reason: 'load_error', error: errText(e) });
         done();
+        // Arquivo do leitor sumiu (página aberta antes de uma atualização do site):
+        // recarrega uma vez para pegar a versão nova.
+        const reloaded = (() => {
+          try {
+            const was = sessionStorage.getItem(RELOADED_KEY) === '1';
+            sessionStorage.setItem(RELOADED_KEY, '1');
+            return was;
+          } catch {
+            return true;
+          }
+        })();
+        if (!reloaded) window.setTimeout(() => window.location.reload(), 300);
       });
   };
   buttons.forEach((b) => b.addEventListener('click', onClick));
