@@ -8,6 +8,7 @@
 //   GET  /api/live            números e últimos tripulantes, para o telão (só primeiro nome)
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN)
 //   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
+//   POST /api/admin/reset     zera os dados de teste, mantém a lista oficial (ADMIN_TOKEN + {"confirm":"ZERAR TUDO"})
 //
 // O corpo é lido como texto e interpretado como JSON independentemente do
 // Content-Type: o navegador envia eventos via sendBeacon com text/plain, o que
@@ -353,6 +354,25 @@ export function createApp(db: Db, opts: AppOptions) {
       invalidSample: report.invalid.slice(0, 10),
       ...result,
     });
+  });
+
+  // Zera os dados de teste (cadastros, coleção, leituras, sessões, eventos) e reinicia a
+  // numeração. A lista oficial (registry_units) e as migrações ficam.
+  app.post('/api/admin/reset', async (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
+    const body = (await readJson(c)) as Record<string, unknown>;
+    if (body?.confirm !== 'ZERAR TUDO') throw new HttpError(400, 'confirmação ausente');
+    await db.transaction(async (tx) => {
+      await tx.exec('truncate collectibles, signups, events, sessions, units restart identity cascade');
+    });
+    const r = await db.query<Record<string, string>>(
+      `select (select count(*) from signups) as signups, (select count(*) from collectibles) as collectibles,
+              (select count(*) from units) as units, (select count(*) from sessions) as sessions,
+              (select count(*) from events) as events, (select count(*) from registry_units) as registry`,
+    );
+    const remaining = Object.fromEntries(Object.entries(r.rows[0]).map(([k, n]) => [k, Number(n)]));
+    return c.json({ ok: true, remaining });
   });
 
   app.get('/api/stats', async (c) => {
