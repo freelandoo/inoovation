@@ -30,22 +30,8 @@ let modulePromise: Promise<typeof import('./ArExperience.ts')> | null = null;
 
 /** Chamar cedo (ex.: quando a seção da RA se aproxima) para o clique ser instantâneo. */
 export function prepareAR() {
-  if (!modulePromise) {
-    // Baixa (sem executar) a biblioteca de rastreamento e os alvos do rótulo.
-    for (const [href, as] of [
-      [config.ar.trackingLib, 'script'],
-      [config.ar.trackingTargets, 'fetch'],
-    ]) {
-      const l = document.createElement('link');
-      l.rel = as === 'script' ? 'modulepreload' : 'preload';
-      l.href = href;
-      if (as === 'fetch') {
-        l.as = 'fetch';
-        l.crossOrigin = 'anonymous';
-      }
-      document.head.appendChild(l);
-    }
-  }
+  // Só o módulo pequeno da RA. A biblioteca de rastreamento e os alvos (~4 MB) baixam
+  // ao tocar em INICIAR RA: pré-carregar na rolagem pesava demais no iPhone.
   modulePromise ??= import('./ArExperience.ts');
   return modulePromise;
 }

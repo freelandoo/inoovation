@@ -209,8 +209,21 @@ export function initActivation(opts: ActivationOptions) {
   heroBtn.className = 'scan-cta scan-cta-hero mono act-hero-cta';
   hero?.appendChild(heroBtn);
 
+  // Cadastro salvo no aparelho: só é usado depois de conferido na API (ver storedStillValid).
+  let checked = false;
+  const stored = readStore<Registered>(() => localStorage, regKey);
+  const validation = (stored ? storedStillValid(stored) : Promise.resolve(false)).then((valid) => {
+    if (stored && !valid) {
+      removeStore(() => localStorage, regKey);
+      removeStore(() => sessionStorage, dismissKey);
+    }
+    checked = true;
+    renderHero();
+    return valid;
+  });
+
   const renderHero = () => {
-    const reg = readStore<Registered>(() => localStorage, regKey);
+    const reg = checked ? readStore<Registered>(() => localStorage, regKey) : null;
     heroBtn.replaceChildren();
     const dot = document.createElement('i');
     dot.className = 'act-dot';
@@ -437,7 +450,8 @@ export function initActivation(opts: ActivationOptions) {
     if (reg) tl.call(() => decode($('[data-act="crew"]'), crewLabel(reg.crew), 0, false), [], 1.9);
   };
 
-  heroBtn.addEventListener('click', () => {
+  heroBtn.addEventListener('click', async () => {
+    await validation;
     const reg = readStore<Registered>(() => localStorage, regKey);
     if (reg?.member) window.location.href = memberUrl(reg.member);
     else open();
@@ -452,13 +466,7 @@ export function initActivation(opts: ActivationOptions) {
     }
     window.setTimeout(open, reduced ? 0 : 700);
   };
-  const stored = readStore<Registered>(() => localStorage, regKey);
-  (stored ? storedStillValid(stored) : Promise.resolve(false)).then((valid) => {
-    if (stored && !valid) {
-      removeStore(() => localStorage, regKey);
-      removeStore(() => sessionStorage, dismissKey);
-      renderHero();
-    }
+  validation.then((valid) => {
     if (valid || readStore(() => sessionStorage, dismissKey)) return;
     tryOpen();
   });

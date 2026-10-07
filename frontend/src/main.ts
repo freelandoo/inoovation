@@ -24,6 +24,21 @@ import { Astronaut } from './scene/Astronaut.ts';
 import { DigitalLabelTwin } from './label/DigitalLabelTwin.ts';
 import { Director } from './story/Director.ts';
 
+// ?limpar: apaga o que a página guardou neste aparelho (cadastro, coleção, sessão).
+// Para testes depois de zerar o banco; a preferência de som fica.
+if (new URLSearchParams(location.search).has('limpar')) {
+  for (const store of [localStorage, sessionStorage]) {
+    try {
+      for (const k of Object.keys(store)) if (k.startsWith('iw:') && k !== 'iw:sound') store.removeItem(k);
+    } catch {
+      /* storage indisponível */
+    }
+  }
+  const u = new URL(location.href);
+  u.searchParams.delete('limpar');
+  history.replaceState(null, '', u);
+}
+
 const perf = detectPerf();
 initSfx();
 document.body.appendChild(soundToggle('sfx-fixed mono'));
