@@ -1007,6 +1007,35 @@ html.vault-open body > :not(#vault, #cv, #stage, #arx) {
     transform: translateX(120%);
   }
 }
+/* coletado com 3D pronto: fundo branco, só o personagem girando */
+.vault-3d {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-out);
+}
+.is-3d > a {
+  color: var(--ink);
+  background:
+    radial-gradient(60% 30% at 50% 70%, rgba(10, 10, 10, 0.06), transparent 70%),
+    #fff;
+}
+.is-3d img {
+  opacity: 0;
+}
+.is-3d .vault-3d {
+  opacity: 1;
+}
+.is-3d > a::after {
+  background: linear-gradient(180deg, transparent 62%, rgba(255, 255, 255, 0.95) 88%);
+}
+.is-3d .vault-meta .mono {
+  opacity: 0.6;
+}
+
 /* disponível, mas ainda não coletado: aparece em tons de cinza */
 .is-available img {
   filter: grayscale(1) contrast(0.9) brightness(0.7);

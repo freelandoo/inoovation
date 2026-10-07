@@ -6,37 +6,12 @@
 // recorte "cover" da imagem, então os pés ficam no pedestal em qualquer proporção de tela.
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { FACE_FRONT, loadModel } from './model.ts';
 
 // Medidas na imagem da câmara (1672x941): centro do topo do pedestal e altura do personagem.
 const BG = { w: 1672, h: 941, feetX: 837, feetY: 563, figure: 400 };
-// O modelo olha para -x; gira para ficar de frente.
-const FACE_FRONT = Math.PI / 2;
 const FOV = 24;
-
-const models = new Map<string, Promise<THREE.Group>>();
-function loadModel(url: string) {
-  let p = models.get(url);
-  if (!p) {
-    p = new GLTFLoader().loadAsync(url).then((gltf) => {
-      const root = gltf.scene;
-      root.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(root);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const s = 1 / size.y;
-      const holder = new THREE.Group();
-      root.scale.setScalar(s);
-      root.position.set(-center.x * s, -box.min.y * s, -center.z * s);
-      holder.add(root);
-      return holder;
-    });
-    p.catch(() => models.delete(url));
-    models.set(url, p);
-  }
-  return p;
-}
 
 function contactShadow() {
   const mat = new THREE.ShaderMaterial({

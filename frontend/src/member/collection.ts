@@ -28,6 +28,7 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
   const items = new Map<string, Collected>();
   let fresh: string | null = null;
   let viewer: import('../collection/CharacterViewer.ts').CharacterViewer | null = null;
+  let turntable: import('../collection/SlotTurntable.ts').SlotTurntable | null = null;
 
   const readLocal = (): Collected[] => {
     try {
@@ -82,6 +83,7 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
         li.innerHTML = `
           <a href="#colecao/${c.id}" aria-label="Ver ${c.name} em 3D">
             <img src="${c.card}" alt="" loading="lazy" decoding="async" />
+            <canvas class="vault-3d" data-model="${c.model}" aria-hidden="true"></canvas>
             <span class="vault-new mono">NOVO</span>
             <span class="vault-meta"><span class="mono">Nº ${c.number}</span><b></b><span class="mono vault-cta">VER EM 3D ›</span></span>
           </a>`;
@@ -112,6 +114,25 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
       }),
     );
     opts.onChange(have);
+    if (!vault.hidden) attach3d();
+  }
+
+  /** Personagens coletados girando nos slots (um renderer para todos). */
+  async function attach3d() {
+    const canvases = [...grid.querySelectorAll<HTMLCanvasElement>('canvas.vault-3d')];
+    if (!canvases.length) return;
+    try {
+      const { SlotTurntable } = await import('../collection/SlotTurntable.ts');
+      if (vault.hidden) return;
+      turntable ??= new SlotTurntable(reduced);
+      turntable.clear();
+      for (const cnv of canvases) {
+        const slot = cnv.closest('.vault-slot')!;
+        turntable.add(cnv, cnv.dataset.model!, () => slot.classList.add('is-3d')).catch(() => {});
+      }
+    } catch {
+      /* sem WebGL: fica a arte 2D do card */
+    }
   }
 
   // ------------------------------------------------------------ câmara branca
@@ -125,6 +146,7 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
     $('[data-cv="date"]').textContent = own ? `COLETADO EM ${fmtDate(own.collectedAt)}` : '';
     cv.style.setProperty('--cv-bg', `url("${CHAMBER_BG}")`);
     cv.hidden = false;
+    turntable?.setPaused(true);
     track('character_viewed', { character: c.id });
     if (!reduced) gsap.fromTo(cv, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
     try {
@@ -142,6 +164,7 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
     cv.hidden = true;
     viewer?.dispose();
     viewer = null;
+    turntable?.setPaused(false);
   }
 
   // ------------------------------------------------------------ rotas
@@ -161,7 +184,11 @@ export function initCollection(opts: { token: string; server: Collected[]; reduc
       }
       window.scrollTo(0, 0);
     }
-    if (!inVault) vault.hidden = true;
+    if (!inVault && !vault.hidden) {
+      vault.hidden = true;
+      turntable?.dispose();
+      turntable = null;
+    }
     if (c && items.has(c.id)) {
       if (cv.hidden) openViewer(c);
     } else if (!cv.hidden) closeViewer();
