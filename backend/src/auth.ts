@@ -1,9 +1,9 @@
-// Login do admin (usuário + senha) e sessão assinada.
+// Login dos admins (usuário + senha) e sessão assinada.
 //
-// A senha nunca fica em texto: ADMIN_PASSWORD_HASH guarda `scrypt:<sal>:<hash>`
-// (base64url), gerado por `npm run admin:hash -- <senha>`. A sessão é um token
-// `<expira-ms>.<hmac>` assinado com o ADMIN_TOKEN, sem estado no banco: trocar o
-// ADMIN_TOKEN derruba todas as sessões.
+// A senha nunca fica em texto: cada admin tem `scrypt:<sal>:<hash>` (base64url),
+// gerado por `npm run admin:hash -- <senha>`. A sessão é um token
+// `<expira-ms>.<usuário>.<hmac>` assinado com o ADMIN_TOKEN, sem estado no banco:
+// trocar o ADMIN_TOKEN derruba todas as sessões; tirar um admin da lista derruba as dele.
 
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
@@ -32,20 +32,39 @@ function sign(secret: string, user: string, exp: number) {
 
 export function issueSession(secret: string, user: string, now = Date.now()) {
   const exp = now + SESSION_MS;
-  return { token: `${exp}.${sign(secret, user, exp)}`, expiresAt: new Date(exp).toISOString() };
+  return { token: `${exp}.${b64(Buffer.from(user))}.${sign(secret, user, exp)}`, expiresAt: new Date(exp).toISOString() };
 }
 
-export function verifySession(secret: string, user: string, token: string, now = Date.now()): boolean {
-  const m = /^(\d{13})\.([A-Za-z0-9_-]{43})$/.exec(token);
-  if (!m) return false;
+/** Usuário da sessão, ou null se o token for inválido ou expirado. */
+export function verifySession(secret: string, token: string, now = Date.now()): string | null {
+  const m = /^(\d{13})\.([A-Za-z0-9_-]{1,80})\.([A-Za-z0-9_-]{43})$/.exec(token);
+  if (!m) return null;
   const exp = Number(m[1]);
-  if (exp <= now) return false;
-  const a = Buffer.from(m[2]);
+  if (exp <= now) return null;
+  const user = Buffer.from(m[2], 'base64url').toString();
+  const a = Buffer.from(m[3]);
   const b = Buffer.from(sign(secret, user, exp));
-  return a.length === b.length && timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b) ? user : null;
 }
 
-// `node src/auth.ts <senha>`: imprime o valor para ADMIN_PASSWORD_HASH.
+/**
+ * Lista de admins a partir das variáveis: ADMIN_USERS=`usuario=scrypt:...,outro=scrypt:...`
+ * e, por compatibilidade, o par ADMIN_USER + ADMIN_PASSWORD_HASH. Usuário em minúsculas.
+ */
+export function parseAdmins(list?: string, user?: string, hash?: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const item of (list ?? '').split(',')) {
+    const i = item.indexOf('=');
+    const name = item.slice(0, i).trim().toLowerCase();
+    const h = item.slice(i + 1).trim();
+    if (i > 0 && name && h.startsWith('scrypt:')) out[name] = h;
+  }
+  const u = user?.trim().toLowerCase();
+  if (u && hash?.startsWith('scrypt:') && !out[u]) out[u] = hash;
+  return out;
+}
+
+// `node src/auth.ts <senha>`: imprime o hash da senha (para ADMIN_USERS).
 if (import.meta.main) {
   const pw = process.argv[2];
   if (!pw || pw.length < 10) {

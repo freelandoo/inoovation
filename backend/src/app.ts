@@ -33,9 +33,8 @@ const MAX_REGISTRY_BODY = 32 * 1024 * 1024;
 export interface AppOptions {
   allowedOrigins: string[];
   adminToken: string | null;
-  /** Login da área admin; sem os dois (ou sem adminToken), o login fica desativado. */
-  adminUser?: string | null;
-  adminPasswordHash?: string | null;
+  /** Admins (usuário -> hash scrypt); sem nenhum (ou sem adminToken), o login fica desativado. */
+  admins?: Record<string, string>;
   /** Requisições por minuto por IP em /api/scan e /api/events. */
   rateLimit?: number;
 }
@@ -346,16 +345,24 @@ export function createApp(db: Db, opts: AppOptions) {
     });
   });
 
-  const loginEnabled = !!(opts.adminToken && opts.adminUser && opts.adminPasswordHash);
+  const admins = new Map(Object.entries(opts.admins ?? {}));
+  const loginEnabled = !!opts.adminToken && admins.size > 0;
+  const bearer = (c: Context) => {
+    const auth = c.req.header('authorization') ?? '';
+    return auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  };
+  /** Admin dono da sessão, se ela for válida e ele ainda estiver na lista. */
+  const sessionUser = (token: string) => {
+    if (!loginEnabled) return null;
+    const user = verifySession(opts.adminToken!, token);
+    return user && admins.has(user) ? user : null;
+  };
 
   /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). Aceita o token ou a sessão do login. */
   const adminDenied = (c: Context) => {
     if (!opts.adminToken) return c.json({ error: 'não encontrado' }, 404);
-    const auth = c.req.header('authorization') ?? '';
-    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-    const ok =
-      safeEqual(token, opts.adminToken) || (loginEnabled && verifySession(opts.adminToken, opts.adminUser!, token));
-    if (!ok) return c.json({ error: 'não autorizado' }, 401);
+    const token = bearer(c);
+    if (!safeEqual(token, opts.adminToken) && !sessionUser(token)) return c.json({ error: 'não autorizado' }, 401);
     return null;
   };
 
@@ -366,17 +373,20 @@ export function createApp(db: Db, opts: AppOptions) {
     const body = (await readJson(c)) as Record<string, unknown>;
     const user = typeof body?.user === 'string' ? body.user.trim().toLowerCase() : '';
     const password = typeof body?.password === 'string' ? body.password : '';
-    // A senha é sempre conferida (mesmo com usuário errado) para o tempo de resposta não dizer qual errou.
-    const passOk = password.length > 0 && password.length <= 200 && verifyPassword(password, opts.adminPasswordHash!);
-    if (!passOk || !safeEqual(user, opts.adminUser!)) return c.json({ error: 'usuário ou senha incorretos' }, 401);
-    return c.json({ ok: true, user: opts.adminUser, ...issueSession(opts.adminToken!, opts.adminUser!) });
+    // A senha é sempre conferida (usuário inexistente: contra um hash qualquer) para o
+    // tempo de resposta não dizer se errou o usuário ou a senha.
+    const hash = admins.get(user);
+    const passOk =
+      password.length > 0 && password.length <= 200 && verifyPassword(password, hash ?? admins.values().next().value!);
+    if (!passOk || !hash) return c.json({ error: 'usuário ou senha incorretos' }, 401);
+    return c.json({ ok: true, user, ...issueSession(opts.adminToken!, user) });
   });
 
   app.get('/api/admin/me', (c) => {
     const denied = adminDenied(c);
     if (denied) return denied;
     c.header('Cache-Control', 'no-store');
-    return c.json({ ok: true, user: opts.adminUser ?? 'admin' });
+    return c.json({ ok: true, user: sessionUser(bearer(c)) ?? 'admin' });
   });
 
   app.post('/api/admin/registry', async (c) => {
