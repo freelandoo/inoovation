@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR" data-state="loading">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Innovation Week · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="ad tb-grid">
+    <div class="ad-deco" aria-hidden="true">
+      <span class="tb-streak" style="left: -160px; top: 90px; height: 90px; width: 520px"></span>
+      <span class="tb-streak tb-streak-red" style="right: -80px; top: 380px; height: 4px; width: 380px"></span>
+      <span class="tb-plus" style="left: 32px; top: 120px"></span>
+      <span class="tb-plus" style="right: 44px; top: 46%"></span>
+    </div>
+
+    <header class="ad-head">
+      <a class="ad-logo" href="/" aria-label="Innovation Week">INNO<b>VA</b>TION WEEK <span class="tb-type">2026</span></a>
+      <nav class="ad-nav tb-type" aria-label="Admin">
+        <span class="ad-live"><i class="tb-live-dot"></i>MISSION CONTROL</span>
+        <span class="ad-user" id="ad-user" hidden></span>
+        <button class="ad-logout" id="ad-logout" type="button" hidden>SAIR</button>
+      </nav>
+    </header>
+
+    <!-- login -->
+    <main class="ad-login" aria-labelledby="ad-login-title">
+      <div class="ad-login-copy">
+        <p class="tb-type ad-kicker">ÁREA ADMIN // ACESSO RESTRITO</p>
+        <h1 class="tb-wide tb-grunge ad-mega" id="ad-login-title">ADMIN</h1>
+        <p class="tb-type tb-arrowbar ad-bar">Mission control da Innovation Week.</p>
+        <p class="tb-type ad-lead">Painel ao vivo, telão e a apresentação THE NEXT LABEL. Entre com o login da TENKAGROUP.</p>
+      </div>
+      <div class="tb-frame ad-login-card" style="--c: 26px">
+        <form class="tb-frame-in ad-form" id="ad-form" novalidate>
+          <span class="ad-num tb-wide">01</span>
+          <label class="ad-field">
+            <span class="tb-type">USUÁRIO</span>
+            <input name="user" autocomplete="username" required maxlength="60" autocapitalize="none" spellcheck="false" />
+          </label>
+          <label class="ad-field">
+            <span class="tb-type">SENHA</span>
+            <input name="password" type="password" autocomplete="current-password" required maxlength="200" />
+          </label>
+          <p class="ad-error tb-type" id="ad-error" role="alert" hidden></p>
+          <button class="tb-btn" type="submit">ENTRAR <span aria-hidden="true">›</span></button>
+        </form>
+      </div>
+    </main>
+
+    <!-- painel -->
+    <main class="ad-main" id="ad-main">
+      <section class="ad-hero">
+        <div>
+          <p class="tb-type ad-kicker">MISSION CONTROL // <b>AO VIVO</b></p>
+          <h1 class="tb-wide tb-grunge ad-mega">THE NEXT<br />LABEL</h1>
+          <p class="tb-type tb-arrowbar ad-bar">Apresentação pronta para o passador.</p>
+          <p class="tb-type ad-lead">Tela cheia, slides com o rótulo 3D, holograma e números ao vivo. Avance com o passador, as setas ou a barra de espaço. <b>B</b> deixa a tela preta.</p>
+          <div class="ad-cta">
+            <a class="tb-btn ad-present" href="/admin/apresentacao">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h18v12H3zM12 16v4M8 20h8" /><path d="m10 8 4 2-4 2z" fill="currentColor" /></svg>
+              INICIAR APRESENTAÇÃO
+            </a>
+            <a class="tb-btn tb-btn-ghost" href="/telao" target="_blank" rel="noopener">ABRIR TELÃO ›</a>
+          </div>
+        </div>
+        <ul class="ad-keys tb-type" aria-label="Atalhos da apresentação">
+          <li><kbd>→</kbd><kbd>PgDn</kbd><kbd>Espaço</kbd><span>avançar</span></li>
+          <li><kbd>←</kbd><kbd>PgUp</kbd><span>voltar</span></li>
+          <li><kbd>F</kbd><kbd>F5</kbd><span>tela cheia</span></li>
+          <li><kbd>B</kbd><kbd>.</kbd><span>tela preta</span></li>
+          <li><kbd>Home</kbd><kbd>End</kbd><span>início / fim</span></li>
+          <li><kbd>12</kbd><kbd>Enter</kbd><span>ir ao slide 12</span></li>
+        </ul>
+      </section>
+
+      <section class="ad-stats" aria-label="Números ao vivo">
+        <div class="ad-stats-head">
+          <h2 class="tb-wide ad-h2">Números <span class="tb-outline">ao vivo</span></h2>
+          <span class="tb-type ad-updated" id="ad-updated"></span>
+        </div>
+        <ol class="ad-cards" id="ad-cards"></ol>
+      </section>
+
+      <section class="ad-split">
+        <div class="ad-panel">
+          <h2 class="tb-wide ad-h3">Funil</h2>
+          <ol class="ad-funnel tb-type" id="ad-funnel"></ol>
+        </div>
+        <div class="ad-panel">
+          <h2 class="tb-wide ad-h3">Últimas unidades</h2>
+          <table class="ad-table tb-type">
+            <thead><tr><th>SERIAL</th><th>LOTE</th><th>STATUS</th><th>LEITURAS</th><th>ÚLTIMA</th></tr></thead>
+            <tbody id="ad-recent"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="ad-foot tb-type">
+        <span>INNOVATION WEEK 2026 · TENKAGROUP</span>
+        <span>INDEMETAL GRÁFICOS</span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/admin/main.ts"></script>
+  </body>
+</html>

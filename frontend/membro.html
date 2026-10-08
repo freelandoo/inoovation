@@ -40,7 +40,40 @@
       <p class="mono mb-kicker">ACESSO // <b>NEGADO</b></p>
       <h1 class="mb-h1">Link de membro<br />não encontrado.</h1>
       <p class="mb-lead">Confira se o endereço está completo. O link de membro é enviado depois do cadastro da sua unidade.</p>
-      <a class="mb-btn" href="/">VOLTAR À EXPERIÊNCIA</a>
+      <div class="mb-error-actions">
+        <a class="mb-btn" href="/membro">ENTRAR COM MEU E-MAIL</a>
+        <a class="mb-btn mb-btn-ghost" href="/">VOLTAR À EXPERIÊNCIA</a>
+      </div>
+    </section>
+
+    <!-- login (/membro sem link): e-mail + nº de tripulante -->
+    <section class="mb-login" aria-labelledby="mb-login-title">
+      <div class="mb-login-copy">
+        <p class="mono mb-kicker">ÁREA DO MEMBRO // <b>ENTRAR</b></p>
+        <h1 class="mb-h1" id="mb-login-title">Bem-vindo de volta,<br /><em>tripulante.</em></h1>
+        <p class="mb-lead">Entre com o e-mail do cadastro e o seu nº de tripulante. Você volta direto para o seu perfil, a sua missão e a sua coleção.</p>
+      </div>
+      <div class="mb-login-card">
+        <i class="mb-corner mb-tl"></i><i class="mb-corner mb-tr"></i><i class="mb-corner mb-bl"></i><i class="mb-corner mb-br"></i>
+        <div class="mb-saved" id="mb-saved" hidden>
+          <p class="mono mb-kicker">NESTE APARELHO</p>
+          <ul id="mb-saved-list"></ul>
+        </div>
+        <form class="mb-form" id="mb-login-form" novalidate>
+          <label class="mb-field">
+            <span class="mono">E-MAIL</span>
+            <input type="email" name="email" autocomplete="email" inputmode="email" required maxlength="120" placeholder="voce@email.com" />
+          </label>
+          <label class="mb-field">
+            <span class="mono">Nº DE TRIPULANTE</span>
+            <input type="text" name="crew" inputmode="numeric" autocomplete="off" required maxlength="8" placeholder="0001" />
+          </label>
+          <p class="mb-form-error" id="mb-login-error" role="alert" hidden></p>
+          <button class="mb-btn" type="submit">ENTRAR NO MEU PERFIL</button>
+        </form>
+        <p class="mb-note">O nº de tripulante aparece na confirmação do cadastro e no seu perfil. Ainda não é membro? Escaneie o QR do seu pote e ative a sua unidade.</p>
+      </div>
+      <a class="mb-admin-link mono" href="/admin">ACESSO ADMIN ›</a>
     </section>
 
     <main class="mb-main" id="mb-main">

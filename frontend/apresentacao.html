@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="pt-BR" class="pz-booting">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>THE NEXT LABEL · Apresentação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" href="/innovation-week/deck/planet.webp" as="image" type="image/webp" fetchpriority="high" />
+  </head>
+  <body class="pz">
+    <!-- ambientação fixa -->
+    <div class="pz-bg" aria-hidden="true"><div class="pz-bg-img"></div><i class="pz-bg-shade"></i></div>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="pz-paper" aria-hidden="true"></div>
+    <div class="pz-fx tb-noise" aria-hidden="true"></div>
+
+    <!-- carregando -->
+    <div class="pz-boot" id="pz-boot" role="status" aria-live="polite">
+      <p class="tb-type">CARREGANDO MISSÃO <b id="pz-boot-pct">000</b>%</p>
+      <div class="pz-boot-bar"><i id="pz-boot-bar"></i></div>
+      <p class="tb-type pz-boot-sub" id="pz-boot-sub">RÓTULO // HOLOGRAMA // DADOS AO VIVO</p>
+    </div>
+
+    <main class="deck" id="deck" aria-live="polite">
+      <!-- ===================================================== 01 ABERTURA -->
+      <section class="slide" data-id="abertura" data-title="Abertura" data-section="INNOVATION DAY BRG">
+        <div class="back par" style="--d: -1.2"><span class="tb-wide tb-grunge" data-a="back">THE NEXT LABEL</span></div>
+        <div class="s-open">
+          <ul class="brands" data-a="up">
+            <li><img src="/innovation-week/deck/brand-integralmedica.webp" alt="Integralmedica" /></li>
+            <li><img src="/innovation-week/deck/brand-darkness.webp" alt="Darkness" /></li>
+            <li><img src="/innovation-week/deck/brand-nutrify.webp" alt="Nutrify" /></li>
+            <li><img src="/innovation-week/deck/brand-on.webp" alt="Optimum Nutrition" /></li>
+          </ul>
+          <div class="open-logos par" style="--d: 0.6">
+            <img class="logo-iw" src="/innovation-week/deck/logo-iw.webp" alt="Innovation Week 2026" data-a="mask" />
+            <span class="open-x tb-wide" data-a="scale" data-d="0.35">×</span>
+            <img class="logo-ind" src="/innovation-week/deck/logo-indemetal.webp" alt="Indemetal Gráficos" data-a="mask" data-d="0.5" />
+          </div>
+          <p class="tb-type tb-arrowbar" data-a="left" data-d="0.8">Missão confidencial // The Next Label</p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 02 MISSÃO -->
+      <section class="slide" data-id="missao" data-title="Mission: The Next Label" data-section="BRIEFING">
+        <div class="back par" style="--d: -1.6"><span class="tb-wide tb-grunge" data-a="back">MISSION</span></div>
+        <div class="s-mission">
+          <h1 class="mega tb-wide" data-a="mask"><em>MISSION:</em> THE NEXT LABEL</h1>
+          <p class="tb-type tb-arrowbar" data-a="left" data-d="0.4">O futuro do rótulo começa além do conhecimento.</p>
+        </div>
+        <p class="s-mission-foot tb-type" data-a="up" data-d="0.7">
+          Materiais. Processos. Informação. Design. Inteligência.<br /><b>Tudo isso em um único rótulo.</b>
+        </p>
+      </section>
+
+      <!-- ===================================================== 03 CONTAGEM -->
+      <section class="slide" data-id="contagem" data-title="Contagem regressiva" data-section="IGNIÇÃO">
+        <div class="count">
+          <svg class="count-ring" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="count-ticks" cx="100" cy="100" r="96" />
+            <circle class="count-track" cx="100" cy="100" r="86" />
+            <circle class="count-arc" cx="100" cy="100" r="86" pathLength="100" />
+          </svg>
+          <span class="count-n tb-wide tb-grunge-red" id="count-n">5</span>
+        </div>
+        <p class="count-label tb-type">CONTAGEM REGRESSIVA // <b id="count-t">T-05</b></p>
+        <p class="count-go tb-wide tb-grunge" id="count-go">IGNIÇÃO</p>
+      </section>
+
+      <!-- ===================================================== 04 HOUSTON -->
+      <section class="slide" data-id="houston" data-title="Houston" data-section="BRIEFING" data-steps="1">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide tb-grunge" data-a="back">HOUSTON</span></div>
+        <div class="houston">
+          <p class="h-call tb-wide" data-a="left">HOUSTON…</p>
+          <p class="h-old tb-wide" data-a="up" data-d="0.3"><span>WE HAVE A PROBLEM</span><i class="h-strike"></i></p>
+          <p class="h-new tb-wide tb-grunge" data-step="1" data-a="mask" data-d="0.45">WE HAVE A <em>NEW MISSION</em></p>
+          <p class="h-sub tb-type" data-step="1" data-d="0.9">Problema todo mercado tem. <b>Missão é para quem decide chegar primeiro.</b></p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 05 FRASCO -->
+      <section class="slide" data-id="frasco" data-title="A embalagem não é apenas o frasco" data-section="BRIEFING" data-steps="1">
+        <h2 class="head tb-wide" data-a="mask">A embalagem <em>não é</em><br />apenas o frasco.</h2>
+        <figure class="pot par" style="--d: 0.9">
+          <img src="/innovation-week/deck/pot.webp" alt="Pote Darkness Evora Vulcan" data-a="scale" data-d="0.2" />
+          <figcaption class="tb-type" data-a="up" data-d="0.5">DARKNESS // EVORA VULCAN // 300 G</figcaption>
+        </figure>
+        <ol class="pot-layers">
+          <li data-step="1"><img src="/innovation-week/deck/layer-1.webp" alt="" /><b class="tb-type">01</b><span>Embalagem final</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-2.webp" alt="" /><b class="tb-type">02</b><span>Frasco</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-3.webp" alt="" /><b class="tb-type">03</b><span>Rótulo impresso</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-4.webp" alt="" /><b class="tb-type">04</b><span>Verniz textura</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-5.webp" alt="" /><b class="tb-type">05</b><span>Verniz relevo</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-6.webp" alt="" /><b class="tb-type">06</b><span>Metalizado</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-7.webp" alt="" /><b class="tb-type">07</b><span>Cores CMYK</span></li>
+          <li data-step="1"><img src="/innovation-week/deck/layer-8.webp" alt="" /><b class="tb-type">08</b><span>Substrato</span></li>
+        </ol>
+        <p class="pot-note tb-type" data-step="1" data-d="0.9">8 camadas de decisão. <b>O consumidor sente todas antes de ler uma palavra.</b></p>
+      </section>
+
+      <!-- ===================================================== 06 MISSION #1 -->
+      <section class="slide" data-id="m1" data-title="Mission #1 · Circularidade" data-section="MISSION #1 // CIRCULARIDADE">
+        <div class="back loud par" style="--d: -1.4"><span class="tb-wide tb-outline-red back-num" data-a="back">01</span></div>
+        <div class="opener">
+          <p class="tb-type op-kicker" data-a="up">MISSÃO 01 DE 04</p>
+          <p class="op-mission tb-wide" data-a="left" data-d="0.15"><em>MISSION</em> #1</p>
+          <h2 class="op-title tb-wide tb-grunge" data-a="mask" data-d="0.35" data-fit="58">CIRCULARIDADE</h2>
+        </div>
+        <div class="layer par" style="--d: 1.2"><svg class="loop-icon" viewBox="0 0 120 120" aria-hidden="true" data-a="scale" data-d="0.5">
+          <g class="loop-spin">
+            <path d="M60 14a46 46 0 0 1 39.8 23" />
+            <path d="M101 72a46 46 0 0 1-39.8 34" />
+            <path d="M40 101A46 46 0 0 1 14.6 52" />
+            <path class="loop-head" d="m92 30 8 8-11 2z" />
+            <path class="loop-head" d="m66 110-10-6 9-6z" />
+            <path class="loop-head" d="m10 60 3-11 8 7z" />
+          </g>
+        </svg></div>
+      </section>
+
+      <!-- ===================================================== 07 DECRETO -->
+      <section class="slide" data-id="decreto" data-title="Decreto 12.688/2025" data-section="MISSION #1 // CIRCULARIDADE" data-steps="1">
+        <div class="back par" style="--d: -1.2"><span class="tb-wide tb-grunge" data-a="back">12.688</span></div>
+        <div class="dec-left">
+          <p class="tb-type kicker" data-a="up">DECRETO Nº 12.688/2025</p>
+          <h2 class="head tb-wide" data-a="mask" data-d="0.1">A lei já escolheu<br /><em>o futuro.</em></h2>
+          <p class="dec-close tb-type" data-step="1" data-d="0.8">A pergunta não é se a sua marca vai se adaptar.<br /><b>É se vai ser a primeira.</b></p>
+        </div>
+        <div class="orbs">
+          <div class="orb" data-a="scale" data-d="0.3">
+            <div class="orb-ring" aria-hidden="true"><i></i></div>
+            <span class="orb-n tb-wide"><b data-count="22">0</b>%</span>
+            <h3 class="tb-type">ÍNDICE DE CONTEÚDO RECICLADO</h3>
+            <p>Meta nacional mínima de conteúdo reciclado incorporado às embalagens de plástico.</p>
+          </div>
+          <div class="orb" data-step="1">
+            <div class="orb-ring" aria-hidden="true"><i></i></div>
+            <span class="orb-n tb-wide"><b data-count="32">0</b>%</span>
+            <h3 class="tb-type">ÍNDICE DE RECUPERAÇÃO</h3>
+            <p>Meta nacional de recuperação de embalagens plásticas, conforme o cronograma do decreto.</p>
+          </div>
+        </div>
+        <p class="source tb-type">FONTE: CÂMARA DOS DEPUTADOS — DECRETO Nº 12.688, DE 21 DE OUTUBRO DE 2025</p>
+      </section>
+
+      <!-- ===================================================== 08 ANTES / AGORA -->
+      <section class="slide" data-id="antes" data-title="Antes / Agora" data-section="MISSION #1 // CIRCULARIDADE" data-steps="1">
+        <div class="split">
+          <div class="split-a">
+            <p class="tb-type split-k" data-a="up">ANTES</p>
+            <p class="split-q tb-wide" data-a="mask" data-d="0.15">“Quanto plástico<br />estou usando?”</p>
+          </div>
+          <div class="split-b" data-step="1" data-a="fade">
+            <p class="tb-type split-k">AGORA</p>
+            <p class="split-q tb-wide">“Esse material consegue<br /><em>voltar para a cadeia?</em>”</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================== 09 ONDE ENTRA O RÓTULO -->
+      <section class="slide" data-id="onde" data-title="Onde entra o rótulo" data-section="MISSION #1 // CIRCULARIDADE">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide tb-grunge" data-a="back">RÓTULO</span></div>
+        <h2 class="head tb-wide onde-q" data-a="mask">E onde entra<br />o <em>rótulo</em> nesta<br />missão?</h2>
+        <ul class="onde-list tb-wide">
+          <li data-a="left" data-d="0.5"><i>/</i> Performance</li>
+          <li data-a="left" data-d="0.75"><i>/</i> Rastreabilidade</li>
+          <li data-a="left" data-d="1"><i>/</i> Impacto positivo</li>
+        </ul>
+      </section>
+
+      <!-- ===================================================== 10 PROCESSO -->
+      <section class="slide" data-id="processo" data-title="Processo Indemetal" data-section="MISSION #1 // CIRCULARIDADE" data-steps="3">
+        <h2 class="head head-s tb-wide" data-a="mask">O rótulo já nasce<br /><em>dentro da missão.</em></h2>
+        <ol class="cards4">
+          <li class="tb-frame" data-a="up" data-d="0.2">
+            <div class="tb-frame-in">
+              <span class="c-n tb-wide tb-outline-red">01</span>
+              <h3 class="tb-wide">Rastreável</h3>
+              <p>Processos e produtos rastreáveis do início ao fim do processo.</p>
+            </div>
+          </li>
+          <li class="tb-frame" data-step="1">
+            <div class="tb-frame-in">
+              <span class="c-n tb-wide tb-outline-red">02</span>
+              <h3 class="tb-wide">HP Indigo digital</h3>
+              <ul>
+                <li>Impressão neutra em carbono</li>
+                <li>Tintas à base de óleo mineral</li>
+                <li>Primer à base d’água</li>
+                <li>Take-back: a HP recolhe e recicla os insumos</li>
+                <li>Até 25% menos energia</li>
+              </ul>
+            </div>
+          </li>
+          <li class="tb-frame" data-step="2">
+            <div class="tb-frame-in">
+              <span class="c-n tb-wide tb-outline-red">03</span>
+              <h3 class="tb-wide">Sob demanda</h3>
+              <ul>
+                <li>Lotes ajustados à demanda real de mercado</li>
+                <li>Velocidade e precisão na impressão</li>
+                <li>Flexibilidade para trocar layout e design</li>
+              </ul>
+            </div>
+          </li>
+          <li class="tb-frame" data-step="3">
+            <div class="tb-frame-in">
+              <span class="c-n tb-wide tb-outline-red">04</span>
+              <h3 class="tb-wide">Menos resíduo</h3>
+              <ul>
+                <li>Redução de resíduos no processo produtivo</li>
+                <li>Energia 100% renovável</li>
+              </ul>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ===================================================== 11 CIRCULAR LOOP -->
+      <section class="slide" data-id="loop" data-title="The Circular Loop" data-section="MISSION #1 // NOSSA PROPOSTA" data-steps="1">
+        <p class="tb-type kicker loop-k" data-a="up">NOSSA PROPOSTA</p>
+        <ol class="eq tb-wide">
+          <li data-a="up" data-d="0.15">Rótulo <i>+</i></li>
+          <li data-a="up" data-d="0.3">Embalagem <i>+</i></li>
+          <li data-a="up" data-d="0.45">Consumidor <i>+</i></li>
+          <li data-a="up" data-d="0.6">Rastreabilidade <i>+</i></li>
+          <li data-a="up" data-d="0.75">Coleta <i>=</i></li>
+        </ol>
+        <p class="eq-res tb-wide tb-grunge-red" data-step="1" data-a="scale">THE CIRCULAR<br />LOOP</p>
+        <p class="eq-sub tb-type" data-step="1" data-d="0.6">Cada embalagem volta como dado. <b>Cada dado volta como venda.</b></p>
+      </section>
+
+      <!-- ===================================================== 12 QR = ELO -->
+      <section class="slide" data-id="elo" data-title="O QR é o elo" data-section="MISSION #1 // NOSSA PROPOSTA" data-steps="1">
+        <div class="elo">
+          <h2 class="head head-s tb-wide" data-a="mask">O QR Code é o elo<br />entre o físico<br /><em>e o circular.</em></h2>
+          <ul class="elo-list">
+            <li data-a="left" data-d="0.3"><b class="tb-type">01</b>Identificação do produto, lote e validade</li>
+            <li data-a="left" data-d="0.45"><b class="tb-type">02</b>Materiais e orientação de descarte</li>
+            <li data-a="left" data-d="0.6"><b class="tb-type">03</b>Pontos de coleta parceiros: academias e lojas</li>
+            <li data-a="left" data-d="0.75"><b class="tb-type">04</b>Campanhas de devolução</li>
+            <li data-a="left" data-d="0.9"><b class="tb-type">05</b>Registro de interações, dentro da LGPD</li>
+          </ul>
+          <p class="elo-box tb-type" data-step="1">O decreto prevê pontos de entrega voluntária, campanhas de coleta, monitoramento e avaliação da logística reversa. <b>O QR do rótulo já entrega a ponte.</b></p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 13 SCAN ME (AO VIVO) -->
+      <section class="slide" data-id="scan" data-title="Scan me — ao vivo" data-section="AO VIVO // ESTA SALA">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide tb-grunge" data-a="back">SCAN ME</span></div>
+        <div class="scan">
+          <div class="scan-qr" data-a="scale">
+            <div class="scan-qr-in" id="scan-qr"></div>
+            <i class="scan-beam" aria-hidden="true"></i>
+            <i class="scan-c tl"></i><i class="scan-c tr"></i><i class="scan-c bl"></i><i class="scan-c br"></i>
+          </div>
+          <div class="scan-copy">
+            <p class="tb-type kicker" data-a="up"><i class="tb-live-dot"></i> AO VIVO // ESTA SALA</p>
+            <h2 class="head tb-wide" data-a="mask" data-d="0.1">Aponte <em>agora.</em></h2>
+            <p class="scan-lead tb-type" data-a="up" data-d="0.3">Em 20 segundos você ativa uma unidade oficial, vira tripulante e abre o holograma.</p>
+            <div class="scan-live" data-a="up" data-d="0.45">
+              <span class="tb-type">TRIPULANTES A BORDO</span>
+              <b class="tb-wide" id="scan-crew">0000</b>
+            </div>
+            <ol class="scan-recent tb-type" id="scan-recent"></ol>
+            <p class="scan-next tb-type" data-a="up" data-d="0.6">PRÓXIMA FASE: o mesmo QR registra o descarte na academia ou na loja parceira.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================== 14 UM CICLO -->
+      <section class="slide" data-id="ciclo" data-title="Uma embalagem. Uma identidade. Um ciclo." data-section="MISSION #1 // NOSSA PROPOSTA">
+        <div class="ciclo">
+          <p class="tb-wide" data-a="up">Uma embalagem.</p>
+          <p class="tb-wide" data-a="up" data-d="0.25">Uma identidade.</p>
+          <p class="tb-wide" data-a="up" data-d="0.5"><em>Um ciclo.</em></p>
+        </div>
+        <p class="ciclo-tag tb-type" data-a="up" data-d="0.8">O RÓTULO REAL DA INNOVATION WEEK // EM 3D, AO VIVO</p>
+      </section>
+
+      <!-- ===================================================== 15 MISSION #2 -->
+      <section class="slide" data-id="m2" data-title="Mission #2 · Performance" data-section="MISSION #2 // PERFORMANCE">
+        <div class="back loud par" style="--d: -1.4"><span class="tb-wide tb-outline-red back-num" data-a="back">02</span></div>
+        <div class="opener">
+          <p class="tb-type op-kicker" data-a="up">MISSÃO 02 DE 04</p>
+          <p class="op-mission tb-wide" data-a="left" data-d="0.15"><em>MISSION</em> #2</p>
+          <h2 class="op-title tb-wide tb-grunge" data-a="mask" data-d="0.35" data-fit="58">PERFORMANCE</h2>
+        </div>
+      </section>
+
+      <!-- ===================================================== 16 LUZ -->
+      <section class="slide" data-id="luz" data-title="Quando a luz apaga" data-section="MISSION #2 // PERFORMANCE">
+        <div class="side-copy">
+          <h2 class="head tb-wide" data-a="mask">Quando a luz apaga,<br /><em>a energia fica.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Verniz fotoluminescente: o rótulo absorve luz e continua brilhando no escuro. <b>Na academia, no quarto, na balada: a marca não desliga.</b></p>
+        </div>
+        <ol class="chips tb-type" id="luz-steps" data-a="up" data-d="0.5">
+          <li>CARGA</li>
+          <li>ESCURO</li>
+          <li>BRILHO RESIDUAL</li>
+          <li>CONCLUÍDO</li>
+        </ol>
+      </section>
+
+      <!-- ===================================================== 17 CAMADAS -->
+      <section class="slide" data-id="camadas" data-title="Não é apenas impressão" data-section="MISSION #2 // PERFORMANCE">
+        <div class="side-copy">
+          <h2 class="head tb-wide" data-a="mask">Não é apenas impressão.<br /><em>É experiência.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Sete camadas físicas, registradas no mesmo rótulo.</p>
+        </div>
+        <ol class="layers-list tb-type" id="camadas-list"></ol>
+      </section>
+
+      <!-- ===================================================== 18 SUPERFÍCIE -->
+      <section class="slide" data-id="superficie" data-title="Superfície revelada" data-section="MISSION #2 // PERFORMANCE">
+        <div class="side-copy top">
+          <h2 class="head tb-wide" data-a="mask">Luz rasante.<br /><em>Superfície revelada.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Acabamentos que o dedo encontra antes do olho.</p>
+        </div>
+        <ul class="surface tb-type" id="surface-tags">
+          <li data-zone="luminescent"><b>LUMINESCENTE</b><span>padrão INNOVATION WAY</span></li>
+          <li data-zone="relief"><b>RELEVO</b><span>molduras e armadura</span></li>
+          <li data-zone="holographic"><b>HOLOGRÁFICO</b><span>céu, planeta e solo</span></li>
+          <li data-zone="texture"><b>TEXTURA</b><span>estrutura da nave</span></li>
+        </ul>
+        <p class="readout tb-type">VARREDURA <b id="surface-pct">000</b>%</p>
+      </section>
+
+      <!-- ===================================================== 19 MISSION #3 -->
+      <section class="slide" data-id="m3" data-title="Mission #3 · Segurança" data-section="MISSION #3 // SEGURANÇA">
+        <div class="back loud par" style="--d: -1.4"><span class="tb-wide tb-outline-red back-num" data-a="back">03</span></div>
+        <div class="opener">
+          <p class="tb-type op-kicker" data-a="up">MISSÃO 03 DE 04</p>
+          <p class="op-mission tb-wide" data-a="left" data-d="0.15"><em>MISSION</em> #3</p>
+          <h2 class="op-title tb-wide tb-grunge" data-a="mask" data-d="0.35" data-fit="58">SEGURANÇA</h2>
+        </div>
+      </section>
+
+      <!-- ===================================================== 20 UM QR -->
+      <section class="slide" data-id="umqr" data-title="Um QR. Uma identidade." data-section="MISSION #3 // SEGURANÇA" data-steps="2">
+        <div class="umqr tb-wide">
+          <p data-a="mask">Um QR.</p>
+          <p data-step="1">Uma identidade.</p>
+          <p data-step="2"><em>Uma experiência.</em></p>
+        </div>
+        <div class="gs1" data-step="1" data-d="0.4">
+          <p class="gs1-url tb-type" id="gs1-url"></p>
+          <dl class="gs1-parts">
+            <div><dt class="tb-type">01 / <span data-gs1="product"></span></dt><dd class="tb-wide">Produto</dd></div>
+            <div><dt class="tb-type">10 / <span data-gs1="lot"></span></dt><dd class="tb-wide">Lote</dd></div>
+            <div><dt class="tb-type">21 / <span data-gs1="unit"></span></dt><dd class="tb-wide">Unidade</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- ===================================================== 21 PASSAPORTE -->
+      <section class="slide" data-id="passaporte" data-title="Identidade digital desbloqueada" data-section="MISSION #3 // SEGURANÇA" data-steps="1">
+        <h2 class="head tb-wide pass-h" data-a="mask">Identidade digital<br /><em>desbloqueada.</em></h2>
+        <article class="passport" data-a="scale" data-d="0.2">
+          <header class="tb-type"><span>PASSAPORTE DIGITAL DO PRODUTO</span><i class="pass-chip"></i></header>
+          <dl>
+            <div><dt class="tb-type">PRODUTO</dt><dd data-decode data-gs1="product"></dd></div>
+            <div><dt class="tb-type">LOTE</dt><dd data-decode data-gs1="lot"></dd></div>
+            <div><dt class="tb-type">UNIDADE</dt><dd data-decode data-gs1="unit" class="red"></dd></div>
+            <div><dt class="tb-type">SITUAÇÃO</dt><dd data-decode="VERIFICADA">VERIFICADA</dd></div>
+          </dl>
+          <footer class="tb-type"><span class="pass-seal">ID DIGITAL ÚNICO</span><span>IW-2026</span></footer>
+          <i class="pass-glare" aria-hidden="true"></i>
+        </article>
+        <ul class="states">
+          <li data-step="1" class="ok"><b class="tb-type">VERIFICADA</b><span>Está na lista oficial do lote. A experiência abre.</span></li>
+          <li data-step="1" data-d="0.15" class="warn"><b class="tb-type">NÃO RECONHECIDA</b><span>Fora da lista: alerta de falsificação na hora.</span></li>
+          <li data-step="1" data-d="0.3" class="block"><b class="tb-type">BLOQUEADA</b><span>A marca trava a unidade. Cópia não passa.</span></li>
+        </ul>
+      </section>
+
+      <!-- ===================================================== 22 MICROTEXTO -->
+      <section class="slide" data-id="micro" data-title="Microtexto" data-section="MISSION #3 // SEGURANÇA">
+        <div class="side-copy top">
+          <h2 class="head tb-wide" data-a="mask">O detalhe que o olho<br /><em>não vê.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Microtexto impresso no próprio rótulo. A olho nu, uma linha. Na lente, a assinatura da marca.</p>
+        </div>
+        <div class="micro" data-a="up" data-d="0.2">
+          <img src="/innovation-week/label/base/label-2048.webp" alt="" />
+          <i class="micro-line" aria-hidden="true"></i>
+          <div class="micro-lens" aria-hidden="true"><div class="micro-zoom"><span class="tb-type"></span></div></div>
+        </div>
+      </section>
+
+      <!-- ===================================================== 23 SERIAL -->
+      <section class="slide" data-id="serial" data-title="Numeração sequencial" data-section="MISSION #3 // SEGURANÇA">
+        <div class="side-copy top">
+          <h2 class="head tb-wide" data-a="mask">Cada unidade tem um número.<br /><em>Só um.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Numeração sequencial abaixo do QR: rastreável, auditável e impossível de duplicar sem ser notada.</p>
+        </div>
+        <div class="serial">
+          <div class="serial-crop" data-a="scale" data-d="0.2"><i class="serial-scan" aria-hidden="true"></i></div>
+          <div class="odo tb-wide" id="serial-odo" data-a="up" data-d="0.4"></div>
+          <p class="tb-type serial-cap" data-a="up" data-d="0.6">UNIDADE // LOTE W4 // PRODUZIDA, NUMERADA E CONFERIDA</p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 24 TRACKING -->
+      <section class="slide" data-id="tracking" data-title="Tracking ao vivo" data-section="TRACKING // AO VIVO">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide tb-grunge" data-a="back">TRACKING</span></div>
+        <div class="trk-head">
+          <p class="tb-type kicker" data-a="up"><i class="tb-live-dot"></i> DADOS REAIS // AGORA</p>
+          <h2 class="head tb-wide" data-a="mask">A embalagem<br /><em>responde de volta.</em></h2>
+        </div>
+        <ol class="trk-cards" id="trk-cards">
+          <li class="tb-frame" data-a="up" data-d="0.2"><div class="tb-frame-in"><b class="tb-wide" data-trk="scans">0</b><span class="tb-type">LEITURAS DO QR</span></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.3"><div class="tb-frame-in"><b class="tb-wide" data-trk="verified">0</b><span class="tb-type">UNIDADES VERIFICADAS</span></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.4"><div class="tb-frame-in"><b class="tb-wide" data-trk="signups">0</b><span class="tb-type">TRIPULANTES</span></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.5"><div class="tb-frame-in"><b class="tb-wide" data-trk="ar">0</b><span class="tb-type">ENTRARAM NA RA</span></div></li>
+        </ol>
+        <div class="trk-body">
+          <ol class="trk-funnel tb-type" id="trk-funnel" data-a="up" data-d="0.5"></ol>
+          <ul class="trk-points tb-type" data-a="up" data-d="0.65">
+            <li>Qual lote, quando e em que aparelho.</li>
+            <li>Até onde cada pessoa foi na jornada.</li>
+            <li>Nenhum dado pessoal sem consentimento: <b>LGPD desde o desenho.</b></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===================================================== 25 MISSION #4 -->
+      <section class="slide" data-id="m4" data-title="Mission #4 · Conexão" data-section="MISSION #4 // CONEXÃO">
+        <div class="back loud par" style="--d: -1.4"><span class="tb-wide tb-outline-red back-num" data-a="back">04</span></div>
+        <div class="opener">
+          <p class="tb-type op-kicker" data-a="up">MISSÃO 04 DE 04</p>
+          <p class="op-mission tb-wide" data-a="left" data-d="0.15"><em>MISSION</em> #4</p>
+          <h2 class="op-title tb-wide tb-grunge" data-a="mask" data-d="0.35" data-fit="58">CONEXÃO</h2>
+        </div>
+      </section>
+
+      <!-- ===================================================== 26 RA -->
+      <section class="slide" data-id="ra" data-title="Além do conhecimento" data-section="MISSION #4 // CONEXÃO">
+        <div class="ra-copy">
+          <p class="tb-type kicker" data-a="up">04 // RA — PRONTO PARA IR ALÉM DA REALIDADE?</p>
+          <h2 class="head tb-wide" data-a="mask" data-d="0.1">Além<br /><em>do conhecimento.</em></h2>
+        </div>
+        <ul class="ra-list tb-type">
+          <li data-a="left" data-d="0.9">Aponte o celular para o rótulo: o astronauta sai da embalagem.</li>
+          <li data-a="left" data-d="1.05">Sem aplicativo. Direto do navegador.</li>
+          <li data-a="left" data-d="1.2">Personagens, jogos, conteúdo por lote, recompensas.</li>
+        </ul>
+      </section>
+
+      <!-- ===================================================== 27 ÁREA DE MEMBROS (BRANCO) -->
+      <section class="slide paper" data-id="membros" data-title="Área de membros" data-section="ÁREA DE MEMBROS" data-theme="paper">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide back-ink" data-a="back">MEMBROS</span></div>
+        <div class="mem-copy">
+          <p class="tb-type kicker" data-a="up">ÁREA DE MEMBROS // <b>ATIVA</b></p>
+          <h2 class="head tb-wide" data-a="mask" data-d="0.1">O consumidor<br />vira <em>tripulante.</em></h2>
+          <ol class="mem-list">
+            <li data-a="left" data-d="0.4"><b class="tb-type">01</b><span><strong>Cadastro em 20 segundos</strong>, com consentimento LGPD.</span></li>
+            <li data-a="left" data-d="0.55"><b class="tb-type">02</b><span><strong>Link pessoal:</strong> o perfil vai com ele para qualquer aparelho.</span></li>
+            <li data-a="left" data-d="0.7"><b class="tb-type">03</b><span><strong>Missões e progresso:</strong> sempre um motivo para voltar.</span></li>
+            <li data-a="left" data-d="0.85"><b class="tb-type">04</b><span><strong>Base própria</strong> de clientes reais da marca.</span></li>
+          </ol>
+        </div>
+        <div class="layer par" style="--d: 0.9"><div class="phone" data-a="up" data-d="0.3">
+          <div class="phone-in">
+            <p class="tb-type ph-k">PERFIL DE MEMBRO // <b>ATIVO</b></p>
+            <p class="ph-crew tb-wide">TRIPULANTE</p>
+            <p class="ph-num tb-type">Nº <b>0001</b></p>
+            <div class="ph-label"><img src="/innovation-week/label/base/label-1024.webp" alt="" /><span class="tb-type">ATIVADO</span></div>
+            <dl class="ph-data tb-type">
+              <div><dt>LOTE</dt><dd data-gs1="lot"></dd></div>
+              <div><dt>SERIAL</dt><dd data-gs1="unit" class="red"></dd></div>
+              <div><dt>STATUS</dt><dd>VERIFICADA</dd></div>
+            </dl>
+            <p class="tb-type ph-k">MISSÃO // <b>67%</b></p>
+            <div class="ph-bar"><i></i></div>
+            <ul class="ph-steps">
+              <li class="done">Unidade verificada</li>
+              <li class="done">Tripulante registrado</li>
+              <li>Primeiro personagem coletado</li>
+            </ul>
+          </div>
+        </div></div>
+      </section>
+
+      <!-- ===================================================== 28 COLECIONÁVEL -->
+      <section class="slide" data-id="coleta" data-title="Colecionar é instinto" data-section="COLECIONÁVEIS" data-steps="2">
+        <div class="back par" style="--d: -1.4"><span class="tb-wide tb-grunge" data-a="back">COLEÇÃO</span></div>
+        <div class="col-copy">
+          <p class="tb-type kicker" data-a="up">COLECIONÁVEIS // Nº 001</p>
+          <h2 class="head tb-wide" data-a="mask" data-d="0.1">Colecionar<br />é <em>instinto.</em></h2>
+          <p class="lead-t tb-type" data-a="up" data-d="0.3">Primeiro ele aparece. Depois vira sólido. Então é seu: com número, data e lugar na vitrine.</p>
+        </div>
+        <ol class="col-steps tb-type">
+          <li data-a="left" data-d="0.5" class="on">HOLOGRAMA</li>
+          <li data-step="1">MATERIALIZADO</li>
+          <li data-step="2">COLETADO // O PIONEIRO</li>
+        </ol>
+      </section>
+
+      <!-- ===================================================== 29 VITRINE (BRANCO) -->
+      <section class="slide paper" data-id="vitrine" data-title="Sua vitrine" data-section="COLECIONÁVEIS // VITRINE" data-theme="paper">
+        <div class="vit-head">
+          <p class="tb-type kicker" data-a="up">EFEITO COLEÇÃO // <b>1/6 COLETADOS</b></p>
+          <h2 class="head tb-wide" data-a="mask" data-d="0.1">Cinco espaços vazios<br />vendem mais que <em>um anúncio.</em></h2>
+        </div>
+        <ol class="vit-grid" id="vit-grid">
+          <li class="vit-slot owned" data-a="up" data-d="0.3">
+            <canvas class="vit-3d" aria-hidden="true"></canvas>
+            <img src="/innovation-week/collection/astronauta-card.webp" alt="" />
+            <span class="vit-meta"><span class="tb-type">Nº 001 // EDIÇÃO DE LANÇAMENTO</span><b class="tb-wide">O Pioneiro</b></span>
+          </li>
+          <li class="vit-slot" data-a="up" data-d="0.4"><span class="vit-q tb-wide">?</span><span class="vit-meta"><span class="tb-type">Nº 002</span><b class="tb-wide">???</b><span class="tb-type">PRÓXIMA MISSÃO</span></span></li>
+          <li class="vit-slot" data-a="up" data-d="0.5"><span class="vit-q tb-wide">?</span><span class="vit-meta"><span class="tb-type">Nº 003</span><b class="tb-wide">???</b><span class="tb-type">PRÓXIMA MISSÃO</span></span></li>
+          <li class="vit-slot" data-a="up" data-d="0.6"><span class="vit-q tb-wide">?</span><span class="vit-meta"><span class="tb-type">Nº 004</span><b class="tb-wide">???</b><span class="tb-type">PRÓXIMA MISSÃO</span></span></li>
+          <li class="vit-slot" data-a="up" data-d="0.7"><span class="vit-q tb-wide">?</span><span class="vit-meta"><span class="tb-type">Nº 005</span><b class="tb-wide">???</b><span class="tb-type">PRÓXIMA MISSÃO</span></span></li>
+          <li class="vit-slot" data-a="up" data-d="0.8"><span class="vit-q tb-wide">?</span><span class="vit-meta"><span class="tb-type">Nº 006</span><b class="tb-wide">???</b><span class="tb-type">PRÓXIMA MISSÃO</span></span></li>
+        </ol>
+        <p class="vit-foot tb-type" data-a="up" data-d="0.9">O cérebro não descansa com coleção incompleta. <b>Cada espaço vazio é a próxima compra.</b></p>
+      </section>
+
+      <!-- ===================================================== 30 RÓTULOS = DROPS -->
+      <section class="slide" data-id="drops" data-title="Cada rótulo, um personagem" data-section="RÓTULOS // COLEÇÃO" data-steps="1">
+        <h2 class="head head-s tb-wide drops-h" data-a="mask">Cada rótulo,<br /><em>um novo personagem.</em></h2>
+        <ol class="drops">
+          <li class="tb-frame" data-a="up" data-d="0.2"><div class="tb-frame-in"><img src="/innovation-week/deck/brand-integralmedica.webp" alt="Integralmedica" /><span class="tb-type">EDIÇÃO 01</span><b class="tb-wide">???</b></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.3"><div class="tb-frame-in"><img src="/innovation-week/deck/brand-darkness.webp" alt="Darkness" /><span class="tb-type">EDIÇÃO 02</span><b class="tb-wide">???</b></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.4"><div class="tb-frame-in"><img src="/innovation-week/deck/brand-nutrify.webp" alt="Nutrify" /><span class="tb-type">EDIÇÃO 03</span><b class="tb-wide">???</b></div></li>
+          <li class="tb-frame" data-a="up" data-d="0.5"><div class="tb-frame-in"><img src="/innovation-week/deck/brand-on.webp" alt="Optimum Nutrition" /><span class="tb-type">EDIÇÃO 04</span><b class="tb-wide">???</b></div></li>
+        </ol>
+        <p class="lead-t tb-type drops-lead" data-a="up" data-d="0.6">Sabor novo, lote especial, evento, atleta: cada edição de rótulo libera um personagem exclusivo.</p>
+        <ol class="cycle tb-wide" data-step="1">
+          <li>Compra</li>
+          <li>Escaneia</li>
+          <li>Coleta</li>
+          <li><em>Volta</em></li>
+        </ol>
+      </section>
+
+      <!-- ===================================================== 31 QUATRO MISSÕES -->
+      <section class="slide" data-id="quatro" data-title="As quatro missões" data-section="THE NEXT LABEL">
+        <div class="four tb-wide">
+          <p class="f1" data-a="left"><em>MISSION</em> #1<br />CIRCULARIDADE</p>
+          <p class="f2" data-a="right" data-d="0.15"><em>MISSION</em> #2<br />PERFORMANCE</p>
+          <p class="f3" data-a="left" data-d="0.3"><em>MISSION</em> #4<br />CONEXÃO</p>
+          <p class="f4" data-a="right" data-d="0.45"><em>MISSION</em> #3<br />SEGURANÇA</p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 32 PRONTOS -->
+      <section class="slide" data-id="prontos" data-title="Vocês estão prontos?" data-section="THE NEXT LABEL">
+        <div class="ready">
+          <h2 class="mega tb-wide tb-grunge" data-a="mask">Vocês estão prontos<br />para esta missão?</h2>
+          <p class="tb-type tb-arrowbar" data-a="left" data-d="0.6">O próximo lote pode ser o primeiro.</p>
+        </div>
+      </section>
+
+      <!-- ===================================================== 33 OBRIGADO -->
+      <section class="slide" data-id="obrigado" data-title="Obrigado" data-section="THE NEXT LABEL">
+        <div class="back par" style="--d: -1.2"><span class="tb-wide tb-grunge" data-a="back">OBRIGADO</span></div>
+        <div class="s-open">
+          <ul class="brands" data-a="up">
+            <li><img src="/innovation-week/deck/brand-integralmedica.webp" alt="Integralmedica" /></li>
+            <li><img src="/innovation-week/deck/brand-darkness.webp" alt="Darkness" /></li>
+            <li><img src="/innovation-week/deck/brand-nutrify.webp" alt="Nutrify" /></li>
+            <li><img src="/innovation-week/deck/brand-on.webp" alt="Optimum Nutrition" /></li>
+          </ul>
+          <div class="open-logos par" style="--d: 0.6">
+            <img class="logo-iw" src="/innovation-week/deck/logo-iw.webp" alt="Innovation Week 2026" data-a="mask" />
+            <span class="open-x tb-wide" data-a="scale" data-d="0.35">×</span>
+            <img class="logo-ind" src="/innovation-week/deck/logo-indemetal.webp" alt="Indemetal Gráficos" data-a="mask" data-d="0.5" />
+          </div>
+          <p class="thanks tb-wide" data-a="up" data-d="0.8">Muito <em>obrigado(a)!</em></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- moldura fixa (como no PDF: logos nos cantos) -->
+    <div class="chrome" aria-hidden="true">
+      <img class="ch-iw" src="/innovation-week/deck/logo-iw.webp" alt="" />
+      <img class="ch-ind" src="/innovation-week/deck/logo-indemetal.webp" alt="" />
+      <div class="ch-foot tb-type">
+        <span class="ch-section" id="ch-section"></span>
+        <span class="ch-bar"><i id="ch-bar"></i></span>
+        <span class="ch-count"><b id="ch-n">01</b> / <span id="ch-total">33</span></span>
+      </div>
+      <span class="ch-barcode tb-barcode"></span>
+    </div>
+    <img class="pz-astro" src="/innovation-week/deck/astronaut.webp" alt="" aria-hidden="true" />
+    <div class="pz-sweep" aria-hidden="true"></div>
+    <div class="pz-black" aria-hidden="true"></div>
+    <p class="pz-hint tb-type" id="pz-hint" aria-hidden="true">PASSADOR / → AVANÇA // F TELA CHEIA // B TELA PRETA</p>
+    <p class="pz-goto tb-wide" id="pz-goto" aria-hidden="true"></p>
+
+    <script type="module" src="/src/present/main.ts"></script>
+  </body>
+</html>

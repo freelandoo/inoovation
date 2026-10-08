@@ -18,11 +18,19 @@
       "destination": "/telao.html"
     },
     {
+      "source": "/admin/apresentacao",
+      "destination": "/apresentacao.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/privacidade",
       "destination": "/privacidade.html"
     },
     {
-      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade).*)",
+      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade|admin).*)",
       "destination": "/index.html"
     }
   ],

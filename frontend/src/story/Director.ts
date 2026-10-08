@@ -350,6 +350,10 @@ export class Director {
   private idleScanT = 0;
   private first = true;
   private ctx: Ctx;
+  /** Apresentação: o estado vem dos slides (sem rolagem). */
+  source: ((c: Ctx) => Partial<SceneState>) | null = null;
+  /** Apresentação: parallax por tempo, sem depender do mouse. */
+  drift = false;
 
   constructor(
     private stage: Stage,
@@ -435,6 +439,11 @@ export class Director {
   }
 
   private computeTarget() {
+    if (this.source) {
+      const s = { ...DEFAULTS, ...this.source(this.ctx) };
+      for (const k of KEYS) this.target[k] = s[k];
+      return;
+    }
     const y = window.scrollY;
     const A = this.anchors;
     if (!A.length) return;
@@ -461,7 +470,7 @@ export class Director {
       T.astroO *= clamp01(this.intro * 1.6 - 0.4);
       T.scan = THREE.MathUtils.lerp(-0.2, 1.2, clamp01((this.intro - 0.3) / 0.6));
       T.scanI = Math.max(T.scanI, this.intro > 0.3 && this.intro < 0.95 ? 1 : 0);
-    } else if (!this.reduced && window.scrollY < window.innerHeight * 0.5) {
+    } else if (!this.source && !this.reduced && window.scrollY < window.innerHeight * 0.5) {
       // Varredura ocasional no hero: a luz vermelha percorre a superfície.
       this.idleScanT = (this.idleScanT + dt) % 7;
       const p = this.idleScanT / 2.2;
@@ -480,6 +489,7 @@ export class Director {
     }
     this.first = false;
 
+    if (this.drift) this.pointerTarget.set(Math.sin(t * 0.21) * 0.6, Math.sin(t * 0.13 + 1.3) * 0.4);
     this.pointer.lerp(this.pointerTarget, 1 - Math.exp(-dt * 4));
     this.apply(t);
   }

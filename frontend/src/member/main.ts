@@ -70,7 +70,8 @@ function decode(el: HTMLElement, text: string, delay = 0) {
 async function load() {
   const token = tokenFromUrl();
   const base = config.api.baseUrl;
-  if (!token || !base) return fail();
+  if (!token) return showLogin();
+  if (!base) return fail();
   let m: Member;
   try {
     const r = await fetch(`${base}/api/member/${encodeURIComponent(token)}`);
@@ -79,7 +80,111 @@ async function load() {
   } catch {
     return fail();
   }
+  remember({ token, crew: m.crew, name: m.name });
   render(m, token);
+}
+
+// ---------------------------------------------------------------- login
+
+interface Saved {
+  token: string;
+  crew: number;
+  name: string;
+}
+const SAVED_KEY = 'iw:members';
+
+function readSaved(): Saved[] {
+  const out = new Map<string, Saved>();
+  try {
+    for (const s of JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]') as Saved[]) if (s?.token) out.set(s.token, s);
+    // Cadastros feitos pelo modal de ativação (iw:signup:<unidade>).
+    for (const k of Object.keys(localStorage)) {
+      if (!k.startsWith('iw:signup:')) continue;
+      const r = JSON.parse(localStorage.getItem(k) ?? 'null') as { crew?: number; name?: string; member?: string } | null;
+      if (r?.member && !out.has(r.member)) out.set(r.member, { token: r.member, crew: r.crew ?? 0, name: r.name ?? '' });
+    }
+  } catch {
+    /* storage indisponível */
+  }
+  return [...out.values()];
+}
+
+function remember(s: Saved) {
+  try {
+    const list = readSaved().filter((x) => x.token !== s.token);
+    localStorage.setItem(SAVED_KEY, JSON.stringify([s, ...list].slice(0, 5)));
+  } catch {
+    /* storage indisponível */
+  }
+}
+
+function showLogin() {
+  html.dataset.state = 'login';
+  document.title = 'Innovation Week · Entrar na área do membro';
+  const saved = readSaved();
+  if (saved.length) {
+    const list = $('#mb-saved-list');
+    for (const s of saved) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `/membro/${encodeURIComponent(s.token)}`;
+      const name = document.createElement('span');
+      name.textContent = s.name ? `Continuar como ${s.name.split(' ')[0]}` : 'Continuar no meu perfil';
+      const crew = document.createElement('span');
+      crew.className = 'mono';
+      crew.textContent = s.crew ? `Nº ${String(s.crew).padStart(4, '0')} ›` : '›';
+      a.append(name, crew);
+      li.appendChild(a);
+      list.appendChild(li);
+    }
+    $('#mb-saved').hidden = false;
+  }
+
+  const form = $<HTMLFormElement>('#mb-login-form');
+  const err = $('#mb-login-error');
+  const btn = form.querySelector<HTMLButtonElement>('button')!;
+  const show = (msg: string) => {
+    err.textContent = msg;
+    err.hidden = false;
+    play('error');
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.hidden = true;
+    const data = new FormData(form);
+    const email = String(data.get('email') ?? '').trim();
+    const crew = String(data.get('crew') ?? '').replace(/\D/g, '');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return show('Confira o e-mail.');
+    if (!crew) return show('Informe o seu nº de tripulante.');
+    if (!config.api.baseUrl) return show('Área do membro indisponível no momento.');
+    btn.disabled = true;
+    btn.textContent = 'CONFERINDO…';
+    try {
+      const r = await fetch(`${config.api.baseUrl}/api/member/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, crew }),
+      });
+      const body = (await r.json().catch(() => ({}))) as { member?: string; error?: string };
+      if (r.ok && body.member) {
+        play('lock');
+        location.href = `/membro/${encodeURIComponent(body.member)}`;
+        return;
+      }
+      show(
+        r.status === 404
+          ? 'Não encontramos esse tripulante. Confira o e-mail e o número.'
+          : r.status === 429
+            ? 'Muitas tentativas. Aguarde um minuto e tente de novo.'
+            : 'Não foi possível entrar agora. Tente de novo.',
+      );
+    } catch {
+      show('Sem conexão. Tente de novo.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'ENTRAR NO MEU PERFIL';
+  });
+  if (!reduced) gsap.from('.mb-login > *', { opacity: 0, y: 18, stagger: 0.08, duration: 0.7, ease: 'power3.out' });
 }
 
 function fail() {

@@ -197,6 +197,136 @@ html[data-state='loading'] .mb-loading,
 html[data-state='error'] .mb-error {
   display: grid;
 }
+.mb-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ---------- Login (/membro sem link) ---------- */
+.mb-login {
+  position: relative;
+  z-index: 1;
+  display: none;
+  width: min(100%, 1120px);
+  min-height: calc(100dvh - 120px);
+  margin: 0 auto;
+  padding: 28px var(--gutter) calc(var(--safe-bottom) + 40px);
+  align-content: center;
+  gap: 28px;
+}
+html[data-state='login'] .mb-login {
+  display: grid;
+}
+@media (min-width: 900px) {
+  .mb-login {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 56px;
+  }
+  .mb-admin-link {
+    grid-column: 1 / -1;
+  }
+}
+.mb-login-copy {
+  display: grid;
+  gap: 16px;
+}
+.mb-login-copy .mb-h1 em {
+  font-style: normal;
+  color: var(--red);
+}
+.mb-login-copy .mb-lead {
+  max-width: 44ch;
+}
+.mb-login-card {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  background: #fff;
+  box-shadow: 0 1px 0 var(--rule), 0 30px 60px -40px rgba(10, 10, 10, 0.35);
+}
+.mb-form {
+  display: grid;
+  gap: 14px;
+}
+.mb-field {
+  display: grid;
+  gap: 6px;
+}
+.mb-field span {
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.14em;
+}
+.mb-field input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--rule);
+  color: var(--ink);
+  font: 500 17px/1 var(--font-ui);
+  transition: box-shadow 0.2s var(--ease-out);
+}
+.mb-field input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.mb-form .mb-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+.mb-form-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--red-deep);
+}
+.mb-saved ul {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mb-saved a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  background: var(--ink);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  transition: background 0.2s var(--ease-out);
+}
+.mb-saved a:hover,
+.mb-saved a:focus-visible {
+  background: var(--red);
+  outline: none;
+}
+.mb-saved a .mono {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.mb-admin-link {
+  justify-self: start;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.mb-admin-link:hover,
+.mb-admin-link:focus-visible {
+  color: var(--red);
+}
 html:not([data-state='ready']) .mb-main {
   display: none;
 }

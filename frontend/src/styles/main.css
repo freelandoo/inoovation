@@ -414,6 +414,44 @@ html.no-boot .boot {
   font-size: 10px;
   color: var(--grey);
 }
+.hud-right {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 18px;
+}
+/* Botão MEMBROS: leva ao login da área do membro. */
+.hud-members {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-decoration: none;
+  color: var(--white);
+  background: rgba(3, 3, 3, 0.55);
+  border: 1px solid var(--line-red);
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  backdrop-filter: blur(6px);
+  transition:
+    background var(--t-micro) var(--ease-out),
+    border-color var(--t-micro) var(--ease-out);
+}
+.hud-members svg {
+  color: var(--red-hot);
+}
+.hud-members:hover,
+.hud-members:focus-visible {
+  background: var(--red);
+  border-color: var(--red);
+}
+.hud-members:hover svg,
+.hud-members:focus-visible svg {
+  color: var(--white);
+}
 .hud-status {
   list-style: none;
   margin: 0;
@@ -1530,6 +1568,10 @@ html.ar-open body {
 
 @media (max-width: 760px) {
   .hud-status .hud-extra {
+    display: none;
+  }
+  /* No celular o topo fica só com a marca e o botão MEMBROS. */
+  .hud-right .hud-status {
     display: none;
   }
   .hud-status {
