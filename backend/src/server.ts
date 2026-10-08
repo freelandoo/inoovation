@@ -12,7 +12,12 @@ if (env.autoMigrate) {
   if (applied.length) console.log(`[migrate] aplicadas: ${applied.join(', ')}`);
 }
 
-const app = createApp(db, { allowedOrigins: env.allowedOrigins, adminToken: env.adminToken });
+const app = createApp(db, {
+  allowedOrigins: env.allowedOrigins,
+  adminToken: env.adminToken,
+  adminUser: env.adminUser,
+  adminPasswordHash: env.adminPasswordHash,
+});
 const server = serve({ fetch: app.fetch, port: env.port, hostname: '0.0.0.0' }, (info) => {
   console.log(`[api] ouvindo na porta ${info.port}`);
 });

@@ -5,8 +5,11 @@
 //   POST /api/events          eventos da jornada (um ou lote de até 20)
 //   POST /api/signup          cadastro de quem ativou uma unidade verificada (devolve o link de membro)
 //   GET  /api/member/:token   área do membro (link secreto)
+//   POST /api/member/login    entrar na área do membro com e-mail + nº de tripulante (devolve o link)
 //   GET  /api/live            números e últimos tripulantes, para o telão (só primeiro nome)
-//   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN)
+//   POST /api/admin/login     usuário + senha da área admin (devolve uma sessão de 12 h)
+//   GET  /api/admin/me        confere a sessão do admin
+//   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN ou sessão do admin)
 //   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
 //   POST /api/admin/reset     zera os dados de teste, mantém a lista oficial (ADMIN_TOKEN + {"confirm":"ZERAR TUDO"})
 //
@@ -21,6 +24,7 @@ import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
 import { parseRegistry, importRegistry } from './registry.ts';
+import { issueSession, verifyPassword, verifySession } from './auth.ts';
 
 const MAX_BODY = 8 * 1024;
 /** Lista de IDs: ~45 bytes por link, 200 mil ≈ 9 MB. */
@@ -29,6 +33,9 @@ const MAX_REGISTRY_BODY = 32 * 1024 * 1024;
 export interface AppOptions {
   allowedOrigins: string[];
   adminToken: string | null;
+  /** Login da área admin; sem os dois (ou sem adminToken), o login fica desativado. */
+  adminUser?: string | null;
+  adminPasswordHash?: string | null;
   /** Requisições por minuto por IP em /api/scan e /api/events. */
   rateLimit?: number;
 }
@@ -68,6 +75,8 @@ function safeEqual(a: string, b: string) {
 export function createApp(db: Db, opts: AppOptions) {
   const app = new Hono();
   const allow = createRateLimiter(opts.rateLimit ?? 120, 60_000);
+  // Tentativas de login (admin e membro): poucas por minuto, para frear força bruta.
+  const allowLogin = createRateLimiter(10, 60_000);
 
   app.use(
     '/api/*',
@@ -279,6 +288,23 @@ export function createApp(db: Db, opts: AppOptions) {
     });
   });
 
+  // Botão MEMBROS do site: quem já se cadastrou volta ao perfil com o e-mail e o
+  // nº de tripulante (os dois juntos; o número sozinho aparece no telão).
+  app.post('/api/member/login', async (c) => {
+    if (!allowLogin(clientIp(c))) return c.json({ error: 'muitas tentativas, aguarde um minuto' }, 429);
+    c.header('Cache-Control', 'no-store');
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const email = v.email(body?.email);
+    const crew = Number(String(body?.crew ?? '').replace(/\D/g, ''));
+    if (!email || !Number.isSafeInteger(crew) || crew < 1) throw new HttpError(400, 'dados inválidos');
+    const r = await db.query<{ member_token: string }>('select member_token from signups where id = $1 and email = $2', [
+      crew,
+      email,
+    ]);
+    if (!r.rows[0]) return c.json({ error: 'não encontramos esse tripulante' }, 404);
+    return c.json({ ok: true, member: r.rows[0].member_token });
+  });
+
   // "Pegar" o personagem na RA: entra na coleção do membro (repetir não duplica).
   app.post('/api/member/:token/collect', async (c) => {
     if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
@@ -320,14 +346,38 @@ export function createApp(db: Db, opts: AppOptions) {
     });
   });
 
-  /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). */
+  const loginEnabled = !!(opts.adminToken && opts.adminUser && opts.adminPasswordHash);
+
+  /** Sem ADMIN_TOKEN as rotas de admin nem existem (404). Aceita o token ou a sessão do login. */
   const adminDenied = (c: Context) => {
     if (!opts.adminToken) return c.json({ error: 'não encontrado' }, 404);
     const auth = c.req.header('authorization') ?? '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-    if (!safeEqual(token, opts.adminToken)) return c.json({ error: 'não autorizado' }, 401);
+    const ok =
+      safeEqual(token, opts.adminToken) || (loginEnabled && verifySession(opts.adminToken, opts.adminUser!, token));
+    if (!ok) return c.json({ error: 'não autorizado' }, 401);
     return null;
   };
+
+  app.post('/api/admin/login', async (c) => {
+    if (!loginEnabled) return c.json({ error: 'não encontrado' }, 404);
+    if (!allowLogin(clientIp(c))) return c.json({ error: 'muitas tentativas, aguarde um minuto' }, 429);
+    c.header('Cache-Control', 'no-store');
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const user = typeof body?.user === 'string' ? body.user.trim().toLowerCase() : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
+    // A senha é sempre conferida (mesmo com usuário errado) para o tempo de resposta não dizer qual errou.
+    const passOk = password.length > 0 && password.length <= 200 && verifyPassword(password, opts.adminPasswordHash!);
+    if (!passOk || !safeEqual(user, opts.adminUser!)) return c.json({ error: 'usuário ou senha incorretos' }, 401);
+    return c.json({ ok: true, user: opts.adminUser, ...issueSession(opts.adminToken!, opts.adminUser!) });
+  });
+
+  app.get('/api/admin/me', (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
+    c.header('Cache-Control', 'no-store');
+    return c.json({ ok: true, user: opts.adminUser ?? 'admin' });
+  });
 
   app.post('/api/admin/registry', async (c) => {
     const denied = adminDenied(c);

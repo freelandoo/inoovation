@@ -9,6 +9,10 @@ export interface Env {
   allowedOrigins: string[];
   /** Token para GET /api/stats. Sem token, a rota fica desativada. */
   adminToken: string | null;
+  /** Login da área admin (/admin). Precisa também do ADMIN_TOKEN, que assina a sessão. */
+  adminUser: string | null;
+  /** `scrypt:<sal>:<hash>` gerado por `npm run admin:hash -- <senha>`. */
+  adminPasswordHash: string | null;
   autoMigrate: boolean;
 }
 
@@ -25,6 +29,8 @@ export function loadEnv(src: NodeJS.ProcessEnv = process.env): Env {
       .map((s) => s.trim().replace(/\/$/, ''))
       .filter(Boolean),
     adminToken: src.ADMIN_TOKEN && src.ADMIN_TOKEN.length >= 16 ? src.ADMIN_TOKEN : null,
+    adminUser: src.ADMIN_USER?.trim().toLowerCase() || null,
+    adminPasswordHash: src.ADMIN_PASSWORD_HASH?.startsWith('scrypt:') ? src.ADMIN_PASSWORD_HASH : null,
     autoMigrate: src.AUTO_MIGRATE !== 'false',
   };
 }
