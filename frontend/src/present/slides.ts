@@ -123,15 +123,16 @@ const openingLabel = (c: Ctx, t: number): Partial<SceneState> => {
 
 const $$ = (el: HTMLElement, s: string) => [...el.querySelectorAll<HTMLElement>(s)];
 
-function countTo(el: HTMLElement, value: number, reduced: boolean, dur = 1.6) {
+function countTo(el: HTMLElement, value: number, reduced: boolean, dur = 1.6, fmt: (n: number) => string = fmtInt) {
   if (reduced) {
-    el.textContent = fmtInt(value);
+    el.textContent = fmt(value);
     return;
   }
   const o = { v: Number(el.dataset.v ?? 0) };
   el.dataset.v = String(value);
-  gsap.to(o, { v: value, duration: dur, ease: 'power3.out', onUpdate: () => (el.textContent = fmtInt(Math.round(o.v))) });
+  gsap.to(o, { v: value, duration: dur, ease: 'power3.out', onUpdate: () => (el.textContent = fmt(Math.round(o.v))) });
 }
+const crewFmt = (n: number) => String(n).padStart(4, '0');
 
 const GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
 function decode(el: HTMLElement, text: string, delay = 0) {
@@ -166,8 +167,7 @@ async function pollLive(el: HTMLElement, d: DeckCtx) {
     const crewEl = el.querySelector<HTMLElement>('#scan-crew')!;
     const before = Number(crewEl.dataset.v ?? 0);
     if (live.crew !== before) {
-      countTo(crewEl, live.crew, d.reduced, 1);
-      crewEl.textContent ||= '0';
+      countTo(crewEl, live.crew, d.reduced, 1, crewFmt);
       if (before && live.crew > before && !d.reduced) gsap.fromTo(crewEl, { color: '#ff3030', scale: 1.15 }, { color: '#f5f5f3', scale: 1, duration: 0.9 });
     }
     const list = el.querySelector<HTMLElement>('#scan-recent')!;
