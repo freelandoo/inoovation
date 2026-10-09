@@ -21,6 +21,8 @@ export interface ScannerOptions {
   onError: (reason: string) => void;
   onInvalid: () => void;
   onClose: () => void;
+  /** Textos do leitor (padrão: ativação da unidade pelo consumidor). */
+  labels?: { chip?: string; title?: string; locked?: (unit: ScannedUnit) => string };
 }
 
 interface NativeDetector {
@@ -92,14 +94,14 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
   const top = el('div', 'usc-top');
   const chip = el('span', 'usc-chip mono');
   const chipState = el('b', '', 'INICIANDO');
-  chip.append('LEITURA DA UNIDADE // ', chipState);
+  chip.append(`${opts.labels?.chip ?? 'LEITURA DA UNIDADE'} // `, chipState);
   const closeBtn = el('button', 'usc-icon', '✕');
   closeBtn.type = 'button';
   closeBtn.setAttribute('aria-label', 'Fechar leitor');
   top.append(chip, closeBtn);
 
   const bottom = el('div', 'usc-bottom');
-  const title = el('h2', 'usc-title', 'Aponte para o QR do pote');
+  const title = el('h2', 'usc-title', opts.labels?.title ?? 'Aponte para o QR do pote');
   title.id = 'usc-title';
   const hint = el('p', 'usc-hint', 'Deixe o QR inteiro dentro do quadro.');
   hint.setAttribute('aria-live', 'polite');
@@ -182,7 +184,9 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
     worker?.terminate();
     setState('locked');
     title.textContent = 'Unidade lida';
-    hint.textContent = `${unit.lotId ? `LOTE ${unit.lotId} · ` : ''}UNIDADE ${unit.unitId}. Carregando sua identidade…`;
+    hint.textContent =
+      opts.labels?.locked?.(unit) ??
+      `${unit.lotId ? `LOTE ${unit.lotId} · ` : ''}UNIDADE ${unit.unitId}. Carregando sua identidade…`;
     torchBtn.hidden = true;
     navigator.vibrate?.([30, 40, 30]);
     opts.onUnit(unit, detector);
@@ -255,7 +259,7 @@ export function openUnitScanner(opts: ScannerOptions): { close: () => void } {
 
   const start = (streamPromise: Promise<MediaStream>) => {
     setState('starting');
-    title.textContent = 'Aponte para o QR do pote';
+    title.textContent = opts.labels?.title ?? 'Aponte para o QR do pote';
     hint.textContent = 'Deixe o QR inteiro dentro do quadro.';
     retryBtn.hidden = true;
     streamPromise

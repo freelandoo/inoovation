@@ -61,7 +61,7 @@ test('reset: zera os dados de teste, mantém a lista oficial e a numeração vol
   const r = await json('/api/admin/reset', { confirm: 'ZERAR TUDO' }, ADMIN);
   assert.equal(r.status, 200);
   const body = (await r.json()) as { remaining: Record<string, number> };
-  assert.deepEqual(body.remaining, { signups: 0, collectibles: 0, units: 0, sessions: 0, events: 0, registry: 1 });
+  assert.deepEqual(body.remaining, { signups: 0, collectibles: 0, units: 0, sessions: 0, events: 0, returns: 0, registry: 1 });
   assert.equal(await scan(), 1);
   assert.equal(await signup('c@example.com'), 1);
 });

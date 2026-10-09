@@ -91,6 +91,33 @@
         <ol class="ad-cards" id="ad-cards"></ol>
       </section>
 
+      <section class="ad-returns" id="ad-returns" aria-labelledby="ad-returns-title">
+        <div class="ad-stats-head">
+          <h2 class="tb-wide ad-h2" id="ad-returns-title">Devolução <span class="tb-outline">de embalagens</span></h2>
+          <span class="tb-type ad-updated">SÓ ADMINS // CADA POTE CONTA UMA VEZ</span>
+        </div>
+        <div class="ad-ret-grid">
+          <div class="tb-frame ad-ret-card" style="--c: 24px">
+            <div class="tb-frame-in ad-ret-in">
+              <span class="tb-type ad-card-l">EMBALAGENS DEVOLVIDAS</span>
+              <b class="tb-wide ad-ret-total" id="ad-ret-total">0</b>
+              <button class="tb-btn ad-ret-scan" id="ad-ret-scan" type="button">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10" /></svg>
+                LER DEVOLUÇÃO
+              </button>
+              <div class="ad-ret-result tb-type" id="ad-ret-result" role="status" aria-live="polite" hidden></div>
+            </div>
+          </div>
+          <div class="ad-panel">
+            <h2 class="tb-wide ad-h3">Últimas devoluções</h2>
+            <table class="ad-table tb-type">
+              <thead><tr><th>SERIAL</th><th>LOTE</th><th>TRIPULANTE</th><th>LIDO POR</th><th>QUANDO</th></tr></thead>
+              <tbody id="ad-ret-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section class="ad-split">
         <div class="ad-panel">
           <h2 class="tb-wide ad-h3">Funil</h2>

@@ -10,6 +10,8 @@
 //   POST /api/admin/login     usuário + senha da área admin (devolve uma sessão de 12 h)
 //   GET  /api/admin/me        confere a sessão do admin
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN ou sessão do admin)
+//   POST /api/admin/returns   registra a devolução de uma embalagem (leitor da área admin)
+//   GET  /api/admin/returns   total e últimas devoluções
 //   POST /api/admin/registry  importa a lista de IDs da Realizse (um link GS1 por linha; ADMIN_TOKEN)
 //   POST /api/admin/reset     zera os dados de teste, mantém a lista oficial (ADMIN_TOKEN + {"confirm":"ZERAR TUDO"})
 //
@@ -23,7 +25,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
-import { parseRegistry, importRegistry, unitCodeSql } from './registry.ts';
+import { gtin14, parseRegistry, importRegistry, unitCodeSql } from './registry.ts';
 import { issueSession, verifyPassword, verifySession } from './auth.ts';
 
 const MAX_BODY = 8 * 1024;
@@ -424,6 +426,82 @@ export function createApp(db: Db, opts: AppOptions) {
     });
   });
 
+  // Devolução de embalagem: só admins, pelo leitor da área admin. O pote precisa
+  // estar na lista oficial e conta uma vez só.
+  app.post('/api/admin/returns', async (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const productId = v.product(body?.productId);
+    const lotId = v.code(body?.lotId);
+    const unitId = v.code(body?.unitId);
+    if (!productId || !lotId || !unitId) throw new HttpError(400, 'unidade inválida');
+    const gtin = gtin14(productId);
+    const unit = { productId: gtin, lotId, unitId };
+
+    const reg = await db.query(
+      'select 1 from registry_units where product_id = $1 and lot_id = $2 and unit_id = $3',
+      [gtin, lotId, unitId],
+    );
+    if (!reg.rows[0]) return c.json({ error: 'embalagem fora da lista oficial', code: 'not_registered', unit }, 404);
+
+    const code = `${gtin}|${lotId}|${unitId}`;
+    const by = sessionUser(bearer(c)) ?? 'admin';
+    const ins = await db.query<{ returned_at: string }>(
+      `insert into returns (unit_code, product_id, lot_id, unit_id, returned_by) values ($1, $2, $3, $4, $5)
+       on conflict (unit_code) do nothing
+       returning returned_at`,
+      [code, gtin, lotId, unitId, by],
+    );
+    const info = await db.query<{ returned_at: string; returned_by: string; crew: string | null; total: number }>(
+      `select r.returned_at, r.returned_by,
+              (select s.id from signups s where s.unit_code = r.unit_code) as crew,
+              (select count(*)::int from returns) as total
+       from returns r where r.unit_code = $1`,
+      [code],
+    );
+    const i = info.rows[0];
+    const out = {
+      unit,
+      returnedAt: i.returned_at,
+      returnedBy: i.returned_by,
+      crew: i.crew == null ? null : Number(i.crew),
+      total: i.total,
+    };
+    if (!ins.rows[0]) return c.json({ error: 'embalagem já devolvida', code: 'already_returned', ...out }, 409);
+    return c.json({ ok: true, ...out });
+  });
+
+  app.get('/api/admin/returns', async (c) => {
+    const denied = adminDenied(c);
+    if (denied) return denied;
+    c.header('Cache-Control', 'no-store');
+    const r = await db.query<{
+      product_id: string;
+      lot_id: string;
+      unit_id: string;
+      returned_by: string;
+      returned_at: string;
+      crew: string | null;
+      total: number;
+    }>(
+      `select r.product_id, r.lot_id, r.unit_id, r.returned_by, r.returned_at,
+              (select s.id from signups s where s.unit_code = r.unit_code) as crew,
+              count(*) over ()::int as total
+       from returns r order by r.returned_at desc limit 30`,
+    );
+    const total = r.rows[0]?.total ?? 0;
+    return c.json({
+      total,
+      recent: r.rows.map((x) => ({
+        unit: { productId: x.product_id, lotId: x.lot_id, unitId: x.unit_id },
+        returnedBy: x.returned_by,
+        returnedAt: x.returned_at,
+        crew: x.crew == null ? null : Number(x.crew),
+      })),
+    });
+  });
+
   // Zera os dados de teste (cadastros, coleção, leituras, sessões, eventos) e reinicia a
   // numeração. A lista oficial (registry_units) e as migrações ficam.
   app.post('/api/admin/reset', async (c) => {
@@ -432,12 +510,13 @@ export function createApp(db: Db, opts: AppOptions) {
     const body = (await readJson(c)) as Record<string, unknown>;
     if (body?.confirm !== 'ZERAR TUDO') throw new HttpError(400, 'confirmação ausente');
     await db.transaction(async (tx) => {
-      await tx.exec('truncate collectibles, signups, events, sessions, units restart identity cascade');
+      await tx.exec('truncate collectibles, signups, events, sessions, units, returns restart identity cascade');
     });
     const r = await db.query<Record<string, string>>(
       `select (select count(*) from signups) as signups, (select count(*) from collectibles) as collectibles,
               (select count(*) from units) as units, (select count(*) from sessions) as sessions,
-              (select count(*) from events) as events, (select count(*) from registry_units) as registry`,
+              (select count(*) from events) as events, (select count(*) from returns) as returns,
+              (select count(*) from registry_units) as registry`,
     );
     const remaining = Object.fromEntries(Object.entries(r.rows[0]).map(([k, n]) => [k, Number(n)]));
     return c.json({ ok: true, remaining });

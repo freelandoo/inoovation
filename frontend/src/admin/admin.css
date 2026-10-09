@@ -339,6 +339,76 @@ html[data-state='ready'] .ad-main {
   opacity: 0.6;
 }
 
+/* ---------- devolução de embalagens ---------- */
+.ad-ret-grid {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+@media (min-width: 1000px) {
+  .ad-ret-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  }
+}
+.ad-ret-in {
+  display: grid;
+  gap: 14px;
+  padding: 24px 22px;
+  align-content: start;
+}
+.ad-ret-total {
+  font-size: clamp(56px, 7vw, 96px);
+  line-height: 0.9;
+  color: var(--tb-red);
+  text-shadow: 0 0 30px rgba(255, 22, 22, 0.45);
+}
+.ad-ret-scan {
+  justify-self: start;
+}
+.ad-ret-result {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--tb-line-strong);
+  border-left: 4px solid var(--tb-white);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+.ad-ret-result b {
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+.ad-ret-result[data-kind='warn'],
+.ad-ret-result[data-kind='error'] {
+  border-left-color: var(--tb-red);
+}
+.ad-ret-result[data-kind='warn'] b,
+.ad-ret-result[data-kind='error'] b {
+  color: var(--tb-red-ink);
+}
+
+/* leitor de QR (componente do site) dentro do admin: tokens que ele espera */
+.usc {
+  --white: var(--tb-white);
+  --grey: #929292;
+  --red: var(--tb-red);
+  --red-hot: var(--tb-red-hot);
+  --line-red: rgba(255, 48, 48, 0.55);
+  --font-display: var(--tb-font-wide);
+  --font-ui: var(--tb-font-wide);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --t-comp: 480ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.usc .mono {
+  font-family: var(--tb-font-type);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .ad-split {
   display: grid;
   gap: 18px;

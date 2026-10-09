@@ -1,11 +1,12 @@
-// Área admin (/admin): login com usuário e senha, números ao vivo e o botão
-// que abre a apresentação (/admin/apresentacao).
+// Área admin (/admin): login com usuário e senha, números ao vivo, leitor de
+// devolução de embalagens e o botão que abre a apresentação (/admin/apresentacao).
 
 import { gsap } from 'gsap';
 import '../present/tabloid.css';
 import './admin.css';
 import { checkAdmin, clearAdmin, loginAdmin, readAdmin } from './session.ts';
 import { fetchStats, fmtInt, funnelRows, type Stats } from './stats.ts';
+import { initReturns, refreshReturns } from './returns.ts';
 
 const html = document.documentElement;
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -68,6 +69,7 @@ function showPanel() {
     gsap.from('.ad-hero > *', { opacity: 0, y: 30, stagger: 0.12, duration: 0.9, ease: 'power3.out' });
     gsap.from('.ad-mega', { letterSpacing: '0.2em', duration: 1.2, ease: 'expo.out' });
   }
+  initReturns();
   refresh(true);
   clearInterval(timer);
   timer = window.setInterval(() => refresh(false), 10_000);
@@ -81,6 +83,7 @@ async function refresh(first: boolean) {
     return;
   }
   render(s, first);
+  refreshReturns();
   $('#ad-updated').textContent = `ATUALIZADO ${new Date().toLocaleTimeString('pt-BR')}`;
 }
 

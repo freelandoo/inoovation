@@ -71,6 +71,23 @@ export async function adminGet<T>(path: string): Promise<T | null> {
   }
 }
 
+/** POST autenticado em rota de admin; devolve o status e o corpo (null sem conexão). */
+export async function adminPost<T>(path: string, body: unknown): Promise<{ status: number; body: T } | null> {
+  const s = readAdmin();
+  if (!s || !config.api.baseUrl) return null;
+  try {
+    const r = await fetch(`${config.api.baseUrl}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${s.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (r.status === 401) clearAdmin();
+    return { status: r.status, body: (await r.json().catch(() => ({}))) as T };
+  } catch {
+    return null;
+  }
+}
+
 /** Confere a sessão salva na API. */
 export async function checkAdmin(): Promise<boolean> {
   return !!(await adminGet<{ ok: boolean }>('/api/admin/me'))?.ok;
