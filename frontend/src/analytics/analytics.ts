@@ -21,6 +21,7 @@ export type AnalyticsEvent =
   | 'signup_viewed'
   | 'signup_submitted'
   | 'signup_dismissed'
+  | 'signup_taken'
   | 'member_viewed'
   | 'member_link_shared'
   | 'character_collected'

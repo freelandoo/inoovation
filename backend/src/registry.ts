@@ -124,6 +124,10 @@ export const REGISTERED_SQL = `exists (
   where r.product_id = lpad(u.product_id, 14, '0') and r.lot_id = u.lot_id and r.unit_id = u.unit_id
 )`;
 
+/** Expressão SQL da unidade como na lista oficial (GTIN-14|lote|serial): a chave de `signups.unit_code`. */
+export const unitCodeSql = (alias: string) =>
+  `lpad(${alias}.product_id, 14, '0') || '|' || ${alias}.lot_id || '|' || ${alias}.unit_id`;
+
 async function promoteVerified(db: Queryable): Promise<number> {
   const r = await db.query<{ n: number }>(
     `with up as (

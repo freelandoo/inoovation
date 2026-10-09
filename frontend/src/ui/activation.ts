@@ -4,7 +4,8 @@
 //
 // Abre sozinho uma vez por sessão depois da entrada do hero; quem fecha pode
 // reabrir pelo botão do hero. Cadastro feito fica salvo no aparelho e o hero
-// passa a mostrar o número de tripulante.
+// passa a mostrar o número de tripulante. Um QR code ativa um tripulante só:
+// se outra pessoa já registrou o pote, o modal avisa em vez de pedir o cadastro.
 
 import { gsap } from 'gsap';
 import { track } from '../analytics/analytics.ts';
@@ -151,6 +152,13 @@ const TEMPLATE = `
       <a class="act-submit act-submit-link" data-member-link href="#"><span class="act-submit-label">ABRIR MEU PERFIL DE MEMBRO</span></a>
       <button class="act-later mono" type="button" data-go-ar>VER O HOLOGRAMA EM RA</button>
     </section>
+
+    <section class="act-step act-done act-taken" data-step="taken" hidden>
+      <p class="act-crew mono">QR CODE <b>JÁ ATIVADO</b></p>
+      <p class="act-lead">Esta unidade já está registrada no nome de outro tripulante. Cada QR code ativa uma pessoa só.</p>
+      <a class="act-submit act-submit-link" href="/membro"><span class="act-submit-label">JÁ É SEU? ENTRAR NO PERFIL</span></a>
+      <button class="act-later mono" type="button" data-go-ar>VER O HOLOGRAMA EM RA</button>
+    </section>
   </div>
 `;
 
@@ -197,6 +205,7 @@ function decode(el: HTMLElement, text: string, delay: number, reduced: boolean, 
 
 export function initActivation(opts: ActivationOptions) {
   const { identity, unit, reduced } = opts;
+  let taken = !!unit.activated;
   const key = unitKey(identity);
   const regKey = `iw:signup:${key}`;
   const dismissKey = `iw:signup-dismissed:${key}`;
@@ -228,9 +237,14 @@ export function initActivation(opts: ActivationOptions) {
     const dot = document.createElement('i');
     dot.className = 'act-dot';
     const label = document.createElement('span');
-    label.textContent = reg ? `TRIPULANTE Nº ${crewLabel(reg.crew)} // PERFIL` : 'REGISTRAR MINHA UNIDADE';
+    label.textContent = reg
+      ? `TRIPULANTE Nº ${crewLabel(reg.crew)} // PERFIL`
+      : taken
+        ? 'QR CODE JÁ ATIVADO'
+        : 'REGISTRAR MINHA UNIDADE';
     heroBtn.append(dot, label);
     heroBtn.classList.toggle('is-registered', !!reg);
+    heroBtn.classList.toggle('is-taken', !reg && taken);
   };
   renderHero();
 
@@ -311,7 +325,7 @@ export function initActivation(opts: ActivationOptions) {
     const phone = $<HTMLInputElement>('input[name="phone"]');
 
     el.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => close('dismiss')));
-    $('[data-go-ar]').addEventListener('click', () => close('ar'));
+    el.querySelectorAll('[data-go-ar]').forEach((b) => b.addEventListener('click', () => close('ar')));
     document.addEventListener('keydown', onKey, true);
     phone.addEventListener('input', () => (phone.value = formatPhone(phone.value)));
     el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((cb) =>
@@ -324,6 +338,7 @@ export function initActivation(opts: ActivationOptions) {
     // Já registrado neste aparelho: abre direto no estado final.
     const reg = readStore<Registered>(() => localStorage, regKey);
     if (reg) showDone(reg, false);
+    else if (taken) showTaken(false);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -350,6 +365,12 @@ export function initActivation(opts: ActivationOptions) {
       delete el.dataset.state;
       $('.act-submit-label').textContent = 'REGISTRAR MINHA UNIDADE';
       if (!res.ok) {
+        if (res.taken) {
+          taken = true;
+          track('signup_taken');
+          showTaken(true);
+          return;
+        }
         error.textContent = res.error;
         play('error');
         return;
@@ -385,6 +406,26 @@ export function initActivation(opts: ActivationOptions) {
           decode($('[data-act="crew"]'), crewLabel(r.crew), 0, false);
         })
         .fromTo(doneStep.children, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power3.out' });
+    }
+
+    function showTaken(animate: boolean) {
+      $('.act-kicker b').textContent = 'JÁ ATIVADA';
+      const formStep = $('[data-step="form"]');
+      const takenStep = $('[data-step="taken"]');
+      if (!animate || reduced) {
+        formStep.hidden = true;
+        takenStep.hidden = false;
+        return;
+      }
+      play('error');
+      gsap
+        .timeline()
+        .to(formStep, { opacity: 0, y: -12, duration: 0.25, ease: 'power2.in' })
+        .call(() => {
+          formStep.hidden = true;
+          takenStep.hidden = false;
+        })
+        .fromTo(takenStep.children, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power3.out' });
     }
 
     function burst() {
@@ -441,7 +482,7 @@ export function initActivation(opts: ActivationOptions) {
       .call(() => fields.forEach(([k, t], i) => decode($(`[data-act="${k}"]`), t, i * 110, false)), [], 1.35)
       .fromTo(el.querySelectorAll('.act-data > div'), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 }, 1.3)
       .fromTo(
-        $(reg ? '[data-step="done"]' : '[data-step="form"]').children,
+        $(reg ? '[data-step="done"]' : taken ? '[data-step="taken"]' : '[data-step="form"]').children,
         { opacity: 0, y: 18 },
         { opacity: 1, y: 0, duration: 0.55, stagger: 0.07 },
         1.9,

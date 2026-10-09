@@ -14,7 +14,10 @@ const CONSENT = '2026-10-v1';
 before(async () => {
   db = await createTestDb();
   app = createApp(db, { allowedOrigins: [], adminToken: null });
-  await db.query(`insert into registry_units (product_id, lot_id, unit_id, batch) values ('07898693620895', 'W4', '1Gp', 't')`);
+  await db.query(
+    `insert into registry_units (product_id, lot_id, unit_id, batch)
+     select '07898693620895', 'W4', u, 't' from unnest(array['1Gp', '2Gp', '3Gp', '4Gp', '4gp']) as u`,
+  );
 });
 after(() => db.close());
 
@@ -51,6 +54,34 @@ test('cadastro numa unidade verificada; repetir o e-mail atualiza', async () => 
   assert.deepEqual({ ...rows[0] }, { name: 'Ana S.', email: 'ana@example.com', phone: '11987654321', marketing_opt_in: false, session_id: s });
 });
 
+test('um QR code ativa um tripulante só: outro e-mail no mesmo pote é recusado', async () => {
+  const pote = { ...UNIT, unitId: '4Gp' };
+  const scan = async (ids = pote) =>
+    ((await (await post('/api/scan', { sessionId: randomUUID(), ...ids })).json()) as { unit: { activated: boolean } }).unit;
+  assert.equal((await scan()).activated, false);
+
+  const first = await post('/api/signup', form({ ...pote, email: 'dono@example.com' }));
+  assert.equal(first.status, 200);
+  const { crew, member } = (await first.json()) as { crew: number; member: string };
+  assert.equal((await scan()).activated, true);
+
+  // Outro e-mail, inclusive lendo o mesmo pote com o GTIN de 14 dígitos.
+  for (const ids of [pote, { ...pote, productId: '07898693620895' }]) {
+    assert.equal((await scan(ids)).activated, true);
+    const r = await post('/api/signup', form({ ...ids, email: 'outro@example.com' }));
+    assert.equal(r.status, 409);
+    assert.deepEqual(await r.json(), { error: 'qrcode já ativado', code: 'already_activated' });
+  }
+
+  // O dono pode repetir (ex.: outro celular) e recebe o mesmo link.
+  const again = await post('/api/signup', form({ ...pote, email: 'DONO@example.com', name: 'Dono Novo' }));
+  assert.deepEqual(await again.json(), { ok: true, crew, member });
+
+  // Serial com outra caixa é outro pote.
+  assert.equal((await scan({ ...pote, unitId: '4gp' })).activated, false);
+  assert.equal((await post('/api/signup', form({ ...pote, unitId: '4gp', email: 'outro@example.com' }))).status, 200);
+});
+
 test('unidade fora da lista oficial não aceita cadastro', async () => {
   const other = { ...UNIT, unitId: 'ZZZZ' };
   await post('/api/scan', { sessionId: randomUUID(), ...other });
@@ -74,12 +105,13 @@ test('valida nome, e-mail, WhatsApp e consentimento', async () => {
 });
 
 test('link de membro: o cadastro devolve um token que abre a área do membro', async () => {
-  const r = await post('/api/signup', form({ email: 'bia@example.com', name: 'Beatriz Lima', consent: '2026-10-v2' }));
+  await post('/api/scan', { sessionId: randomUUID(), ...UNIT, unitId: '2Gp' });
+  const r = await post('/api/signup', form({ unitId: '2Gp', email: 'bia@example.com', name: 'Beatriz Lima', consent: '2026-10-v2' }));
   const j = (await r.json()) as { crew: number; member: string };
   assert.match(j.member, /^[A-Za-z0-9_-]{24}$/);
 
   // repetir o cadastro mantém o mesmo link
-  const again = (await (await post('/api/signup', form({ email: 'bia@example.com', name: 'Beatriz Lima' }))).json()) as { member: string };
+  const again = (await (await post('/api/signup', form({ unitId: '2Gp', email: 'bia@example.com', name: 'Beatriz Lima' }))).json()) as { member: string };
   assert.equal(again.member, j.member);
 
   const m = await app.request(`/api/member/${j.member}`);
@@ -89,7 +121,7 @@ test('link de membro: o cadastro devolve um token que abre a área do membro', a
   assert.equal(body.crew, j.crew);
   assert.equal(body.name, 'Beatriz Lima');
   assert.equal(body.email, 'bi•@example.com');
-  assert.deepEqual([body.unit.unitId, body.unit.status], ['1Gp', 'verified']);
+  assert.deepEqual([body.unit.unitId, body.unit.status], ['2Gp', 'verified']);
 
   assert.equal((await app.request('/api/member/nao-existe-mas-tem-formato-ok')).status, 404);
   assert.equal((await app.request('/api/member/x')).status, 404);
@@ -106,7 +138,8 @@ test('telão: totais e últimos tripulantes só com o primeiro nome', async () =
 });
 
 test('coleção: pegar o personagem entra na vitrine do membro, sem duplicar', async () => {
-  const j = (await (await post('/api/signup', form({ email: 'cora@example.com', name: 'Cora Dias' }))).json()) as { member: string };
+  await post('/api/scan', { sessionId: randomUUID(), ...UNIT, unitId: '3Gp' });
+  const j = (await (await post('/api/signup', form({ unitId: '3Gp', email: 'cora@example.com', name: 'Cora Dias' }))).json()) as { member: string };
   const before = (await (await app.request(`/api/member/${j.member}`)).json()) as { collection: unknown[] };
   assert.deepEqual(before.collection, []);
 

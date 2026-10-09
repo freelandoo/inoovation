@@ -52,6 +52,8 @@ export interface UnitInfo {
   status: 'seen' | 'verified' | 'blocked';
   scanCount: number;
   firstSeenAt: string;
+  /** Alguém já registrou este pote (um QR code ativa um tripulante só). */
+  activated?: boolean;
 }
 
 let scanDone: Promise<unknown> = Promise.resolve();
@@ -88,7 +90,7 @@ export interface SignupForm {
   marketing: boolean;
 }
 
-export type SignupResult = { ok: true; crew: number; member?: string } | { ok: false; error: string };
+export type SignupResult = { ok: true; crew: number; member?: string } | { ok: false; error: string; taken?: boolean };
 
 /** Cadastro de quem ativou uma unidade verificada. */
 export async function submitSignup(id: ProductIdentity, form: SignupForm): Promise<SignupResult> {
@@ -99,8 +101,9 @@ export async function submitSignup(id: ProductIdentity, form: SignupForm): Promi
       headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
       body: JSON.stringify({ sessionId: sessionId(), productId: id.productId, lotId: id.lotId, unitId: id.unitId, ...form }),
     });
-    const j = (await r.json().catch(() => ({}))) as { crew?: number; member?: string; error?: string };
+    const j = (await r.json().catch(() => ({}))) as { crew?: number; member?: string; error?: string; code?: string };
     if (r.ok && typeof j.crew === 'number') return { ok: true, crew: j.crew, member: j.member };
+    if (j.code === 'already_activated') return { ok: false, error: 'Esse QR code já foi ativado.', taken: true };
     if (r.status === 429) return { ok: false, error: 'Muitas tentativas. Aguarde um minuto.' };
     return { ok: false, error: j.error ? j.error.charAt(0).toUpperCase() + j.error.slice(1) + '.' : 'Não foi possível enviar.' };
   } catch {

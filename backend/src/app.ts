@@ -23,7 +23,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
-import { parseRegistry, importRegistry } from './registry.ts';
+import { parseRegistry, importRegistry, unitCodeSql } from './registry.ts';
 import { issueSession, verifyPassword, verifySession } from './auth.ts';
 
 const MAX_BODY = 8 * 1024;
@@ -119,9 +119,9 @@ export function createApp(db: Db, opts: AppOptions) {
     const key = v.unitKey(productId, lotId, unitId);
 
     const result = await db.transaction(async (tx) => {
-      let unit: { id: string; status: string; scan_count: number; first_seen_at: string } | null = null;
+      let unit: { id: string; status: string; scan_count: number; first_seen_at: string; activated: boolean } | null = null;
       if (key) {
-        const r = await tx.query<{ id: string; status: string; scan_count: number; first_seen_at: string }>(
+        const r = await tx.query<{ id: string; status: string; scan_count: number; first_seen_at: string; activated: boolean }>(
           // Nasce `verified` se estiver na lista oficial (registry_units); uma
           // unidade `seen` é promovida quando a lista chega depois. `blocked` nunca muda.
           `insert into units (product_id, lot_id, unit_id, unit_key, status)
@@ -132,7 +132,8 @@ export function createApp(db: Db, opts: AppOptions) {
            on conflict (unit_key) do update
              set last_seen_at = now(),
                  status = case when units.status = 'seen' then excluded.status else units.status end
-           returning id, status, scan_count, first_seen_at`,
+           returning id, status, scan_count, first_seen_at,
+                     exists (select 1 from signups s where s.unit_code = ${unitCodeSql('units')}) as activated`,
           [productId, lotId, unitId, key],
         );
         unit = r.rows[0];
@@ -173,7 +174,7 @@ export function createApp(db: Db, opts: AppOptions) {
     return c.json({
       ok: true,
       unit: result
-        ? { status: result.status, scanCount: Number(result.scan_count), firstSeenAt: result.first_seen_at }
+        ? { status: result.status, scanCount: Number(result.scan_count), firstSeenAt: result.first_seen_at, activated: result.activated }
         : null,
     });
   });
@@ -220,21 +221,28 @@ export function createApp(db: Db, opts: AppOptions) {
     const consent = typeof body.consent === 'string' && v.CONSENT_VERSIONS.has(body.consent) ? body.consent : null;
     if (!consent) throw new HttpError(400, 'consentimento obrigatório');
 
-    const unit = await db.query<{ id: string }>(`select id from units where unit_key = $1 and status = 'verified'`, [key]);
+    const unit = await db.query<{ id: string; code: string }>(
+      `select id, ${unitCodeSql('u')} as code from units u where unit_key = $1 and status = 'verified'`,
+      [key],
+    );
     if (!unit.rows[0]) return c.json({ error: 'unidade não verificada' }, 409);
 
+    // Um QR code ativa um tripulante só. O mesmo e-mail pode repetir (atualiza e
+    // devolve o mesmo link); outro e-mail no mesmo pote é recusado.
     const r = await db.query<{ id: string; member_token: string }>(
-      `insert into signups (unit_ref, session_id, name, email, phone, consent_version, marketing_opt_in, member_token)
-       values ($1, (select id from sessions where id = $2), $3, $4, $5, $6, $7, $8)
-       on conflict (unit_ref, email) do update
+      `insert into signups (unit_ref, unit_code, session_id, name, email, phone, consent_version, marketing_opt_in, member_token)
+       values ($1, $2, (select id from sessions where id = $3), $4, $5, $6, $7, $8, $9)
+       on conflict (unit_code) do update
          set name = excluded.name,
              phone = coalesce(excluded.phone, signups.phone),
              consent_version = excluded.consent_version,
              marketing_opt_in = excluded.marketing_opt_in,
              updated_at = now()
+         where signups.email = excluded.email
        returning id, member_token`,
-      [unit.rows[0].id, sessionId, name, email, phone, consent, body.marketing === true, randomBytes(18).toString('base64url')],
+      [unit.rows[0].id, unit.rows[0].code, sessionId, name, email, phone, consent, body.marketing === true, randomBytes(18).toString('base64url')],
     );
+    if (!r.rows[0]) return c.json({ error: 'qrcode já ativado', code: 'already_activated' }, 409);
     return c.json({ ok: true, crew: Number(r.rows[0].id), member: r.rows[0].member_token });
   });
 

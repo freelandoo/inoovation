@@ -608,6 +608,13 @@ html.act-open {
   line-height: 1.1;
 }
 
+/* ---------- Já ativado por outra pessoa ---------- */
+.act-taken .act-crew b {
+  min-width: 0;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+}
+
 /* ---------- Botão no hero ---------- */
 .act-hero-cta .act-dot {
   width: 8px;
@@ -621,6 +628,11 @@ html.act-open {
   animation: none;
   background: var(--white);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+.act-hero-cta.is-taken .act-dot {
+  animation: none;
+  background: var(--grey);
+  box-shadow: none;
 }
 @keyframes act-ping {
   70%,
