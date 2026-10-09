@@ -375,6 +375,9 @@ html[data-state='ready'] .ad-main {
   letter-spacing: 0.06em;
   line-height: 1.5;
 }
+.ad-ret-result[hidden] {
+  display: none;
+}
 .ad-ret-result b {
   font-size: 13px;
   letter-spacing: 0.16em;
