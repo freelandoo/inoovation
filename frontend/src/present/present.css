@@ -1742,6 +1742,17 @@ html.pz-booting .chrome {
 }
 
 /* 24 — tracking */
+.trk-head .kicker.is-off {
+  color: var(--tb-red-ink);
+}
+.trk-head .kicker.is-off .tb-live-dot {
+  animation: none;
+  background: var(--tb-faint);
+  box-shadow: none;
+}
+.trk-head .kicker.is-off .tb-live-dot::after {
+  display: none;
+}
 .trk-cards {
   position: absolute;
   left: calc(var(--u) * 4);

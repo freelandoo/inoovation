@@ -10,7 +10,8 @@ import type { Ctx, SceneState } from '../story/Director.ts';
 import type { DigitalLabelTwin } from '../label/DigitalLabelTwin.ts';
 import { LABEL_WORLD, QR_UV, SURFACE_ZONES, explodedOrder } from '../label/labelConfig.ts';
 import { config } from '../config.ts';
-import { fetchStats, fmtInt, funnelRows, type Stats } from '../admin/stats.ts';
+import { fetchStats, fmtInt, funnelRows } from '../admin/stats.ts';
+import { readAdmin } from '../admin/session.ts';
 
 export interface HoloTarget {
   x: number;
@@ -185,15 +186,22 @@ async function pollLive(el: HTMLElement, d: DeckCtx) {
   }
 }
 
-const EMPTY_STATS: Stats = {
-  totals: { units: 0, scans: 0, verified: 0, registered: 0, signups: 0, sessions: 0, with_unit: 0 },
-  funnel: [],
-  lots: [],
-  recentUnits: [],
-};
+/** Linha de status do slide: ao vivo com a hora, ou o motivo de não atualizar. */
+function trackingStatus(el: HTMLElement, text: string, off: boolean) {
+  const st = el.querySelector<HTMLElement>('[data-trk-status]');
+  if (!st) return;
+  st.textContent = text;
+  st.closest('.kicker')?.classList.toggle('is-off', off);
+}
 
 async function pollTracking(el: HTMLElement, d: DeckCtx) {
-  const s = (await fetchStats()) ?? EMPTY_STATS;
+  const s = await fetchStats();
+  // Falhou: mantém os últimos números na tela (nunca volta a zero) e diz o porquê.
+  if (!s) {
+    trackingStatus(el, readAdmin() ? 'SEM CONEXÃO // TENTANDO DE NOVO' : 'SESSÃO EXPIRADA // ENTRE DE NOVO NO ADMIN', true);
+    return;
+  }
+  trackingStatus(el, `DADOS REAIS // AO VIVO ${new Date().toLocaleTimeString('pt-BR')}`, false);
   const rows = funnelRows(s);
   const vals: Record<string, number> = {
     scans: s.totals.scans,
@@ -557,7 +565,7 @@ export const HOOKS: Record<string, SlideHooks> = {
     enter: (el, d) => {
       pollTracking(el, d);
       clearInterval(trackPoll);
-      trackPoll = window.setInterval(() => pollTracking(el, d), 6000);
+      trackPoll = window.setInterval(() => pollTracking(el, d), 3000);
     },
     leave: () => clearInterval(trackPoll),
   },
