@@ -220,12 +220,12 @@ body {
 .tv-returns {
   display: flex;
   align-items: baseline;
-  gap: calc(var(--u) * 1.6);
-  margin: calc(var(--u) * 2.4) 0 0;
+  gap: calc(var(--u) * 1.4);
+  margin: calc(var(--u) * 1.4) 0 0;
 }
 .tv-odo-sm {
   margin: 0;
-  font-size: calc(var(--u) * 6);
+  font-size: calc(var(--u) * 4.6);
   color: var(--red-hot);
   text-shadow: 0 0 24px rgba(255, 22, 22, 0.35);
 }
@@ -236,8 +236,8 @@ body {
 .tv-stats {
   display: flex;
   gap: calc(var(--u) * 5);
-  margin: calc(var(--u) * 3.5) 0 0;
-  padding-top: calc(var(--u) * 2);
+  margin: calc(var(--u) * 2) 0 0;
+  padding-top: calc(var(--u) * 1.4);
   border-top: 1px solid var(--line);
 }
 .tv-stats dt {
