@@ -217,6 +217,22 @@ body {
   font-variation-settings: 'wdth' 112;
   color: rgba(245, 245, 243, 0.8);
 }
+.tv-returns {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 1.6);
+  margin: calc(var(--u) * 2.4) 0 0;
+}
+.tv-odo-sm {
+  margin: 0;
+  font-size: calc(var(--u) * 6);
+  color: var(--red-hot);
+  text-shadow: 0 0 24px rgba(255, 22, 22, 0.35);
+}
+.tv-sub-sm {
+  margin: 0;
+  font-size: calc(var(--u) * 1.6);
+}
 .tv-stats {
   display: flex;
   gap: calc(var(--u) * 5);

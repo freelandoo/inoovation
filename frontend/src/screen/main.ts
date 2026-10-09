@@ -1,5 +1,5 @@
-// Telão do evento (/telao): total de tripulantes ao vivo, últimos cadastros e uma
-// chegada animada (com som) a cada novo tripulante. Consulta GET /api/live a
+// Telão do evento (/telao): total de tripulantes e de embalagens devolvidas ao
+// vivo, últimos cadastros e uma chegada animada (com som) a cada novo tripulante. Consulta GET /api/live a
 // cada 3 s. ?demo=1 simula chegadas sem API, para ensaio.
 
 import { gsap } from 'gsap';
@@ -16,6 +16,8 @@ interface Live {
   crew: number;
   units: number;
   ar: number;
+  /** Embalagens devolvidas (leitor da área admin). */
+  returns?: number;
   recent: Crew[];
 }
 
@@ -59,30 +61,34 @@ for (let k = 0; k < 2; k++) {
 
 // ---------------------------------------------------------------- contador (odômetro)
 
-const odo = $('#tv-odo');
-let shown = -1;
-function setCount(n: number) {
-  if (n === shown) return;
-  const digits = pad(n).split('');
-  while (odo.children.length < digits.length) {
-    const col = document.createElement('span');
-    col.className = 'tv-digit';
-    const strip = document.createElement('span');
-    for (let d = 0; d <= 9; d++) {
-      const i = document.createElement('i');
-      i.textContent = String(d);
-      strip.appendChild(i);
+/** Odômetro de 4+ dígitos que rola até o número novo e pulsa quando sobe. */
+function odometer(odo: HTMLElement) {
+  let shown = -1;
+  return (n: number) => {
+    if (n === shown) return;
+    const digits = pad(n).split('');
+    while (odo.children.length < digits.length) {
+      const col = document.createElement('span');
+      col.className = 'tv-digit';
+      const strip = document.createElement('span');
+      for (let d = 0; d <= 9; d++) {
+        const i = document.createElement('i');
+        i.textContent = String(d);
+        strip.appendChild(i);
+      }
+      col.appendChild(strip);
+      odo.prepend(col);
     }
-    col.appendChild(strip);
-    odo.prepend(col);
-  }
-  [...odo.children].forEach((col, i) => {
-    const d = Number(digits[i]);
-    gsap.to(col.firstElementChild, { yPercent: -d * 10, duration: shown < 0 ? 0 : 1.2, ease: 'expo.out', delay: i * 0.05 });
-  });
-  if (shown >= 0) gsap.fromTo(odo, { scale: 1.06, textShadow: '0 0 60px rgba(255,22,22,1)' }, { scale: 1, textShadow: '0 0 30px rgba(255,22,22,0.35)', duration: 1.2 });
-  shown = n;
+    [...odo.children].forEach((col, i) => {
+      const d = Number(digits[i]);
+      gsap.to(col.firstElementChild, { yPercent: -d * 10, duration: shown < 0 ? 0 : 1.2, ease: 'expo.out', delay: i * 0.05 });
+    });
+    if (shown >= 0) gsap.fromTo(odo, { scale: 1.06, textShadow: '0 0 60px rgba(255,22,22,1)' }, { scale: 1, textShadow: '0 0 30px rgba(255,22,22,0.35)', duration: 1.2 });
+    shown = n;
+  };
 }
+const setCount = odometer($('#tv-odo'));
+const setReturns = odometer($('#tv-returns'));
 
 function setStat(el: HTMLElement, n: number) {
   const from = Number(el.dataset.v ?? 0);
@@ -162,6 +168,7 @@ let lastCrew = -1;
 function apply(live: Live) {
   setStat($('#tv-units'), live.units);
   setStat($('#tv-ar'), live.ar);
+  setReturns(live.returns ?? 0);
   const fresh = live.recent.filter((c) => c.crew > lastCrew).sort((a, b) => a.crew - b.crew);
   if (lastCrew < 0) {
     // primeira leitura: monta a lista sem festa
@@ -189,13 +196,14 @@ async function poll() {
 
 function runDemo() {
   const names = ['ANA', 'BRUNO', 'CAROL', 'DIEGO', 'ELISA', 'FELIPE', 'GABI', 'HUGO', 'ISA', 'JOÃO'];
-  const live: Live = { crew: 41, units: 128, ar: 37, recent: [] };
+  const live: Live = { crew: 41, units: 128, ar: 37, returns: 6, recent: [] };
   for (let i = 0; i < 6; i++) live.recent.push({ crew: 41 - i, name: names[i], at: new Date(Date.now() - i * 60000).toISOString() });
   apply(live);
   setInterval(() => {
     live.crew++;
     live.units += 1 + Math.round(Math.random() * 2);
     live.ar += Math.random() > 0.5 ? 1 : 0;
+    live.returns! += Math.random() > 0.6 ? 1 : 0;
     live.recent = [{ crew: live.crew, name: names[live.crew % names.length], at: new Date().toISOString() }, ...live.recent].slice(0, 12);
     apply(live);
   }, 8000);

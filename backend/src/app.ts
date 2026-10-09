@@ -6,7 +6,7 @@
 //   POST /api/signup          cadastro de quem ativou uma unidade verificada (devolve o link de membro)
 //   GET  /api/member/:token   área do membro (link secreto)
 //   POST /api/member/login    entrar na área do membro com e-mail + nº de tripulante (devolve o link)
-//   GET  /api/live            números e últimos tripulantes, para o telão (só primeiro nome)
+//   GET  /api/live            números, embalagens devolvidas e últimos tripulantes, para o telão (só primeiro nome)
 //   POST /api/admin/login     usuário + senha da área admin (devolve uma sessão de 12 h)
 //   GET  /api/admin/me        confere a sessão do admin
 //   GET  /api/stats           métricas (Authorization: Bearer ADMIN_TOKEN ou sessão do admin)
@@ -339,8 +339,9 @@ export function createApp(db: Db, opts: AppOptions) {
   app.get('/api/live', async (c) => {
     if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
     const [totals, recent] = await Promise.all([
-      db.query<{ crew: number; units: number; ar: number }>(
+      db.query<{ crew: number; units: number; ar: number; returns: number }>(
         `select (select count(*)::int from signups) as crew,
+                (select count(*)::int from returns) as returns,
                 (select count(*)::int from units where status = 'verified') as units,
                 (select count(distinct session_id)::int from events where name = 'ar_experience_started') as ar`,
       ),

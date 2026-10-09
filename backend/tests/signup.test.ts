@@ -130,8 +130,9 @@ test('link de membro: o cadastro devolve um token que abre a área do membro', a
 test('telão: totais e últimos tripulantes só com o primeiro nome', async () => {
   const r = await app.request('/api/live');
   assert.equal(r.status, 200);
-  const j = (await r.json()) as { crew: number; units: number; recent: { crew: number; name: string }[] };
+  const j = (await r.json()) as { crew: number; units: number; returns: number; recent: { crew: number; name: string }[] };
   assert.ok(j.crew >= 2);
+  assert.equal(j.returns, 0);
   assert.ok(j.units >= 1);
   assert.equal(j.recent[0].name, 'BEATRIZ');
   assert.ok(j.recent.every((x) => !x.name.includes(' ') && !('email' in x)));
