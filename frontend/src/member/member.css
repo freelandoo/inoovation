@@ -924,6 +924,11 @@ html.mb-unverified .mb-stamp {
   border: 1px dashed rgba(10, 10, 10, 0.25);
   border-radius: 4px;
 }
+.mb-game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .mb-keep > div {
   display: grid;
   gap: 6px;

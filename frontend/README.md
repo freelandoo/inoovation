@@ -112,6 +112,17 @@ pela área do membro (botão JOGAR) ou direto em `/jogo`. `?debug` mostra a caix
 - Recorde: local sempre; com API e link de membro no aparelho, vai para o ranking (`/api/game/*`). O servidor
   sorteia a seed e recusa distância impossível para o tempo decorrido.
 
+- Visual: bloom (luzes HDR: neon dos obstáculos, trilhos, fogo, cápsulas, pote) em aparelhos com WebGL2
+  bom; desliga sozinho se o FPS ficar abaixo de 40 (`?bloom=0`/`?bloom=1` força). Nebulosa, estrelas
+  cintilando e riscos de velocidade no cenário.
+
+### Ranking (`/ranking`)
+
+Pódio com o top 3 (1º no centro, maior, coroa) e lista até 50. Todos veem; quem tem link de membro no
+aparelho vê a própria posição (`POST /api/game/me`), quem não tem recebe o convite "Ative um pote" com o
+leitor de QR (mesmo fluxo de ativação da página principal). Botão RANKING no fim de partida e na área do
+membro.
+
 ### Personagem (`public/models/astronaut-rig.glb`)
 
 Gerado das FBX do Mixamo em `../animações` (o astronauta oficial riggado): `npm run assets:rig` (Blender 4.4+

@@ -26,6 +26,10 @@
       "destination": "/admin.html"
     },
     {
+      "source": "/ranking",
+      "destination": "/ranking.html"
+    },
+    {
       "source": "/jogo",
       "destination": "/jogo.html"
     },
@@ -34,7 +38,7 @@
       "destination": "/privacidade.html"
     },
     {
-      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade|admin|jogo).*)",
+      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade|admin|jogo|ranking).*)",
       "destination": "/index.html"
     }
   ],

@@ -540,6 +540,10 @@ html[data-state='loading'] [data-panel='loading'] {
   cursor: pointer;
   touch-action: manipulation;
 }
+.jg-link-hot {
+  color: #ffcf5a;
+  text-shadow: 0 0 12px rgba(255, 190, 60, 0.6);
+}
 .jg-link:hover {
   color: var(--white);
 }

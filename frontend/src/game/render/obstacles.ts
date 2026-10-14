@@ -14,6 +14,7 @@ interface Mats {
   metal: THREE.MeshStandardMaterial;
   panel: THREE.MeshStandardMaterial;
   red: THREE.MeshBasicMaterial;
+  neon: THREE.MeshBasicMaterial;
   field: THREE.ShaderMaterial;
 }
 
@@ -47,7 +48,7 @@ function energyFieldMaterial(): THREE.ShaderMaterial {
         float bands = 0.55 + 0.45 * sin(vPos.y * 9.0 - uTime * 14.0);
         float flick = 0.85 + 0.15 * sin(uTime * 37.0 + vPos.y * 2.0);
         float core = 1.0 - abs(fract(vPos.x * 2.0) - 0.5) * 0.6;
-        gl_FragColor = vec4(vec3(1.0, 0.1, 0.05) * (0.35 + 0.65 * bands) * flick * core, 0.85);
+        gl_FragColor = vec4(vec3(2.4, 0.05, 0.02) * (0.35 + 0.65 * bands) * flick * core, 0.85);
       }`,
   });
 }
@@ -59,7 +60,11 @@ function makePiece(kind: ObstacleKind, m: Mats): Piece {
   if (kind === 'pipes') {
     const body = new THREE.Group();
     const pipe = new THREE.Mesh(unitCyl, m.metal);
-    body.add(pipe);
+    // Faixa neon na frente do tubo (o grupo é escalado pela largura/altura da peça).
+    const strip = new THREE.Mesh(unitBox, m.neon);
+    strip.scale.set(0.09, 1, 0.04);
+    strip.position.z = 0.5;
+    body.add(pipe, strip);
     const edge = new THREE.Group();
     const flange = new THREE.Mesh(unitCyl, m.panel);
     flange.scale.set(1.18, 0.34, 1.18);
@@ -78,8 +83,22 @@ function makePiece(kind: ObstacleKind, m: Mats): Piece {
     edge.add(head, strip);
     return { body, edge };
   }
-  // wall e beam: blocos de metal com borda vermelha
-  const body = new THREE.Mesh(unitBox, kind === 'beam' ? m.panel : m.metal);
+  // wall e beam: blocos de metal com borda vermelha e faixas neon na face da frente
+  const body = new THREE.Group();
+  body.add(new THREE.Mesh(unitBox, kind === 'beam' ? m.panel : m.metal));
+  if (kind === 'wall') {
+    for (const x of [-0.36, 0.36]) {
+      const strip = new THREE.Mesh(unitBox, m.neon);
+      strip.scale.set(0.07, 1, 0.02);
+      strip.position.set(x, 0, 0.5);
+      body.add(strip);
+    }
+  } else {
+    const strip = new THREE.Mesh(unitBox, m.neon);
+    strip.scale.set(0.92, 0.05, 0.02);
+    strip.position.set(0, 0, 0.5);
+    body.add(strip);
+  }
   const edge = new THREE.Mesh(unitBox, m.red);
   return { body, edge };
 }
@@ -96,7 +115,9 @@ export class ObstacleRenderer {
     this.mats = {
       metal: new THREE.MeshStandardMaterial({ color: 0x2a2d33, metalness: 0.85, roughness: 0.38 }),
       panel: new THREE.MeshStandardMaterial({ color: 0x8d9097, metalness: 0.7, roughness: 0.32 }),
-      red: new THREE.MeshBasicMaterial({ color: 0xff1a12 }),
+      // Cores acima de 1: passam do limiar do bloom e brilham.
+      red: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 0.04, 0.02) }),
+      neon: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 0.03, 0.015) }),
       field: energyFieldMaterial(),
     };
     // Aquecimento: cria o suficiente para a tela e compila os materiais.
@@ -213,8 +234,8 @@ export class PickupRenderer {
     this.fire = fire;
     this.shell = new THREE.MeshStandardMaterial({ color: 0xd8dade, metalness: 0.8, roughness: 0.25 });
     this.core = {
-      small: new THREE.MeshBasicMaterial({ color: 0x3df2ff }),
-      big: new THREE.MeshBasicMaterial({ color: 0xffd36a }),
+      small: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 2.6, 3) }),
+      big: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.1, 0.6) }),
     };
     const halo = (color: number, opacity: number) =>
       new THREE.SpriteMaterial({ map: glow, color, blending: THREE.AdditiveBlending, depthWrite: false, opacity });

@@ -9,7 +9,8 @@ Node 24 (TypeScript executado direto, sem build) + Hono + Postgres.
 | `POST /api/events` | Evento ou lote (até 20): `{ sessionId, name, data }` |
 | `POST /api/game/start` | Início de partida do jogo: `{ sessionId, member? }` → `{ runId, seed }` |
 | `POST /api/game/finish` | Fim: `{ runId, distance, fuel, pickups }` → `{ ok, best, rank }`. Uma vez por partida; 422 se a distância não cabe no tempo (6,8 m/s) |
-| `GET /api/game/top` | Ranking do jogo: melhor de cada tripulante (nº e primeiro nome) |
+| `GET /api/game/top?limit=N` | Ranking do jogo: `{ total, top }`, melhor de cada tripulante (nº e primeiro nome), até 100 |
+| `POST /api/game/me` | Posição do membro: `{ member }` → `{ crew, name, best, rank }` |
 | `GET /api/stats` | Métricas. Header `Authorization: Bearer <ADMIN_TOKEN>` |
 | `POST /api/admin/registry?batch=<nome>` | Importa a lista de IDs (corpo = o arquivo). Header `Authorization: Bearer <ADMIN_TOKEN>` |
 

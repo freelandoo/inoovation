@@ -5,6 +5,10 @@
 
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import type { PerfProfile } from '../../perf/tier.ts';
 import { TUNING } from '../sim/tuning.ts';
 
@@ -25,6 +29,18 @@ export class Stage {
   viewWidth = VIEW_WIDTH;
   private shake = 0;
   private host: HTMLElement;
+  /**
+   * Bloom: as luzes (neon, fogo, cápsulas) brilham de verdade. Liga em
+   * aparelhos com WebGL2 bom e desliga sozinho se o FPS cair (ver watchFps).
+   * ?bloom=0 / ?bloom=1 força.
+   */
+  private composer: EffectComposer | null = null;
+  private bloom: UnrealBloomPass | null = null;
+  bloomOn = false;
+  private fpsT = 0;
+  private fpsN = 0;
+  private fpsWarm = 0;
+  private bloomForced: boolean | null = null;
 
   constructor(canvas: HTMLCanvasElement, host: HTMLElement, perf: PerfProfile) {
     this.host = host;
@@ -37,8 +53,9 @@ export class Stage {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, perf.mobile ? Math.min(perf.maxDpr, 1.75) : perf.maxDpr));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    // Neutral preserva o matiz das cores fortes (o ACES puxa o neon vermelho para laranja).
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
     this.scene.background = new THREE.Color(0x020306);
     this.scene.fog = new THREE.Fog(0x020306, 34, 125);
 
@@ -56,13 +73,53 @@ export class Stage {
     const fill = new THREE.HemisphereLight(0x5a6a88, 0x120404, 0.55);
     this.scene.add(key, rim, fill);
 
+    const q = new URLSearchParams(location.search).get('bloom');
+    this.bloomForced = q === '1' ? true : q === '0' ? false : null;
+    const want = this.bloomForced ?? (!perf.reducedMotion && (perf.tier === 'high' || perf.tier === 'medium'));
+    if (want) this.enableBloom(perf.tier === 'high' ? 0.5 : 0.35);
+
     this.resize();
+  }
+
+  private enableBloom(scale: number) {
+    const composer = new EffectComposer(this.renderer);
+    composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.65, 0.35, 0.55);
+    this.bloom.resolution.multiplyScalar(scale);
+    composer.addPass(this.bloom);
+    composer.addPass(new OutputPass());
+    this.composer = composer;
+    this.bloomScale = scale;
+    this.bloomOn = true;
+  }
+  private bloomScale = 0.5;
+
+  /** Mede o FPS com o bloom ligado; abaixo de 40 por 2,5 s, desliga (sem volta). */
+  private watchFps(dt: number) {
+    if (!this.bloomOn || this.bloomForced) return;
+    this.fpsWarm += dt;
+    if (this.fpsWarm < 3) return; // compilação de shaders e carregamento
+    this.fpsT += dt;
+    this.fpsN++;
+    if (this.fpsT < 2.5) return;
+    const fps = this.fpsN / this.fpsT;
+    this.fpsT = this.fpsN = 0;
+    if (fps < 40) {
+      this.bloomOn = false;
+      console.info(`[jogo] bloom desligado (${fps.toFixed(0)} fps)`);
+    }
   }
 
   resize() {
     const w = Math.max(1, this.host.clientWidth);
     const h = Math.max(1, this.host.clientHeight);
     this.renderer.setSize(w, h, false);
+    if (this.composer && this.bloom) {
+      const pr = this.renderer.getPixelRatio();
+      this.composer.setPixelRatio(pr);
+      this.composer.setSize(w, h);
+      this.bloom.setSize(w * pr * this.bloomScale, h * pr * this.bloomScale);
+    }
     const aspect = w / h;
     this.camera.aspect = aspect;
     // Celular (mais estreito que 9:16): largura fixa. Telas mais largas ganham um
@@ -95,7 +152,9 @@ export class Stage {
       this.shake *= Math.exp(-dt * 7);
     }
     cam.lookAt(cam.position.x, cam.position.y, 0);
-    this.renderer.render(this.scene, cam);
+    this.watchFps(dt);
+    if (this.bloomOn && this.composer) this.composer.render(dt);
+    else this.renderer.render(this.scene, cam);
   }
 
   dispose() {

@@ -105,10 +105,40 @@ test('ranking: melhor de cada membro, só nº e primeiro nome; anônimos ficam f
   await age(a.runId, 30);
   assert.deepEqual(await (await finish(a.runId, 100)).json(), { ok: true, best: 300, rank: 2 });
 
-  const top = (await (await app.request('/api/game/top')).json()) as { top: { crew: number; name: string; best: number }[] };
+  const top = (await (await app.request('/api/game/top')).json()) as {
+    total: number;
+    top: { crew: number; name: string; best: number; at?: string }[];
+  };
+  assert.equal(top.total, 2);
+  for (const t of top.top) delete t.at;
   assert.deepEqual(top.top, [
     { crew: members[1].crew, name: 'BRUNO', best: 500 },
     { crew: members[0].crew, name: 'ANA', best: 300 },
   ]);
   assert.ok(!JSON.stringify(top).includes('example.com'));
+});
+
+test('minha posição: melhor e lugar do membro; sem partida, best/rank nulos', async () => {
+  const me = async (member: string) => post('/api/game/me', { member });
+  assert.deepEqual(await (await me(members[0].token)).json(), { crew: members[0].crew, name: 'ANA', best: 300, rank: 2 });
+  assert.deepEqual(await (await me(members[1].token)).json(), { crew: members[1].crew, name: 'BRUNO', best: 500, rank: 1 });
+  assert.equal((await me('x'.repeat(30))).status, 404);
+  assert.equal((await post('/api/game/me', {})).status, 404);
+
+  // Membro que ainda não jogou.
+  const s = randomUUID();
+  const unit = { productId: '7898693620895', lotId: 'W4', unitId: 'g3' };
+  await post('/api/scan', { sessionId: s, ...unit });
+  const r = (await (
+    await post('/api/signup', { sessionId: s, ...unit, name: 'Caio Reis', email: 'g3@example.com', consent: '2026-10-v2' })
+  ).json()) as { member: string; crew: number };
+  assert.deepEqual(await (await me(r.member)).json(), { crew: r.crew, name: 'CAIO', best: null, rank: null });
+
+  // Empate na distância: quem chegou primeiro fica na frente; limite da lista.
+  const c = await start(r.member);
+  await age(c.runId, 200);
+  await finish(c.runId, 500);
+  const top = (await (await app.request('/api/game/top?limit=2')).json()) as { top: { name: string }[] };
+  assert.deepEqual(top.top.map((t) => t.name), ['BRUNO', 'CAIO']);
+  assert.equal(((await (await me(r.member)).json()) as { rank: number }).rank, 2);
 });

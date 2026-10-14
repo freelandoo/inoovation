@@ -4,7 +4,8 @@
 //
 //   POST /api/game/start   { sessionId, member? }              -> { runId, seed }
 //   POST /api/game/finish  { runId, distance, fuel, pickups }  -> { ok, best, rank }
-//   GET  /api/game/top                                          -> { top: [{ crew, name, best }] }
+//   GET  /api/game/top?limit=N                                  -> { total, top: [{ crew, name, best }] }
+//   POST /api/game/me      { member }                           -> { crew, name, best, rank }
 //
 // O servidor sorteia a seed e marca o início; no fim confere se a distância é
 // possível para o tempo decorrido. O cliente não decide recordes sozinho.
@@ -80,8 +81,24 @@ export function finishRun(runId: string, distance: number, fuel: number, pickups
   );
 }
 
-export function topScores(): Promise<TopEntry[] | null> {
-  return call<{ top: TopEntry[] }>('/api/game/top', undefined, 4000).then((r) => r?.top ?? null);
+export function topScores(limit = 10): Promise<{ total: number; top: TopEntry[] } | null> {
+  return call<{ total: number; top: TopEntry[] }>(`/api/game/top?limit=${limit}`, undefined, 5000).then((r) =>
+    r && Array.isArray(r.top) ? { total: r.total ?? r.top.length, top: r.top } : null,
+  );
+}
+
+export interface MyRank {
+  crew: number;
+  name: string;
+  best: number | null;
+  rank: number | null;
+}
+
+/** Posição do membro deste aparelho (null sem link de membro ou sem rede). */
+export function myRank(): Promise<MyRank | null> {
+  const member = memberToken();
+  if (!member) return Promise.resolve(null);
+  return call<MyRank>('/api/game/me', { member }, 5000).then((r) => (r && typeof r.crew === 'number' ? r : null));
 }
 
 export function localBest(): number {

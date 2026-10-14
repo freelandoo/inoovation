@@ -83,6 +83,7 @@ const world = new World(randomSeed());
 
 function onResize() {
   stage.resize();
+  env.setPixelRatio(stage.renderer.getPixelRatio());
   const h = stage.renderer.domElement.height;
   fire.setViewport(h, stage.camera.fov);
   smoke.setViewport(h, stage.camera.fov);
@@ -309,7 +310,7 @@ async function gameOver() {
     return;
   }
   const token = api.memberToken();
-  ui.overNet.textContent = token && runId ? 'Enviando para o ranking…' : 'Recorde salvo neste aparelho. Ative seu pote para entrar no ranking.';
+  ui.overNet.textContent = token && runId ? 'Enviando para o ranking…' : 'Recorde salvo neste aparelho. Ative um pote para entrar no ranking.';
   if (token && runId) {
     const r = await api.finishRun(runId, distance, Math.round(world.fuelCollected), world.pickupsTaken);
     if (state !== 'over') return;
@@ -319,9 +320,9 @@ async function gameOver() {
   } else if (runId) {
     void api.finishRun(runId, distance, Math.round(world.fuelCollected), world.pickupsTaken);
   }
-  const top = await api.topScores();
+  const top = (await api.topScores(5))?.top;
   if (state !== 'over' || !top?.length) return;
-  for (const t of top.slice(0, 5)) {
+  for (const t of top) {
     const li = document.createElement('li');
     li.innerHTML = `<span class="n">#${t.crew}</span><span class="who"></span><b>${t.best} m</b>`;
     (li.querySelector('.who') as HTMLElement).textContent = t.name;
@@ -384,6 +385,7 @@ click('jg-restart', () => {
 click('jg-pause', () => (state === 'paused' ? resume() : pause()));
 click('jg-quit', goBack);
 click('jg-back', goBack);
+click('jg-ranking', () => (location.href = '/ranking'));
 click('jg-menu-back', goBack);
 click('jg-retry', () => location.reload());
 for (const b of document.querySelectorAll<HTMLButtonElement>('[data-sound]')) {
@@ -473,7 +475,7 @@ function frameLoop(now: number) {
   }
   obstacles.update(world.obstacles, world.t, time);
   pickups.update(world.pickups, time, frozen ? 0 : dt);
-  env.update(stage.camera.position.x, time);
+  env.update(stage.camera.position.x, time, state === 'playing' ? (world.speed - 4.2) / (6.8 - 4.2) * 0.7 + 0.3 : 0);
   stage.render(x, dt, time);
   updateHud();
 
@@ -481,7 +483,7 @@ function frameLoop(now: number) {
     fpsAcc += dt;
     fpsN++;
     if (fpsAcc > 0.5) {
-      ui.net.textContent = `${Math.round(fpsN / fpsAcc)} fps · ${stage.renderer.info.render.calls} draws`;
+      ui.net.textContent = `${Math.round(fpsN / fpsAcc)} fps · ${stage.renderer.info.render.calls} draws${stage.bloomOn ? ' · bloom' : ''}`;
       fpsAcc = fpsN = 0;
     }
   }

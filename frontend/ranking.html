@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR" data-state="loading">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#030305" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Innovation Week · Ranking Astronaut Jetpack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="rk">
+    <div class="rk-bg" aria-hidden="true">
+      <div class="rk-glow"></div>
+      <div class="rk-floor"></div>
+      <div class="rk-scan"></div>
+    </div>
+
+    <header class="rk-head">
+      <a class="rk-back mono" href="/jogo" id="rk-back">← JOGO</a>
+      <span class="rk-live mono"><i></i>AO VIVO</span>
+    </header>
+
+    <main class="rk-main">
+      <section class="rk-hero">
+        <p class="rk-kicker mono">INNOVATION WEEK · ASTRONAUT JETPACK</p>
+        <h1 class="rk-title">RANK<span>ING</span></h1>
+        <p class="rk-sub">Os tripulantes que voaram mais longe pela estação.</p>
+        <p class="rk-count mono" id="rk-count"></p>
+      </section>
+
+      <!-- Você (membro) ou convite para ativar um pote -->
+      <section class="rk-me" id="rk-me" hidden>
+        <div class="rk-me-rank mono"><small>SUA POSIÇÃO</small><b id="rk-me-rank">—</b></div>
+        <div class="rk-me-info">
+          <p class="rk-me-name" id="rk-me-name"></p>
+          <p class="rk-me-best mono" id="rk-me-best"></p>
+        </div>
+        <a class="rk-btn sm" href="/jogo">JOGAR</a>
+      </section>
+
+      <section class="rk-join" id="rk-join" hidden>
+        <div class="rk-join-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+            <path d="M7 7h4v4H7zM13 7h4v4h-4zM7 13h4v4H7zM14 14h3v3h-3z" />
+          </svg>
+        </div>
+        <div>
+          <p class="rk-join-title">Ative um pote para aparecer no ranking</p>
+          <p class="rk-join-text">Leia o QR code do seu pote, cadastre-se como tripulante e seus recordes passam a contar aqui.</p>
+        </div>
+        <button type="button" class="rk-btn" id="rk-scan">LER QR DO POTE</button>
+      </section>
+
+      <section class="rk-podium" id="rk-podium" aria-label="Top 3"></section>
+
+      <ol class="rk-list" id="rk-list"></ol>
+
+      <section class="rk-empty" id="rk-empty" hidden>
+        <p class="rk-empty-title">Ninguém no ranking ainda.</p>
+        <p class="rk-join-text">Seja o primeiro tripulante a decolar.</p>
+        <a class="rk-btn" href="/jogo">JOGAR AGORA</a>
+      </section>
+
+      <p class="rk-error mono" id="rk-error" hidden>Sem conexão com o ranking agora. Tentando de novo…</p>
+
+      <footer class="rk-foot mono">
+        <a class="rk-btn ghost" href="/jogo">JOGAR</a>
+        <span>Ranking por distância · empate: quem chegou primeiro · só nº de tripulante e primeiro nome</span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/ranking/main.ts"></script>
+  </body>
+</html>

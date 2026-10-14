@@ -37,7 +37,7 @@ function flameMaterial(): THREE.ShaderMaterial {
         vec3 col = mix(vec3(1.0, 0.22, 0.02), vec3(1.0, 0.85, 0.35), core);
         col = mix(col, vec3(1.0, 1.0, 0.9), smoothstep(0.85, 1.0, along));
         float a = pow(along, 1.4) * flick * uPower;
-        gl_FragColor = vec4(col * a * 1.6, a);
+        gl_FragColor = vec4(col * a * 3.0, a);
       }`,
   });
 }
@@ -136,7 +136,7 @@ export class AstronautView {
     const sm = skinned as THREE.SkinnedMesh | null;
     if (!sm) return;
     const mat = new THREE.MeshBasicMaterial({
-      color: 0xff2412,
+      color: new THREE.Color(3, 0.25, 0.1),
       side: THREE.BackSide,
       transparent: true,
       blending: THREE.AdditiveBlending,

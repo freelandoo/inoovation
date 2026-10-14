@@ -5,4 +5,5 @@
 /admin        /admin.html        200
 /privacidade   /privacidade.html  200
 /jogo          /jogo.html         200
+/ranking       /ranking.html      200
 /*             /index.html        200
