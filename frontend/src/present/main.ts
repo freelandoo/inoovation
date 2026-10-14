@@ -191,10 +191,6 @@ function fillDemo() {
   let d = '';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
   $('#scan-qr').innerHTML = `<svg viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges" role="img" aria-label="QR Code da experiência"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/><path d="${d}" fill="#050505"/></svg>`;
-
-  // Microtexto (lente da missão Segurança).
-  const micro = document.querySelector<HTMLElement>('.micro-zoom span');
-  if (micro) micro.textContent = 'INNOVATIONWEEK2026·INDEMETAL·THENEXTLABEL·'.repeat(60);
 }
 
 async function preload() {

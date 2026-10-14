@@ -122,6 +122,12 @@ const openingLabel = (c: Ctx, t: number): Partial<SceneState> => {
 
 // ------------------------------------------------------------------ helpers de DOM
 
+/** Correção da revisão BRG para a lista das sete camadas: textura no céu, planeta e solo; casting na estrutura da nave. */
+const CAMADAS_FIX: Partial<Record<string, { label: string; tech: string }>> = {
+  texture: { label: 'VERNIZ TEXTURA', tech: 'Céu, planeta e solo' },
+  holographic: { label: 'CASTING', tech: 'Estrutura da nave' },
+};
+
 const $$ = (el: HTMLElement, s: string) => [...el.querySelectorAll<HTMLElement>(s)];
 
 function countTo(el: HTMLElement, value: number, reduced: boolean, dur = 1.6, fmt: (n: number) => string = fmtInt) {
@@ -284,6 +290,13 @@ export const HOOKS: Record<string, SlideHooks> = {
 
   houston: {
     scene: (c) => quiet(c),
+    // O risco não tem data-a/data-step, então o resetSlide não o limpa: sem isto,
+    // ao voltar ao slide a frase já entrava riscada e o passo riscava de novo.
+    enter: (el) => {
+      const strike = el.querySelector('.h-strike');
+      gsap.killTweensOf(strike);
+      gsap.set(strike, { scaleX: 0 });
+    },
     step: (el, _s, _d, instant) => {
       const strike = el.querySelector('.h-strike');
       const old = el.querySelector('.h-old');
@@ -295,18 +308,6 @@ export const HOOKS: Record<string, SlideHooks> = {
       gsap.fromTo(strike, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power3.inOut' });
       gsap.to(old, { opacity: 0.22, duration: 0.5, delay: 0.45 });
     },
-  },
-
-  frasco: {
-    scene: (c, t, step) => {
-      const { H } = box(c);
-      return quiet(c, { portalX: 0, portalY: -H * 0.04, portalR: H * (step ? 0.46 : 0.28), portalI: step ? 0.3 : 0.75 + Math.sin(t) * 0.1, partOpacity: 0.5 });
-    },
-    step: (el, _s, _d, instant) => {
-      const pot = el.querySelector('.pot');
-      gsap.to(pot, { opacity: 0, scale: 0.8, duration: instant ? 0 : 0.5, ease: 'power2.in' });
-    },
-    leave: (el) => gsap.set(el.querySelector('.pot'), { clearProps: 'opacity,scale' }),
   },
 
   m1: { scene: opener },
@@ -447,13 +448,14 @@ export const HOOKS: Record<string, SlideHooks> = {
       const list = el.querySelector<HTMLElement>('#camadas-list')!;
       if (list.children.length) return;
       explodedOrder.forEach((l, i) => {
+        const fix = CAMADAS_FIX[l.key];
         const li = document.createElement('li');
         const n = document.createElement('b');
         n.textContent = String(i + 1).padStart(2, '0');
         const name = document.createElement('span');
-        name.textContent = l.label;
+        name.textContent = fix?.label ?? l.label;
         const small = document.createElement('small');
-        small.textContent = l.tech;
+        small.textContent = fix?.tech ?? l.tech;
         li.append(n, name, small);
         list.appendChild(li);
       });
