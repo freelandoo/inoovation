@@ -106,6 +106,9 @@ pela área do membro (botão JOGAR) ou direto em `/jogo`. `?debug` mostra a caix
 - Gerador: cada obstáculo tem uma linha segura; a mudança entre linhas nunca passa do alcance vertical no tempo
   disponível (descontando reação e obstáculos móveis). Cápsulas só onde pegar não condena a partida, e nunca
   mais de 30 m sem uma. Teste: um autopiloto atravessa 2000 m em 30 seeds (`tests/game.test.ts`).
+- Pote Evora Vulcan (`public/innovation-week/deck/pot.webp`): aparece ~a cada 10 s (`VULCAN_EVERY` em
+  `generator.ts`), dá +50 de combustível e 4 s de poder (`powerTime`): contorno vermelho, rastro, e bater numa
+  pilastra quebra a peça em vez de matar. Chão e teto continuam letais.
 - Recorde: local sempre; com API e link de membro no aparelho, vai para o ranking (`/api/game/*`). O servidor
   sorteia a seed e recusa distância impossível para o tempo decorrido.
 

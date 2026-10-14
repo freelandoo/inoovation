@@ -18,6 +18,9 @@ export type GameEvent =
   | { type: 'fuel_low' }
   | { type: 'fuel_empty' }
   | { type: 'pass' }
+  | { type: 'power_on'; until: number }
+  | { type: 'power_off' }
+  | { type: 'smash'; x: number; y: number; obstacle: number; piece: number }
   | { type: 'phase'; phase: number }
   | { type: 'dead'; cause: DeathCause };
 
@@ -38,6 +41,10 @@ export class World {
   passed = 0;
   phase = 1;
   seed = 1;
+  /** Fim do poder Vulcan (tempo de jogo, s). */
+  powerUntil = 0;
+  smashed = 0;
+  private poweredFlag = false;
   obstacles: Obstacle[] = [];
   pickups: Pickup[] = [];
   /** Eventos desde a última leitura (drain). */
@@ -62,6 +69,14 @@ export class World {
   get alive() {
     return this.state !== 'dead';
   }
+  /** Poder Vulcan ativo: bater num obstáculo quebra a peça em vez de matar. */
+  get powered() {
+    return this.t < this.powerUntil;
+  }
+  /** Segundos de poder restantes. */
+  get powerLeft() {
+    return Math.max(0, this.powerUntil - this.t);
+  }
 
   reset(seed: number) {
     for (const o of this.obstacles) this.gen?.recycle(o);
@@ -83,6 +98,9 @@ export class World {
     this.pickupsTaken = 0;
     this.passed = 0;
     this.phase = 1;
+    this.powerUntil = 0;
+    this.smashed = 0;
+    this.poweredFlag = false;
     this.fuel.reset();
     this.gen.fill(this.tune.lookahead, this.obstacles, this.pickups);
   }
@@ -130,6 +148,10 @@ export class World {
     }
 
     this.collectPickups();
+    if (this.poweredFlag && !this.powered) {
+      this.poweredFlag = false;
+      this.events.push({ type: 'power_off' });
+    }
     const cause = this.collide();
     if (cause) {
       this.die(cause);
@@ -150,8 +172,17 @@ export class World {
     if (hb.y1 >= tune.ceiling) return 'ceiling';
     for (const o of this.obstacles) {
       if (o.x > hb.x1 || o.x + o.w < hb.x0) continue;
-      for (const r of obstacleRects(o, this.t, tune, this.rects)) {
-        if (r.x0 < hb.x1 && r.x1 > hb.x0 && r.y0 < hb.y1 && r.y1 > hb.y0) return 'obstacle';
+      const rects = obstacleRects(o, this.t, tune, this.rects);
+      for (let i = 0; i < rects.length; i++) {
+        const r = rects[i];
+        if (o.broken & (1 << i)) continue;
+        if (!(r.x0 < hb.x1 && r.x1 > hb.x0 && r.y0 < hb.y1 && r.y1 > hb.y0)) continue;
+        if (!this.powered) return 'obstacle';
+        // Poder Vulcan: a peça se parte e o astronauta segue.
+        o.broken |= 1 << i;
+        this.smashed++;
+        const y = Math.min(r.y1, Math.max(r.y0, this.y));
+        this.events.push({ type: 'smash', x: Math.max(r.x0, hb.x0), y, obstacle: o.id, piece: i });
       }
     }
     return null;
@@ -159,18 +190,23 @@ export class World {
 
   private collectPickups() {
     const hb = this.hitbox();
-    const r = this.tune.pickupR;
     for (const p of this.pickups) {
+      const r = p.kind === 'vulcan' ? this.tune.vulcanR : this.tune.pickupR;
       if (p.taken || p.x - r > hb.x1 || p.x + r < hb.x0) continue;
       const cx = Math.min(hb.x1, Math.max(hb.x0, p.x));
       const cy = Math.min(hb.y1, Math.max(hb.y0, p.y));
       if ((p.x - cx) ** 2 + (p.y - cy) ** 2 > r * r) continue;
       p.taken = true;
-      const amount = p.kind === 'big' ? this.tune.fuel.big : this.tune.fuel.small;
+      const amount = this.tune.fuel[p.kind];
       const added = this.fuel.collect(amount);
       this.fuelCollected += added;
       this.pickupsTaken++;
       this.events.push({ type: 'pickup', kind: p.kind, added, x: p.x, y: p.y });
+      if (p.kind === 'vulcan') {
+        this.powerUntil = this.t + this.tune.powerTime;
+        this.poweredFlag = true;
+        this.events.push({ type: 'power_on', until: this.powerUntil });
+      }
     }
   }
 
@@ -200,6 +236,9 @@ export class World {
   }
 
   private die(cause: DeathCause) {
+    if (this.poweredFlag) this.events.push({ type: 'power_off' });
+    this.poweredFlag = false;
+    this.powerUntil = 0;
     if (this.thrusting) this.events.push({ type: 'thrust_off' });
     this.thrusting = false;
     this.state = 'dead';

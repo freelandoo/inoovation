@@ -346,6 +346,47 @@ html[data-offline] .jg-offline {
   display: block;
 }
 
+/* Poder Evora Vulcan: barra de tempo, borda da tela pulsando em vermelho. */
+.jg-power {
+  display: none;
+  width: clamp(120px, 38vw, 170px);
+  padding: 7px 10px 8px;
+  background: rgba(60, 0, 0, 0.55);
+  border: 1px solid rgba(255, 40, 20, 0.7);
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(255, 30, 10, 0.45);
+}
+.jg-power .jg-lbl {
+  color: #ffb2a0;
+}
+.jg-power .jg-bar i {
+  background: linear-gradient(90deg, #ff2a0a, #ff8a3a);
+  box-shadow: 0 0 10px rgba(255, 50, 10, 0.8);
+  transition: none;
+}
+html[data-power] .jg-power {
+  display: block;
+}
+html[data-power] .jg-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 70px rgba(255, 20, 0, 0.45);
+  animation: jg-power 0.5s ease-in-out infinite alternate;
+}
+@keyframes jg-power {
+  from {
+    opacity: 0.55;
+  }
+}
+.jg-toast[data-kind='power'] {
+  color: #ff5a3a;
+  font-size: 12.5px;
+  text-shadow: 0 0 12px rgba(255, 30, 0, 0.8);
+}
+
 /* ---------------------------------------------------------------- painéis */
 
 .jg-panel {
@@ -443,6 +484,10 @@ html[data-state='loading'] [data-panel='loading'] {
 .c-red {
   background: var(--red);
   box-shadow: 0 0 8px var(--red);
+}
+.c-vulcan {
+  background: #ff3a10;
+  box-shadow: 0 0 10px #ff2000, 0 0 3px #ffb070;
 }
 .c-fuel {
   background: var(--fuel);

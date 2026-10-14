@@ -34,13 +34,16 @@ export interface Obstacle {
   blockY0: number;
   blockY1: number;
   passed: boolean;
+  /** Peças quebradas pelo poder Vulcan (bit i = retângulo i de obstacleRects). */
+  broken: number;
 }
 
 export interface Pickup {
   id: number;
   x: number;
   y: number;
-  kind: 'small' | 'big';
+  /** small/big: cápsulas de combustível; vulcan: pote Evora Vulcan (combustível + poder). */
+  kind: 'small' | 'big' | 'vulcan';
   taken: boolean;
 }
 
@@ -71,6 +74,8 @@ export function pathAt(o: Obstacle, t: number): number {
 
 /** Maior trecho (m) sem cápsula antes de o gerador forçar uma. */
 const MAX_FUEL_GAP = 30;
+/** Intervalo médio (s de jogo) entre potes Evora Vulcan. */
+export const VULCAN_EVERY = 10;
 const OUT = 6; // quanto as peças passam do chão/teto (só visual)
 
 /** Retângulos letais do obstáculo no instante t (escreve em `out`). */
@@ -101,6 +106,7 @@ export class Generator {
   private lastEnd: number;
   private fuelDebt = 0;
   private lastFuelX = 0;
+  private nextVulcanX = 0;
   private nextId = 1;
   private obstaclePool: Obstacle[] = [];
   private pickupPool: Pickup[] = [];
@@ -112,6 +118,12 @@ export class Generator {
     this.nextX = tune.firstObstacleX;
     this.lastPath = tune.startY;
     this.lastEnd = 0;
+    this.nextVulcanX = this.vulcanInterval(0);
+  }
+
+  /** Distância até o próximo pote: ~10 s na velocidade daquele trecho. */
+  private vulcanInterval(x: number) {
+    return x + difficultyAt(x).speed * VULCAN_EVERY * this.rng.range(0.85, 1.15);
   }
 
   /** Gera obstáculos e cápsulas até `xMax`. */
@@ -176,6 +188,7 @@ export class Generator {
     o.omega = amp ? (Math.PI * 2) / rng.range(2.6, 3.4) : 0;
     o.phase = amp ? rng.range(0, Math.PI * 2) : 0;
     o.passed = false;
+    o.broken = 0;
     o.blockY0 = 0;
     o.blockY1 = 0;
     if (kind === 'beam') this.placeBeam(o, diff);
@@ -222,13 +235,14 @@ export class Generator {
    */
   private placeFuel(x: number, pathY: number, amp: number, diff: Difficulty, pickups: Pickup[], overdue: boolean) {
     this.fuelDebt += 1;
-    if (this.fuelDebt < diff.fuelEvery && !overdue) return;
+    const vulcan = x >= this.nextVulcanX;
+    if (this.fuelDebt < diff.fuelEvery && !overdue && !vulcan) return;
     const tune = this.tune;
     const rng = this.rng;
     const gapStart = this.lastEnd + 0.9;
     const gapEnd = x - 0.9;
     if (gapEnd - gapStart < 1) return;
-    const big = rng.chance(diff.bigFuel);
+    const big = !vulcan && rng.chance(diff.bigFuel);
     const want = rng.range(0.3, 0.6);
     // A especial fica um pouco fora da linha: recompensa por arriscar.
     const off = big ? rng.range(-1, 1) * Math.min(1.6, diff.gap * 0.45) : rng.range(-0.3, 0.3);
@@ -246,14 +260,16 @@ export class Generator {
       y = Math.min(hi - 0.05, Math.max(lo + 0.05, lineY + off));
       break;
     }
+    // Pote sem lugar seguro aqui: tenta no próximo vão.
     if (Number.isNaN(y)) return;
     this.fuelDebt = Math.max(0, this.fuelDebt - diff.fuelEvery);
     this.lastFuelX = px;
+    if (vulcan) this.nextVulcanX = this.vulcanInterval(px);
     const p = this.pickupPool.pop() ?? ({} as Pickup);
     p.id = this.nextId++;
     p.x = px;
     p.y = y;
-    p.kind = big ? 'big' : 'small';
+    p.kind = vulcan ? 'vulcan' : big ? 'big' : 'small';
     p.taken = false;
     pickups.push(p);
   }

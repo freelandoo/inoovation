@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { obstacleRects, offsetAt, type Obstacle, type ObstacleKind, type Pickup, type Rect } from '../sim/generator.ts';
 import { TUNING } from '../sim/tuning.ts';
+import type { Particles } from './particles.ts';
 
 const DEPTH = 2.2;
 
@@ -145,6 +146,10 @@ export class ObstacleRenderer {
     for (let i = 0; i < v.pieces.length; i++) {
       const r = rects[i];
       const p = v.pieces[i];
+      const broken = (o.broken & (1 << i)) !== 0;
+      p.body.visible = !broken;
+      p.edge.visible = !broken;
+      if (broken) continue;
       const h = r.y1 - r.y0;
       const cy = (r.y0 + r.y1) / 2;
       // Ponta voltada para a passagem: topo da peça de baixo, base da de cima.
@@ -185,53 +190,76 @@ export class ObstacleRenderer {
   }
 }
 
-/** Cápsulas de combustível: núcleo ciano (comum) ou dourado (especial). */
+/**
+ * Coletáveis: cápsulas de combustível (núcleo ciano comum, dourado especial) e
+ * o pote Evora Vulcan (imagem do produto, halo vermelho pulsando e brasas).
+ */
 export class PickupRenderer {
   private group = new THREE.Group();
   private active = new Map<number, THREE.Group>();
-  private pool: { small: THREE.Group[]; big: THREE.Group[] } = { small: [], big: [] };
+  private pool: Record<Pickup['kind'], THREE.Group[]> = { small: [], big: [], vulcan: [] };
   private kindOf = new Map<THREE.Group, Pickup['kind']>();
   private shell: THREE.MeshStandardMaterial;
-  private core: Record<Pickup['kind'], THREE.MeshBasicMaterial>;
+  private core: Record<'small' | 'big', THREE.MeshBasicMaterial>;
   private halo: Record<Pickup['kind'], THREE.SpriteMaterial>;
+  private potMat: THREE.SpriteMaterial;
   private capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 12);
   private cap = new THREE.CylinderGeometry(0.2, 0.2, 0.09, 14);
+  private fire: Particles;
+  private emberAcc = 0;
 
-  constructor(scene: THREE.Scene, glow: THREE.Texture) {
+  constructor(scene: THREE.Scene, glow: THREE.Texture, fire: Particles, pot: THREE.Texture) {
     scene.add(this.group);
+    this.fire = fire;
     this.shell = new THREE.MeshStandardMaterial({ color: 0xd8dade, metalness: 0.8, roughness: 0.25 });
     this.core = {
       small: new THREE.MeshBasicMaterial({ color: 0x3df2ff }),
       big: new THREE.MeshBasicMaterial({ color: 0xffd36a }),
     };
-    this.halo = {
-      small: new THREE.SpriteMaterial({ map: glow, color: 0x2fd8ff, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8 }),
-      big: new THREE.SpriteMaterial({ map: glow, color: 0xffb030, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95 }),
-    };
+    const halo = (color: number, opacity: number) =>
+      new THREE.SpriteMaterial({ map: glow, color, blending: THREE.AdditiveBlending, depthWrite: false, opacity });
+    this.halo = { small: halo(0x2fd8ff, 0.8), big: halo(0xffb030, 0.95), vulcan: halo(0xff1a0a, 1) };
+    this.potMat = new THREE.SpriteMaterial({ map: pot, transparent: true, depthWrite: false });
     for (let i = 0; i < 4; i++) {
       this.pool.small.push(this.make('small'));
       this.pool.big.push(this.make('big'));
     }
+    this.pool.vulcan.push(this.make('vulcan'), this.make('vulcan'));
   }
 
   private make(kind: Pickup['kind']): THREE.Group {
     const g = new THREE.Group();
-    const core = new THREE.Mesh(this.capsule, this.core[kind]);
-    const top = new THREE.Mesh(this.cap, this.shell);
-    top.position.y = 0.3;
-    const bottom = new THREE.Mesh(this.cap, this.shell);
-    bottom.position.y = -0.3;
-    const halo = new THREE.Sprite(this.halo[kind]);
-    halo.scale.setScalar(kind === 'big' ? 1.9 : 1.3);
-    g.add(halo, core, top, bottom);
-    if (kind === 'big') g.scale.setScalar(1.3);
+    if (kind === 'vulcan') {
+      // Halo largo + núcleo mais forte atrás do pote; a imagem fica na frente.
+      const outer = new THREE.Sprite(this.halo.vulcan);
+      outer.scale.setScalar(3.2);
+      outer.name = 'outer';
+      const inner = new THREE.Sprite(this.halo.vulcan);
+      inner.scale.setScalar(1.9);
+      inner.name = 'inner';
+      const pot = new THREE.Sprite(this.potMat);
+      pot.scale.set(0.96, 1.5, 1);
+      pot.position.z = 0.05;
+      pot.name = 'pot';
+      g.add(outer, inner, pot);
+    } else {
+      const core = new THREE.Mesh(this.capsule, this.core[kind]);
+      const top = new THREE.Mesh(this.cap, this.shell);
+      top.position.y = 0.3;
+      const bottom = new THREE.Mesh(this.cap, this.shell);
+      bottom.position.y = -0.3;
+      const halo = new THREE.Sprite(this.halo[kind]);
+      halo.scale.setScalar(kind === 'big' ? 1.9 : 1.3);
+      g.add(halo, core, top, bottom);
+      if (kind === 'big') g.scale.setScalar(1.3);
+    }
     g.visible = false;
     this.group.add(g);
     this.kindOf.set(g, kind);
     return g;
   }
 
-  update(pickups: readonly Pickup[], time: number) {
+  update(pickups: readonly Pickup[], time: number, dt: number) {
     for (const [id, g] of this.active) {
       const p = pickups.find((k) => k.id === id);
       if (!p || p.taken) {
@@ -240,6 +268,9 @@ export class PickupRenderer {
         this.active.delete(id);
       }
     }
+    this.emberAcc += dt * 26;
+    const embers = Math.floor(this.emberAcc);
+    this.emberAcc -= embers;
     for (const p of pickups) {
       if (p.taken) continue;
       let g = this.active.get(p.id);
@@ -248,9 +279,31 @@ export class PickupRenderer {
         g.visible = true;
         this.active.set(p.id, g);
       }
-      g.position.set(p.x, p.y + Math.sin(time * 3 + p.id) * 0.06, 0);
-      g.rotation.set(0.35, time * 2 + p.id, 0.25);
+      if (p.kind === 'vulcan') {
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        g.position.set(p.x, p.y + Math.sin(time * 2.4 + p.id) * 0.1, 0);
+        g.rotation.set(0, 0, 0);
+        g.getObjectByName('outer')!.scale.setScalar(3 + pulse * 0.6);
+        g.getObjectByName('inner')!.scale.setScalar(1.75 + pulse * 0.3);
+        (g.getObjectByName('pot') as THREE.Sprite).material.rotation = Math.sin(time * 1.7 + p.id) * 0.12;
+        for (let i = 0; i < embers; i++) this.ember(g.position);
+      } else {
+        g.position.set(p.x, p.y + Math.sin(time * 3 + p.id) * 0.06, 0);
+        g.rotation.set(0.35, time * 2 + p.id, 0.25);
+      }
     }
+  }
+
+  /** Brasa subindo do pote. */
+  private ember(at: THREE.Vector3) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 0.25 + Math.random() * 0.25;
+    this.fire.emit({
+      x: at.x + Math.cos(a) * r, y: at.y + Math.sin(a) * r * 1.3, z: 0.15,
+      vx: (Math.random() - 0.5) * 0.8, vy: 0.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.4,
+      life: 0.5 + Math.random() * 0.5, size: 0.07 + Math.random() * 0.08,
+      c0: [1, 0.55, 0.2], c1: [0.8, 0.05, 0.02], drag: 1.2,
+    });
   }
 
   reset() {

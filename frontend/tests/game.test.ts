@@ -114,7 +114,7 @@ test('bater em obstáculo, no chão ou no teto encerra a partida uma única vez'
   const hit = clearWorld();
   hit.step(true);
   hit.obstacles.push({
-    id: 1, kind: 'wall', x: hit.x + 0.5, w: 0.8, pathY: 2, gap: 2, amp: 0, omega: 0, phase: 0, blockY0: 0, blockY1: 0, passed: false,
+    id: 1, kind: 'wall', x: hit.x + 0.5, w: 0.8, pathY: 2, gap: 2, amp: 0, omega: 0, phase: 0, blockY0: 0, blockY1: 0, passed: false, broken: 0,
   });
   for (let i = 0; i < steps(1); i++) hit.step(false);
   assert.equal(hit.state, 'dead');
@@ -272,4 +272,62 @@ test('obstáculos móveis mantêm a passagem livre do tamanho certo', () => {
       assert.ok(c - o.gap / 2 > TUNING.floor && c + o.gap / 2 < TUNING.ceiling);
     }
   }
+});
+
+test('pote Evora Vulcan aparece a cada ~10 s de jogo, mais raro que as cápsulas', () => {
+  const w = new World(2024);
+  const seen = new Map<number, string>();
+  while (w.alive && w.t < 120) {
+    w.step(autopilot(w));
+    for (const p of w.pickups) seen.set(p.id, p.kind);
+  }
+  assert.ok(w.alive);
+  const kinds = [...seen.values()];
+  const pots = kinds.filter((k) => k === 'vulcan').length;
+  assert.ok(pots >= 9 && pots <= 15, `${pots} potes em 120 s`);
+  assert.ok(kinds.filter((k) => k !== 'vulcan').length > pots * 3, 'cápsulas comuns continuam mais frequentes');
+});
+
+test('pegar o pote dá combustível e 4 s de poder; com poder a pilastra quebra em vez de matar', () => {
+  const w = clearWorld();
+  w.step(true);
+  w.fuel.consume(80);
+  w.pickups.push({ id: 500, x: w.x + 0.3, y: w.y, kind: 'vulcan', taken: false });
+  w.step(false);
+  let ev = w.drain().map((e) => e.type);
+  assert.ok(ev.includes('pickup') && ev.includes('power_on'));
+  assert.ok(w.powered);
+  assert.ok(Math.abs(w.powerLeft - TUNING.powerTime) < 0.02);
+  assert.ok(Math.abs(w.fuel.value - (100 - 80 - TUNING.fuel.burn * TUNING.step + TUNING.fuel.vulcan)) < 1e-6);
+
+  // Parede inteira na frente (passagem fora de alcance): com poder, atravessa.
+  w.obstacles.push({
+    id: 77, kind: 'wall', x: w.x + 0.8, w: 0.8, pathY: 1.5, gap: 1, amp: 0, omega: 0, phase: 0, blockY0: 0, blockY1: 0, passed: false, broken: 0,
+  });
+  w.y = 7;
+  w.vy = 0;
+  for (let i = 0; i < steps(0.6); i++) w.step(w.vy < 0);
+  assert.ok(w.alive, 'com poder não morre na pilastra');
+  ev = w.drain().map((e) => e.type);
+  assert.ok(ev.includes('smash'));
+  assert.equal(w.smashed, 1);
+  assert.equal(w.obstacles.find((o) => o.id === 77)!.broken, 0b10, 'só a peça de cima (a que bateu) quebrou');
+
+  // O poder acaba em 4 s; depois disso a próxima pilastra mata.
+  while (w.powered) w.step(w.vy < 0 && w.y < 7);
+  assert.ok(w.drain().some((e) => e.type === 'power_off'));
+  w.obstacles.push({
+    id: 78, kind: 'wall', x: w.x + 0.8, w: 0.8, pathY: 1.5, gap: 1, amp: 0, omega: 0, phase: 0, blockY0: 0, blockY1: 0, passed: false, broken: 0,
+  });
+  for (let i = 0; i < steps(0.6) && w.alive; i++) w.step(w.vy < 0);
+  assert.equal(w.state, 'dead');
+});
+
+test('com poder, chão e teto continuam letais', () => {
+  const w = clearWorld();
+  w.step(true);
+  w.powerUntil = w.t + 10;
+  for (let i = 0; i < steps(4) && w.alive; i++) w.step(false);
+  const d = w.drain().find((e) => e.type === 'dead');
+  assert.ok(d && d.type === 'dead' && d.cause === 'floor');
 });

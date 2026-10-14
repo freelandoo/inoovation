@@ -61,6 +61,14 @@ export class AstronautView {
   private emitAcc = 0;
   private pitch = 0;
   private tmp = new THREE.Vector3();
+  /** Poder Vulcan: contorno vermelho (casca da própria malha) + aura + brasas. */
+  private outlineMat: THREE.MeshBasicMaterial | null = null;
+  private outline: THREE.SkinnedMesh | null = null;
+  private outlineWidth = { value: 0 };
+  private aura: THREE.Sprite;
+  private power01 = 0;
+  private powerLeft = 0;
+  private powerAcc = 0;
 
   constructor(
     scene: THREE.Scene,
@@ -70,6 +78,13 @@ export class AstronautView {
   ) {
     this.root.add(this.body);
     scene.add(this.root);
+    this.aura = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: glowMap, color: 0xff1a0a, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }),
+    );
+    this.aura.scale.set(2.6, 1.6, 1);
+    this.aura.position.z = -0.4;
+    this.aura.visible = false;
+    this.body.add(this.aura);
   }
 
   async load(url: string, onProgress?: (ratio: number) => void) {
@@ -92,6 +107,7 @@ export class AstronautView {
       if ((o as THREE.Bone).isBone && /Spine2$/.test(o.name)) this.spine = o as THREE.Bone;
     });
     this.body.add(this.model);
+    this.buildOutline();
 
     this.mixer = new THREE.AnimationMixer(this.model);
     for (const clip of gltf.animations) {
@@ -105,6 +121,53 @@ export class AstronautView {
     }
     if (this.spine) this.buildJetpack(this.spine);
     this.play('idle', 0);
+  }
+
+  /**
+   * Contorno: cópia da malha com a mesma pele/esqueleto, inflada pelas normais e
+   * desenhada só por trás (BackSide). Acompanha qualquer animação sem custo extra
+   * de CPU; fica invisível quando não há poder.
+   */
+  private buildOutline() {
+    let skinned: THREE.SkinnedMesh | null = null;
+    this.model.traverse((o) => {
+      if (!skinned && (o as THREE.SkinnedMesh).isSkinnedMesh) skinned = o as THREE.SkinnedMesh;
+    });
+    const sm = skinned as THREE.SkinnedMesh | null;
+    if (!sm) return;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xff2412,
+      side: THREE.BackSide,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0,
+    });
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uOutline = this.outlineWidth;
+      shader.vertexShader =
+        'uniform float uOutline;\n' +
+        shader.vertexShader.replace(
+          '#include <skinning_vertex>',
+          '#include <skinning_vertex>\n  transformed += normalize(objectNormal) * uOutline;',
+        );
+    };
+    const shell = new THREE.SkinnedMesh(sm.geometry, mat);
+    shell.bind(sm.skeleton, sm.bindMatrix);
+    shell.position.copy(sm.position);
+    shell.quaternion.copy(sm.quaternion);
+    shell.scale.copy(sm.scale);
+    shell.frustumCulled = false;
+    shell.renderOrder = 4;
+    shell.visible = false;
+    sm.parent!.add(shell);
+    this.outlineMat = mat;
+    this.outline = shell;
+  }
+
+  /** Liga/desliga o visual do poder; `left` = segundos restantes (pisca no fim). */
+  setPower(left: number) {
+    this.powerLeft = left;
   }
 
   private buildJetpack(spine: THREE.Bone) {
@@ -188,6 +251,36 @@ export class AstronautView {
     }
 
     if (this.spine && this.power > 0.05) this.emitTrail(dt, thrust);
+    this.updatePower(dt, time);
+  }
+
+  private updatePower(dt: number, time: number) {
+    const on = this.powerLeft > 0;
+    this.power01 += ((on ? 1 : 0) - this.power01) * (1 - Math.exp(-dt * (on ? 14 : 6)));
+    const vis = this.power01 > 0.01;
+    // Último segundo: pisca para avisar que vai acabar.
+    const blink = on && this.powerLeft < 1 ? 0.45 + 0.55 * (Math.sin(time * 28) > 0 ? 1 : 0) : 1;
+    const pulse = 0.8 + 0.2 * Math.sin(time * 12);
+    if (this.outlineMat && this.outline) {
+      this.outlineMat.opacity = this.power01 * pulse * blink;
+      this.outlineWidth.value = 0.022 + 0.008 * Math.sin(time * 9);
+      this.outline.visible = vis;
+    }
+    this.aura.visible = vis;
+    this.aura.material.opacity = this.power01 * 0.55 * pulse * blink;
+    if (!on) return;
+    // Partículas vermelhas saindo de trás do astronauta.
+    this.powerAcc += dt * 120;
+    const p = this.root.position;
+    while (this.powerAcc >= 1) {
+      this.powerAcc -= 1;
+      this.fire.emit({
+        x: p.x - 0.3 + (Math.random() - 0.5) * 0.6, y: p.y + (Math.random() - 0.5) * 0.45, z: (Math.random() - 0.5) * 0.4,
+        vx: -2.5 - Math.random() * 2.5, vy: (Math.random() - 0.5) * 0.8, vz: (Math.random() - 0.5) * 0.5,
+        life: 0.35 + Math.random() * 0.35, size: 0.14 + Math.random() * 0.16,
+        c0: [1, 0.45, 0.2], c1: [0.9, 0.04, 0.0], drag: 2.2, grow: 0.5,
+      });
+    }
   }
 
   private emitTrail(dt: number, thrust: boolean) {

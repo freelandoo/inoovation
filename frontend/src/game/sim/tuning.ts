@@ -17,12 +17,18 @@ export interface Tuning {
   hitH: number;
   /** Raio de coleta das cápsulas. */
   pickupR: number;
+  /** Raio de coleta do pote Evora Vulcan (maior que a cápsula). */
+  vulcanR: number;
+  /** Duração do poder Vulcan (s): bater numa pilastra quebra a peça em vez de matar. */
+  powerTime: number;
   fuel: {
     max: number;
     start: number;
     burn: number;
     small: number;
     big: number;
+    /** Combustível que o pote Evora Vulcan dá, além do poder. */
+    vulcan: number;
     /** Fração do tanque abaixo da qual o alerta de combustível baixo aparece. */
     low: number;
   };
@@ -46,7 +52,9 @@ export const TUNING: Tuning = {
   hitW: 0.95,
   hitH: 0.48,
   pickupR: 0.42,
-  fuel: { max: 100, start: 100, burn: 12, small: 30, big: 60, low: 0.2 },
+  vulcanR: 0.6,
+  powerTime: 4,
+  fuel: { max: 100, start: 100, burn: 12, small: 30, big: 60, vulcan: 50, low: 0.2 },
   firstObstacleX: 16,
   lookahead: 34,
   reaction: 0.15,

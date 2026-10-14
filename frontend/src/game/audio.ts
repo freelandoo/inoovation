@@ -6,7 +6,7 @@
 
 const KEY = 'iw:sound';
 
-export type Sound = 'pickup' | 'pickup_big' | 'low' | 'pass' | 'crash' | 'record' | 'ui' | 'off';
+export type Sound = 'pickup' | 'pickup_big' | 'vulcan' | 'power_off' | 'smash' | 'low' | 'pass' | 'crash' | 'record' | 'ui' | 'off';
 
 export class GameAudio {
   private ctx: AudioContext | null = null;
@@ -108,6 +108,19 @@ export class GameAudio {
       case 'pickup_big':
         this.tone('sine', [660, 990, 1320, 1760], t, 0.06, 0.28);
         break;
+      case 'vulcan':
+        // Acorde de potência subindo + chiado de fogo.
+        this.tone('sawtooth', [196, 294, 392, 587, 784], t, 0.06, 0.16);
+        this.burst(t, 0.5, 600, 4000, 0.35);
+        break;
+      case 'power_off':
+        this.tone('triangle', [660, 440], t, 0.08, 0.12);
+        break;
+      case 'smash': {
+        this.burst(t, 0.35, 5000, 400, 0.7);
+        this.tone('square', [140, 90], t, 0.05, 0.25);
+        break;
+      }
       case 'low':
         if (t - this.lastLow < 1.2) return;
         this.lastLow = t;

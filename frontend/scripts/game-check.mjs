@@ -86,6 +86,15 @@ const snap = (page) =>
   await page.tap('#jg-resume');
   await page.waitForFunction(() => document.documentElement.dataset.state === 'playing', null, { timeout: 5000 });
 
+  // O screenshot no SwiftShader trava o teste ~1 s: enquanto ele acontece, o
+  // autopiloto assume dentro da página (sem latência) e depois devolve ao toque.
+  const shoot = async (path) => {
+    await page.evaluate(() =>
+      Object.defineProperty(window.__game.input, 'held', { configurable: true, get: () => window.__auto() }),
+    );
+    await page.screenshot({ path });
+    await page.evaluate(() => delete window.__game.input.held);
+  };
   let holding = false;
   let shots = 0;
   let thrustSeen = false;
@@ -101,11 +110,11 @@ const snap = (page) =>
     if (s.state === 'playing') started = true;
     if (s.thrusting) thrustSeen = true;
     if (started && s.thrusting && shots === 0 && s.x > 6) {
-      await page.screenshot({ path: `${out}/m3-thrust.png` });
+      await shoot(`${out}/m3-thrust.png`);
       shots++;
     }
     if (started && shots === 1 && s.x > 60) {
-      await page.screenshot({ path: `${out}/m4-run.png` });
+      await shoot(`${out}/m4-run.png`);
       shots++;
     }
     if (!s.alive || s.x > 120) break;
