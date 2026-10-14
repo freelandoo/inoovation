@@ -203,6 +203,7 @@ export class World {
       this.pickupsTaken++;
       this.events.push({ type: 'pickup', kind: p.kind, added, x: p.x, y: p.y });
       if (p.kind === 'vulcan') {
+        this.gen.vulcanTaken(p.x);
         this.powerUntil = this.t + this.tune.powerTime;
         this.poweredFlag = true;
         this.events.push({ type: 'power_on', until: this.powerUntil });

@@ -74,8 +74,20 @@ export function pathAt(o: Obstacle, t: number): number {
 
 /** Maior trecho (m) sem cápsula antes de o gerador forçar uma. */
 const MAX_FUEL_GAP = 30;
-/** Intervalo médio (s de jogo) entre potes Evora Vulcan. */
-export const VULCAN_EVERY = 10;
+/**
+ * Intervalo (s de jogo) entre potes Evora Vulcan. Pote perdido: o próximo vem
+ * VULCAN_EVERY depois dele. Pote pego: só VULCAN_EVERY depois de o poder acabar
+ * (powerTime + VULCAN_EVERY após a coleta).
+ */
+export const VULCAN_EVERY = 15;
+
+/** Distância percorrida em `seconds` partindo de x (a velocidade sobe com a distância). */
+export function distanceIn(x: number, seconds: number): number {
+  let d = x;
+  const dt = 0.25;
+  for (let t = 0; t < seconds; t += dt) d += difficultyAt(d).speed * Math.min(dt, seconds - t);
+  return d - x;
+}
 const OUT = 6; // quanto as peças passam do chão/teto (só visual)
 
 /** Retângulos letais do obstáculo no instante t (escreve em `out`). */
@@ -121,9 +133,19 @@ export class Generator {
     this.nextVulcanX = this.vulcanInterval(0);
   }
 
-  /** Distância até o próximo pote: ~10 s na velocidade daquele trecho. */
+  /** Posição do próximo pote: ~VULCAN_EVERY s de voo depois de x. */
   private vulcanInterval(x: number) {
-    return x + difficultyAt(x).speed * VULCAN_EVERY * this.rng.range(0.85, 1.15);
+    return x + distanceIn(x, VULCAN_EVERY * this.rng.range(0.95, 1.08));
+  }
+
+  /**
+   * O jogador pegou o pote em x: o próximo só depois do poder acabar mais
+   * VULCAN_EVERY. Com 15 s entre potes e ~34 m gerados à frente, o próximo
+   * ainda não existe no percurso quando isso é chamado.
+   */
+  vulcanTaken(x: number) {
+    const after = x + distanceIn(x, this.tune.powerTime + VULCAN_EVERY);
+    this.nextVulcanX = Math.max(this.nextVulcanX, after);
   }
 
   /** Gera obstáculos e cápsulas até `xMax`. */

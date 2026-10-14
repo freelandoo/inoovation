@@ -6,7 +6,7 @@ import { World } from '../src/game/sim/world.ts';
 import { FuelSystem } from '../src/game/sim/fuel.ts';
 import { TUNING } from '../src/game/sim/tuning.ts';
 import { difficultyAt, MAX_SPEED } from '../src/game/sim/difficulty.ts';
-import { obstacleRects, pathAt, reach } from '../src/game/sim/generator.ts';
+import { distanceIn, obstacleRects, pathAt, reach, VULCAN_EVERY } from '../src/game/sim/generator.ts';
 import { autopilot } from '../src/game/sim/autopilot.ts';
 
 const steps = (s: number) => Math.round(s / TUNING.step);
@@ -274,18 +274,58 @@ test('obstáculos móveis mantêm a passagem livre do tamanho certo', () => {
   }
 });
 
-test('pote Evora Vulcan aparece a cada ~10 s de jogo, mais raro que as cápsulas', () => {
-  const w = new World(2024);
-  const seen = new Map<number, string>();
-  while (w.alive && w.t < 120) {
+/** Joga com o autopiloto e anota cada pote: posição e se foi pego. */
+function potRun(seed: number, seconds: number, takePots: boolean) {
+  const w = new World(seed);
+  const pots = new Map<number, { x: number; taken: boolean }>();
+  while (w.alive && w.t < seconds) {
+    // Sem pegar: o pote some da simulação (como se o jogador desviasse).
+    if (!takePots) for (const p of w.pickups) if (p.kind === 'vulcan') p.taken = true;
     w.step(autopilot(w));
-    for (const p of w.pickups) seen.set(p.id, p.kind);
+    for (const p of w.pickups) if (p.kind === 'vulcan') pots.set(p.id, { x: p.x, taken: p.taken });
+  }
+  assert.ok(w.alive, `seed ${seed} morreu`);
+  return { w, pots: [...pots.values()].sort((a, b) => a.x - b.x) };
+}
+
+test('pote perdido: o próximo vem ~15 s depois', () => {
+  const { pots } = potRun(2024, 150, false);
+  assert.ok(pots.length >= 8 && pots.length <= 10, `${pots.length} potes em 150 s`);
+  for (let i = 1; i < pots.length; i++) {
+    const gap = pots[i].x - pots[i - 1].x;
+    const lo = distanceIn(pots[i - 1].x, VULCAN_EVERY * 0.95);
+    const hi = distanceIn(pots[i - 1].x, VULCAN_EVERY * 1.08 + 2.5); // + até um vão de obstáculo
+    assert.ok(gap >= lo - 1e-6 && gap <= hi, `intervalo ${gap.toFixed(1)} m fora de [${lo.toFixed(1)}, ${hi.toFixed(1)}]`);
+  }
+});
+
+test('pote pego: o próximo só 15 s depois de o poder acabar (19 s após a coleta)', () => {
+  // Coloca um pote na frente e pega; depois mede onde o gerador põe o próximo.
+  const w = new World(77);
+  w.step(true);
+  for (const p of w.pickups) p.taken = p.kind === 'vulcan' ? true : p.taken;
+  w.pickups.push({ id: 4242, x: w.x + 0.3, y: w.y, kind: 'vulcan', taken: false });
+  w.step(false);
+  assert.ok(w.powered);
+  const takenAt = w.x;
+  const seen: number[] = [];
+  while (w.alive && w.t < 60) {
+    w.step(autopilot(w));
+    for (const p of w.pickups) if (p.kind === 'vulcan' && p.id !== 4242 && !seen.includes(p.x)) seen.push(p.x);
   }
   assert.ok(w.alive);
-  const kinds = [...seen.values()];
-  const pots = kinds.filter((k) => k === 'vulcan').length;
-  assert.ok(pots >= 9 && pots <= 15, `${pots} potes em 120 s`);
-  assert.ok(kinds.filter((k) => k !== 'vulcan').length > pots * 3, 'cápsulas comuns continuam mais frequentes');
+  assert.ok(seen.length >= 1);
+  const min = takenAt + distanceIn(takenAt, TUNING.powerTime + VULCAN_EVERY);
+  assert.ok(seen[0] >= min - 0.5, `próximo pote em ${seen[0].toFixed(1)} m, antes de ${min.toFixed(1)} m`);
+  // ...e não muito depois disso (no máximo o intervalo normal com folga).
+  assert.ok(seen[0] <= min + distanceIn(min, 3), `próximo pote tarde demais (${seen[0].toFixed(1)} m)`);
+});
+
+test('pegando todos os potes, eles vêm a cada ~19 s e continuam raros', () => {
+  const { pots } = potRun(2025, 150, true);
+  const taken = pots.filter((p) => p.taken).length;
+  assert.ok(taken >= 4, `pegou ${taken}`);
+  assert.ok(pots.length >= 6 && pots.length <= 9, `${pots.length} potes em 150 s`);
 });
 
 test('pegar o pote dá combustível e 4 s de poder; com poder a pilastra quebra em vez de matar', () => {
