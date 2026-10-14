@@ -84,7 +84,8 @@ export class Stage {
   private enableBloom(scale: number) {
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.65, 0.35, 0.55);
+    // Limiar alto: só as luzes (neon, pista, fogo, pote) brilham; branco do traje não.
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.35, 0.95);
     this.bloom.resolution.multiplyScalar(scale);
     composer.addPass(this.bloom);
     composer.addPass(new OutputPass());

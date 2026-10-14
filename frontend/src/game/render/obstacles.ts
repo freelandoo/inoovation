@@ -116,7 +116,7 @@ export class ObstacleRenderer {
       metal: new THREE.MeshStandardMaterial({ color: 0x2a2d33, metalness: 0.85, roughness: 0.38 }),
       panel: new THREE.MeshStandardMaterial({ color: 0x8d9097, metalness: 0.7, roughness: 0.32 }),
       // Cores acima de 1: passam do limiar do bloom e brilham.
-      red: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 0.04, 0.02) }),
+      red: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.6, 0.06, 0.03) }),
       neon: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 0.03, 0.015) }),
       field: energyFieldMaterial(),
     };
@@ -234,12 +234,12 @@ export class PickupRenderer {
     this.fire = fire;
     this.shell = new THREE.MeshStandardMaterial({ color: 0xd8dade, metalness: 0.8, roughness: 0.25 });
     this.core = {
-      small: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 2.6, 3) }),
-      big: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.1, 0.6) }),
+      small: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.25, 1.25, 1.45) }),
+      big: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.05, 0.3) }),
     };
     const halo = (color: number, opacity: number) =>
       new THREE.SpriteMaterial({ map: glow, color, blending: THREE.AdditiveBlending, depthWrite: false, opacity });
-    this.halo = { small: halo(0x2fd8ff, 0.8), big: halo(0xffb030, 0.95), vulcan: halo(0xff1a0a, 1) };
+    this.halo = { small: halo(0x2fd8ff, 0.45), big: halo(0xffb030, 0.55), vulcan: halo(0xff1a0a, 1) };
     this.potMat = new THREE.SpriteMaterial({ map: pot, transparent: true, depthWrite: false });
     for (let i = 0; i < 4; i++) {
       this.pool.small.push(this.make('small'));

@@ -35,9 +35,9 @@ function flameMaterial(): THREE.ShaderMaterial {
         float flick = 0.8 + 0.2 * sin(uTime * 60.0 + vUv.x * 25.0) * sin(uTime * 37.0);
         float core = smoothstep(0.35, 1.0, along);
         vec3 col = mix(vec3(1.0, 0.22, 0.02), vec3(1.0, 0.85, 0.35), core);
-        col = mix(col, vec3(1.0, 1.0, 0.9), smoothstep(0.85, 1.0, along));
+        col = mix(col, vec3(1.0, 0.75, 0.3), smoothstep(0.85, 1.0, along));
         float a = pow(along, 1.4) * flick * uPower;
-        gl_FragColor = vec4(col * a * 3.0, a);
+        gl_FragColor = vec4(col * a * 1.7, a);
       }`,
   });
 }
@@ -102,7 +102,9 @@ export class AstronautView {
       if (mesh.isMesh) {
         mesh.frustumCulled = false;
         const m = mesh.material as THREE.MeshStandardMaterial;
-        m.envMapIntensity = 1.6;
+        m.envMapIntensity = 0.8;
+        // Menos brilho especular no traje branco (não passa do limiar do bloom).
+        m.roughness = Math.max(m.roughness, 0.55);
       }
       if ((o as THREE.Bone).isBone && /Spine2$/.test(o.name)) this.spine = o as THREE.Bone;
     });
@@ -136,7 +138,7 @@ export class AstronautView {
     const sm = skinned as THREE.SkinnedMesh | null;
     if (!sm) return;
     const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(3, 0.25, 0.1),
+      color: new THREE.Color(4.4, 0.3, 0.1),
       side: THREE.BackSide,
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -174,7 +176,8 @@ export class AstronautView {
     // O osso está na escala do modelo; o jetpack é medido em metros do modelo original.
     const pack = new THREE.Group();
     pack.position.copy(PACK_CENTER);
-    const shell = new THREE.MeshStandardMaterial({ color: 0xe9eaec, metalness: 0.55, roughness: 0.35 });
+    // Tanque em metal grafite: branco aqui virava uma caixa estourada no bloom.
+    const shell = new THREE.MeshStandardMaterial({ color: 0x5a5e66, metalness: 0.7, roughness: 0.45 });
     const dark = new THREE.MeshStandardMaterial({ color: 0x1b1d21, metalness: 0.8, roughness: 0.4 });
     const red = new THREE.MeshBasicMaterial({ color: 0xff1a12 });
     const tank = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.22, 0.09), shell);

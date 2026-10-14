@@ -190,7 +190,7 @@ function railLayer(span: number, y: number, up: boolean, metal: THREE.Material, 
 
 /** Cor HDR (acima de 1) para passar do limiar do bloom. */
 const hdr = (r: number, g: number, b: number) => new THREE.Color(r, g, b);
-const runLight = new THREE.MeshBasicMaterial({ color: hdr(2.4, 0.7, 0.25) });
+const runLight = new THREE.MeshBasicMaterial({ color: hdr(3.2, 0.9, 0.3) });
 
 export class Environment {
   private layers: Tiled[] = [];
@@ -213,7 +213,9 @@ export class Environment {
     // Fundo: silhuetas translúcidas sem luz — não se confundem com os obstáculos
     // (que são opacos e têm borda vermelha).
     const farMetal = new THREE.MeshBasicMaterial({ color: 0x0a0c14, transparent: true, opacity: 0.45, depthWrite: false });
-    const red = new THREE.MeshBasicMaterial({ color: hdr(2.2, 0.04, 0.02), fog: false });
+    // Linha do trilho acesa mas abaixo do limiar do bloom: ela atravessa a tela
+    // toda e o brilho dela virava uma névoa vermelha no fundo.
+    const red = new THREE.MeshBasicMaterial({ color: hdr(2.6, 0.04, 0.02), fog: false });
     const redDim = new THREE.MeshBasicMaterial({ color: hdr(0.45, 0.02, 0.01) });
 
     this.layers.push(new Tiled(root, starField(quality === 'high' ? 700 : 380, 140, -90, -130, rng), 140));
