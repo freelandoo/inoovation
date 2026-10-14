@@ -171,7 +171,7 @@ function handle(e: GameEvent) {
         audio.play('vulcan');
         burst(e.x, e.y, [1, 0.12, 0.04], 70);
         stage.addShake(0.35);
-        toast('EVORA VULCAN · QUEBRE AS PILASTRAS', 'power');
+        toast('EVORA VULCAN · 2X · QUEBRE AS PILASTRAS', 'power');
       } else {
         audio.play(e.kind === 'big' ? 'pickup_big' : 'pickup');
         burst(e.x, e.y, e.kind === 'big' ? [1, 0.8, 0.35] : [0.3, 0.95, 1], e.kind === 'big' ? 40 : 24);

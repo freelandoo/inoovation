@@ -77,9 +77,18 @@ const MAX_FUEL_GAP = 30;
 /**
  * Intervalo (s de jogo) entre potes Evora Vulcan. Pote perdido: o próximo vem
  * VULCAN_EVERY depois dele. Pote pego: só VULCAN_EVERY depois de o poder acabar
- * (powerTime + VULCAN_EVERY após a coleta).
+ * (5 s de poder a 2x + VULCAN_EVERY após a coleta).
  */
 export const VULCAN_EVERY = 15;
+
+/**
+ * Distância entre um pote pego em x e o próximo: o trecho do poder (mais rápido,
+ * powerSpeed) seguido de VULCAN_EVERY segundos de voo normal.
+ */
+export function vulcanGapAfterTaken(x: number, tune: Tuning): number {
+  const power = distanceIn(x, tune.powerTime) * tune.powerSpeed;
+  return power + distanceIn(x + power, VULCAN_EVERY);
+}
 
 /** Distância percorrida em `seconds` partindo de x (a velocidade sobe com a distância). */
 export function distanceIn(x: number, seconds: number): number {
@@ -144,7 +153,7 @@ export class Generator {
    * ainda não existe no percurso quando isso é chamado.
    */
   vulcanTaken(x: number) {
-    const after = x + distanceIn(x, this.tune.powerTime + VULCAN_EVERY);
+    const after = x + vulcanGapAfterTaken(x, this.tune);
     this.nextVulcanX = Math.max(this.nextVulcanX, after);
   }
 
@@ -257,7 +266,8 @@ export class Generator {
    */
   private placeFuel(x: number, pathY: number, amp: number, diff: Difficulty, pickups: Pickup[], overdue: boolean) {
     this.fuelDebt += 1;
-    const vulcan = x >= this.nextVulcanX;
+    // O vão inteiro (onde o pote fica) precisa começar depois do ponto mínimo.
+    const vulcan = this.lastEnd >= this.nextVulcanX;
     if (this.fuelDebt < diff.fuelEvery && !overdue && !vulcan) return;
     const tune = this.tune;
     const rng = this.rng;

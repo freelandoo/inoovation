@@ -107,7 +107,7 @@ pela área do membro (botão JOGAR) ou direto em `/jogo`. `?debug` mostra a caix
   disponível (descontando reação e obstáculos móveis). Cápsulas só onde pegar não condena a partida, e nunca
   mais de 30 m sem uma. Teste: um autopiloto atravessa 2000 m em 30 seeds (`tests/game.test.ts`).
 - Pote Evora Vulcan (`public/innovation-week/deck/pot.webp`): ~15 s depois do anterior (`VULCAN_EVERY` em
-  `generator.ts`); se o jogador pega, o próximo só vem 15 s depois de o poder acabar (19 s após a coleta). Dá +50 de combustível e 4 s de poder (`powerTime`): contorno vermelho, rastro, e bater numa
+  `generator.ts`); se o jogador pega, o próximo só vem 15 s depois de o poder acabar. Dá +50 de combustível e 5 s de poder (`powerTime`) voando 2x mais rápido (`powerSpeed`): contorno vermelho, rastro, e bater numa
   pilastra quebra a peça em vez de matar. Chão e teto continuam letais.
 - Recorde: local sempre; com API e link de membro no aparelho, vai para o ranking (`/api/game/*`). O servidor
   sorteia a seed e recusa distância impossível para o tempo decorrido.

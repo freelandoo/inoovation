@@ -132,7 +132,7 @@ export class World {
     this.vy += ((thrust ? tune.thrust : 0) - tune.gravity) * dt;
     this.vy = Math.min(tune.maxUp, Math.max(-tune.maxFall, this.vy));
     this.y += this.vy * dt;
-    this.speed = difficultyAt(this.x).speed;
+    this.speed = difficultyAt(this.x).speed * (this.powered ? tune.powerSpeed : 1);
     this.x += this.speed * dt;
     if (thrust) this.fuel.consume(tune.fuel.burn * dt);
     if (this.fuel.empty && this.thrusting) {

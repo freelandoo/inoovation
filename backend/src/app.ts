@@ -34,10 +34,12 @@ import { issueSession, verifyPassword, verifySession } from './auth.ts';
 
 const MAX_BODY = 8 * 1024;
 /**
- * Velocidade máxima do jogo (m/s) — mesmo teto de frontend/src/game/sim/difficulty.ts.
- * Uma partida não pode andar mais que isso vezes o tempo desde /api/game/start.
+ * Velocidade média máxima do jogo (m/s). Teto normal 6,8 (frontend/src/game/sim/difficulty.ts);
+ * o pote Evora Vulcan dá 5 s a 2x e o próximo só vem 15 s depois do poder, então a
+ * média nunca passa de 6,8 × 25/20 = 8,5. Uma partida não pode andar mais que isso
+ * vezes o tempo desde /api/game/start.
  */
-const GAME_MAX_SPEED = 6.8;
+const GAME_MAX_SPEED = 8.6;
 /** Folga (m) para atraso de rede entre o toque inicial e o start. */
 const GAME_SLACK = 8;
 /** Partida esquecida aberta não aceita mais resultado. */

@@ -6,7 +6,7 @@ import { World } from '../src/game/sim/world.ts';
 import { FuelSystem } from '../src/game/sim/fuel.ts';
 import { TUNING } from '../src/game/sim/tuning.ts';
 import { difficultyAt, MAX_SPEED } from '../src/game/sim/difficulty.ts';
-import { distanceIn, obstacleRects, pathAt, reach, VULCAN_EVERY } from '../src/game/sim/generator.ts';
+import { distanceIn, obstacleRects, pathAt, reach, VULCAN_EVERY, vulcanGapAfterTaken } from '../src/game/sim/generator.ts';
 import { autopilot } from '../src/game/sim/autopilot.ts';
 
 const steps = (s: number) => Math.round(s / TUNING.step);
@@ -299,7 +299,7 @@ test('pote perdido: o próximo vem ~15 s depois', () => {
   }
 });
 
-test('pote pego: o próximo só 15 s depois de o poder acabar (19 s após a coleta)', () => {
+test('pote pego: o próximo só 15 s depois de o poder acabar (20 s após a coleta)', () => {
   // Coloca um pote na frente e pega; depois mede onde o gerador põe o próximo.
   const w = new World(77);
   w.step(true);
@@ -315,7 +315,7 @@ test('pote pego: o próximo só 15 s depois de o poder acabar (19 s após a cole
   }
   assert.ok(w.alive);
   assert.ok(seen.length >= 1);
-  const min = takenAt + distanceIn(takenAt, TUNING.powerTime + VULCAN_EVERY);
+  const min = takenAt + vulcanGapAfterTaken(takenAt, TUNING);
   assert.ok(seen[0] >= min - 0.5, `próximo pote em ${seen[0].toFixed(1)} m, antes de ${min.toFixed(1)} m`);
   // ...e não muito depois disso (no máximo o intervalo normal com folga).
   assert.ok(seen[0] <= min + distanceIn(min, 3), `próximo pote tarde demais (${seen[0].toFixed(1)} m)`);
@@ -370,4 +370,20 @@ test('com poder, chão e teto continuam letais', () => {
   for (let i = 0; i < steps(4) && w.alive; i++) w.step(false);
   const d = w.drain().find((e) => e.type === 'dead');
   assert.ok(d && d.type === 'dead' && d.cause === 'floor');
+});
+
+test('com o poder Vulcan o astronauta voa 2x mais rápido por 5 s, depois volta ao normal', () => {
+  const w = clearWorld();
+  w.step(true);
+  const normal = w.speed;
+  w.pickups.push({ id: 600, x: w.x + 0.3, y: w.y, kind: 'vulcan', taken: false });
+  w.step(false);
+  w.step(false);
+  assert.ok(w.powered);
+  assert.ok(Math.abs(w.speed - normal * TUNING.powerSpeed) < 0.05, `${w.speed} vs ${normal}`);
+  const t0 = w.t;
+  while (w.powered) w.step(w.vy < 0 && w.y < 7);
+  assert.ok(Math.abs(w.t - t0 - TUNING.powerTime) < 0.05);
+  w.step(false);
+  assert.ok(w.speed < normal * 1.2, 'velocidade volta ao normal');
 });

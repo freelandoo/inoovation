@@ -21,6 +21,8 @@ export interface Tuning {
   vulcanR: number;
   /** Duração do poder Vulcan (s): bater numa pilastra quebra a peça em vez de matar. */
   powerTime: number;
+  /** Multiplicador da velocidade horizontal durante o poder Vulcan. */
+  powerSpeed: number;
   fuel: {
     max: number;
     start: number;
@@ -53,7 +55,8 @@ export const TUNING: Tuning = {
   hitH: 0.48,
   pickupR: 0.42,
   vulcanR: 0.6,
-  powerTime: 4,
+  powerTime: 5,
+  powerSpeed: 2,
   fuel: { max: 100, start: 100, burn: 12, small: 30, big: 60, vulcan: 50, low: 0.2 },
   firstObstacleX: 16,
   lookahead: 34,
