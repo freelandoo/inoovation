@@ -63,7 +63,7 @@ function eclipse(): THREE.Mesh {
         float halo = exp(-max(r - disk, 0.0) * 9.0) * step(disk, r);
         // luz vindo de baixo-direita, como na arte da campanha
         float side = clamp(dot(normalize(p + 1e-4), normalize(vec2(0.55, -0.85))) * 0.5 + 0.5, 0.0, 1.0);
-        float k = (rim * 1.6 + halo * 0.55) * (0.25 + 0.75 * pow(side, 2.0));
+        float k = (rim * 1.0 + halo * 0.35) * (0.25 + 0.75 * pow(side, 2.0));
         k *= 0.92 + 0.08 * sin(uTime * 0.7);
         vec3 col = mix(vec3(1.0, 0.08, 0.04), vec3(1.0, 0.55, 0.35), rim * side);
         gl_FragColor = vec4(col * k, 1.0);
@@ -190,7 +190,7 @@ function railLayer(span: number, y: number, up: boolean, metal: THREE.Material, 
 
 /** Cor HDR (acima de 1) para passar do limiar do bloom. */
 const hdr = (r: number, g: number, b: number) => new THREE.Color(r, g, b);
-const runLight = new THREE.MeshBasicMaterial({ color: hdr(3.2, 0.9, 0.3) });
+const runLight = new THREE.MeshBasicMaterial({ color: hdr(1.7, 0.48, 0.16) });
 
 export class Environment {
   private layers: Tiled[] = [];
@@ -215,7 +215,7 @@ export class Environment {
     const farMetal = new THREE.MeshBasicMaterial({ color: 0x0a0c14, transparent: true, opacity: 0.45, depthWrite: false });
     // Linha do trilho acesa mas abaixo do limiar do bloom: ela atravessa a tela
     // toda e o brilho dela virava uma névoa vermelha no fundo.
-    const red = new THREE.MeshBasicMaterial({ color: hdr(2.6, 0.04, 0.02), fog: false });
+    const red = new THREE.MeshBasicMaterial({ color: hdr(1.25, 0.02, 0.01), fog: false });
     const redDim = new THREE.MeshBasicMaterial({ color: hdr(0.45, 0.02, 0.01) });
 
     this.layers.push(new Tiled(root, starField(quality === 'high' ? 700 : 380, 140, -90, -130, rng), 140));

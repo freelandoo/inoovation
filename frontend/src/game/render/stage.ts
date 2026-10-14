@@ -55,7 +55,7 @@ export class Stage {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     // Neutral preserva o matiz das cores fortes (o ACES puxa o neon vermelho para laranja).
     this.renderer.toneMapping = THREE.NeutralToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 0.92;
     this.scene.background = new THREE.Color(0x020306);
     this.scene.fog = new THREE.Fog(0x020306, 34, 125);
 
@@ -66,9 +66,9 @@ export class Stage {
     this.scene.environmentIntensity = 0.45;
     pmrem.dispose();
 
-    const key = new THREE.DirectionalLight(0xffffff, 1.6);
+    const key = new THREE.DirectionalLight(0xffffff, 1.35);
     key.position.set(-4, 8, 10);
-    const rim = new THREE.DirectionalLight(0xff2a1a, 3.2);
+    const rim = new THREE.DirectionalLight(0xff2a1a, 1.8);
     rim.position.set(6, 2, -8);
     const fill = new THREE.HemisphereLight(0x5a6a88, 0x120404, 0.55);
     this.scene.add(key, rim, fill);
@@ -85,7 +85,7 @@ export class Stage {
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
     // Limiar alto: só as luzes (neon, pista, fogo, pote) brilham; branco do traje não.
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.35, 0.95);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.3, 0.3, 0.95);
     this.bloom.resolution.multiplyScalar(scale);
     composer.addPass(this.bloom);
     composer.addPass(new OutputPass());

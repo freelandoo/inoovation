@@ -37,7 +37,7 @@ function flameMaterial(): THREE.ShaderMaterial {
         vec3 col = mix(vec3(1.0, 0.22, 0.02), vec3(1.0, 0.85, 0.35), core);
         col = mix(col, vec3(1.0, 0.75, 0.3), smoothstep(0.85, 1.0, along));
         float a = pow(along, 1.4) * flick * uPower;
-        gl_FragColor = vec4(col * a * 1.7, a);
+        gl_FragColor = vec4(col * a * 1.25, a);
       }`,
   });
 }
@@ -138,7 +138,7 @@ export class AstronautView {
     const sm = skinned as THREE.SkinnedMesh | null;
     if (!sm) return;
     const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(4.4, 0.3, 0.1),
+      color: new THREE.Color(2.2, 0.15, 0.05),
       side: THREE.BackSide,
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -270,7 +270,7 @@ export class AstronautView {
       this.outline.visible = vis;
     }
     this.aura.visible = vis;
-    this.aura.material.opacity = this.power01 * 0.55 * pulse * blink;
+    this.aura.material.opacity = this.power01 * 0.32 * pulse * blink;
     if (!on) return;
     // Partículas vermelhas saindo de trás do astronauta.
     this.powerAcc += dt * 120;

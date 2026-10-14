@@ -48,7 +48,7 @@ function energyFieldMaterial(): THREE.ShaderMaterial {
         float bands = 0.55 + 0.45 * sin(vPos.y * 9.0 - uTime * 14.0);
         float flick = 0.85 + 0.15 * sin(uTime * 37.0 + vPos.y * 2.0);
         float core = 1.0 - abs(fract(vPos.x * 2.0) - 0.5) * 0.6;
-        gl_FragColor = vec4(vec3(1.7, 0.04, 0.02) * (0.35 + 0.65 * bands) * flick * core, 0.85);
+        gl_FragColor = vec4(vec3(1.0, 0.03, 0.015) * (0.35 + 0.65 * bands) * flick * core, 0.85);
       }`,
   });
 }
@@ -118,8 +118,8 @@ export class ObstacleRenderer {
       // caixa quase branca (a viga suspensa era o objeto mais claro da tela).
       panel: new THREE.MeshStandardMaterial({ color: 0x1c1e23, metalness: 0.6, roughness: 0.6, envMapIntensity: 0.3 }),
       // Cores acima de 1: passam do limiar do bloom e brilham.
-      red: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.6, 0.06, 0.03) }),
-      neon: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 0.03, 0.015) }),
+      red: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.04, 0.02) }),
+      neon: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 0.02, 0.01) }),
       field: energyFieldMaterial(),
     };
     // Aquecimento: cria o suficiente para a tela e compila os materiais.
@@ -236,12 +236,12 @@ export class PickupRenderer {
     this.fire = fire;
     this.shell = new THREE.MeshStandardMaterial({ color: 0xd8dade, metalness: 0.8, roughness: 0.25 });
     this.core = {
-      small: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.25, 1.25, 1.45) }),
-      big: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.05, 0.3) }),
+      small: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 0.95, 1.1) }),
+      big: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.15, 0.8, 0.22) }),
     };
     const halo = (color: number, opacity: number) =>
       new THREE.SpriteMaterial({ map: glow, color, blending: THREE.AdditiveBlending, depthWrite: false, opacity });
-    this.halo = { small: halo(0x2fd8ff, 0.45), big: halo(0xffb030, 0.55), vulcan: halo(0xff1a0a, 1) };
+    this.halo = { small: halo(0x2fd8ff, 0.32), big: halo(0xffb030, 0.38), vulcan: halo(0xff1a0a, 0.55) };
     this.potMat = new THREE.SpriteMaterial({ map: pot, transparent: true, depthWrite: false });
     for (let i = 0; i < 4; i++) {
       this.pool.small.push(this.make('small'));
