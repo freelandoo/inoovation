@@ -48,7 +48,7 @@ function energyFieldMaterial(): THREE.ShaderMaterial {
         float bands = 0.55 + 0.45 * sin(vPos.y * 9.0 - uTime * 14.0);
         float flick = 0.85 + 0.15 * sin(uTime * 37.0 + vPos.y * 2.0);
         float core = 1.0 - abs(fract(vPos.x * 2.0) - 0.5) * 0.6;
-        gl_FragColor = vec4(vec3(2.4, 0.05, 0.02) * (0.35 + 0.65 * bands) * flick * core, 0.85);
+        gl_FragColor = vec4(vec3(1.7, 0.04, 0.02) * (0.35 + 0.65 * bands) * flick * core, 0.85);
       }`,
   });
 }
@@ -113,8 +113,10 @@ export class ObstacleRenderer {
   constructor(scene: THREE.Scene) {
     scene.add(this.group);
     this.mats = {
-      metal: new THREE.MeshStandardMaterial({ color: 0x2a2d33, metalness: 0.85, roughness: 0.38 }),
-      panel: new THREE.MeshStandardMaterial({ color: 0x8d9097, metalness: 0.7, roughness: 0.32 }),
+      metal: new THREE.MeshStandardMaterial({ color: 0x23252b, metalness: 0.8, roughness: 0.45, envMapIntensity: 0.6 }),
+      // Painel grafite: o cinza-claro metálico refletia o ambiente e virava uma
+      // caixa quase branca (a viga suspensa era o objeto mais claro da tela).
+      panel: new THREE.MeshStandardMaterial({ color: 0x1c1e23, metalness: 0.6, roughness: 0.6, envMapIntensity: 0.3 }),
       // Cores acima de 1: passam do limiar do bloom e brilham.
       red: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.6, 0.06, 0.03) }),
       neon: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 0.03, 0.015) }),
