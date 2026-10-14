@@ -12,6 +12,8 @@
     "lint": "eslint .",
     "test": "node --test tests/*.test.ts",
     "assets:label": "python scripts/build_label_assets.py",
+    "assets:rig": "blender -b --factory-startup -P scripts/build_astronaut_rig.py",
+    "test:game-e2e": "node scripts/game-check.mjs",
     "check": "npm run typecheck && npm run lint && npm test && vite build"
   },
   "dependencies": {

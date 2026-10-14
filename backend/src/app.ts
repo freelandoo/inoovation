@@ -6,6 +6,9 @@
 //   POST /api/signup          cadastro de quem ativou uma unidade verificada (devolve o link de membro)
 //   GET  /api/member/:token   área do membro (link secreto)
 //   POST /api/member/login    entrar na área do membro com e-mail + nº de tripulante (devolve o link)
+//   POST /api/game/start      início de uma partida do jogo (devolve runId e seed)
+//   POST /api/game/finish     fim da partida: confere a distância pelo tempo e grava o recorde
+//   GET  /api/game/top        ranking do jogo (melhor de cada tripulante; só nº e primeiro nome)
 //   GET  /api/live            números, embalagens devolvidas e últimos tripulantes, para o telão (só primeiro nome)
 //   POST /api/admin/login     usuário + senha da área admin (devolve uma sessão de 12 h)
 //   GET  /api/admin/me        confere a sessão do admin
@@ -21,7 +24,7 @@
 
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { Db } from './db.ts';
 import * as v from './validate.ts';
 import { createRateLimiter } from './rateLimit.ts';
@@ -29,6 +32,17 @@ import { gtin14, parseRegistry, importRegistry, unitCodeSql } from './registry.t
 import { issueSession, verifyPassword, verifySession } from './auth.ts';
 
 const MAX_BODY = 8 * 1024;
+/**
+ * Velocidade máxima do jogo (m/s) — mesmo teto de frontend/src/game/sim/difficulty.ts.
+ * Uma partida não pode andar mais que isso vezes o tempo desde /api/game/start.
+ */
+const GAME_MAX_SPEED = 6.8;
+/** Folga (m) para atraso de rede entre o toque inicial e o start. */
+const GAME_SLACK = 8;
+/** Partida esquecida aberta não aceita mais resultado. */
+const GAME_RUN_TTL_S = 2 * 60 * 60;
+/** Combustível máximo por cápsula (cápsula especial). */
+const GAME_MAX_PICKUP = 60;
 /** Lista de IDs: ~45 bytes por link, 200 mil ≈ 9 MB. */
 const MAX_REGISTRY_BODY = 32 * 1024 * 1024;
 
@@ -336,6 +350,92 @@ export function createApp(db: Db, opts: AppOptions) {
     return c.json({ ok: true, character, collectedAt: row.collected_at, new: row.created });
   });
 
+  // ---------------------------------------------------------------- jogo
+  app.post('/api/game/start', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    c.header('Cache-Control', 'no-store');
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const sessionId = v.uuid(body?.sessionId);
+    if (!sessionId) throw new HttpError(400, 'sessionId inválido');
+    // Link de membro inválido não impede de jogar: a partida só fica fora do ranking.
+    const token = v.memberToken(body.member);
+    let signup: string | null = null;
+    if (token) {
+      const r = await db.query<{ id: string }>('select id from signups where member_token = $1', [token]);
+      signup = r.rows[0]?.id ?? null;
+    }
+    const runId = randomUUID();
+    const seed = randomInt(1, 2 ** 31);
+    await db.query('insert into game_runs (id, session_id, signup_ref, seed) values ($1, $2, $3, $4)', [
+      runId,
+      sessionId,
+      signup,
+      seed,
+    ]);
+    return c.json({ runId, seed, member: !!signup });
+  });
+
+  app.post('/api/game/finish', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    c.header('Cache-Control', 'no-store');
+    const body = (await readJson(c)) as Record<string, unknown>;
+    const runId = v.uuid(body?.runId);
+    const int = (x: unknown, max: number) => (Number.isSafeInteger(x) && (x as number) >= 0 && (x as number) <= max ? (x as number) : null);
+    const distance = int(body?.distance, 1_000_000);
+    const fuel = int(body?.fuel, 10_000_000);
+    const pickups = int(body?.pickups, 100_000);
+    if (!runId || distance === null || fuel === null || pickups === null) throw new HttpError(400, 'dados inválidos');
+    if (fuel > pickups * GAME_MAX_PICKUP) return c.json({ error: 'resultado impossível', code: 'implausible' }, 422);
+
+    const run = await db.query<{ signup_ref: string | null; finished: boolean; elapsed: number }>(
+      `select signup_ref, finished_at is not null as finished,
+              extract(epoch from now() - started_at)::float8 as elapsed
+       from game_runs where id = $1`,
+      [runId],
+    );
+    const r = run.rows[0];
+    if (!r) return c.json({ error: 'partida não encontrada' }, 404);
+    if (r.finished) return c.json({ error: 'partida já encerrada', code: 'finished' }, 409);
+    if (r.elapsed > GAME_RUN_TTL_S) return c.json({ error: 'partida expirada', code: 'expired' }, 410);
+    if (distance > GAME_MAX_SPEED * r.elapsed + GAME_SLACK) {
+      return c.json({ error: 'resultado impossível', code: 'implausible' }, 422);
+    }
+    // Fecha uma vez só (duas requisições ao mesmo tempo: só uma passa).
+    const upd = await db.query<{ id: string }>(
+      `update game_runs set finished_at = now(), distance = $2, fuel = $3, pickups = $4
+       where id = $1 and finished_at is null returning id`,
+      [runId, distance, fuel, pickups],
+    );
+    if (!upd.rows[0]) return c.json({ error: 'partida já encerrada', code: 'finished' }, 409);
+    if (!r.signup_ref) return c.json({ ok: true, best: distance, rank: null });
+
+    const best = await db.query<{ best: number; rank: number }>(
+      `with bests as (
+         select signup_ref, max(distance) as best from game_runs
+         where finished_at is not null and signup_ref is not null group by signup_ref
+       )
+       select b.best::int as best,
+              (select count(*)::int + 1 from bests o where o.best > b.best) as rank
+       from bests b where b.signup_ref = $1`,
+      [r.signup_ref],
+    );
+    return c.json({ ok: true, best: best.rows[0].best, rank: best.rows[0].rank });
+  });
+
+  app.get('/api/game/top', async (c) => {
+    if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
+    const r = await db.query<{ id: string; name: string; best: number }>(
+      `select s.id, s.name, max(g.distance)::int as best
+       from game_runs g join signups s on s.id = g.signup_ref
+       where g.finished_at is not null
+       group by s.id, s.name
+       order by best desc, min(g.finished_at) asc
+       limit 10`,
+    );
+    c.header('Cache-Control', 'public, max-age=10');
+    return c.json({ top: r.rows.map((x) => ({ crew: Number(x.id), name: v.firstName(x.name), best: x.best })) });
+  });
+
   app.get('/api/live', async (c) => {
     if (!allow(clientIp(c))) return c.json({ error: 'muitas requisições' }, 429);
     const [totals, recent] = await Promise.all([
@@ -503,7 +603,7 @@ export function createApp(db: Db, opts: AppOptions) {
     });
   });
 
-  // Zera os dados de teste (cadastros, coleção, leituras, sessões, eventos) e reinicia a
+  // Zera os dados de teste (cadastros, coleção, leituras, sessões, eventos, partidas) e reinicia a
   // numeração. A lista oficial (registry_units) e as migrações ficam.
   app.post('/api/admin/reset', async (c) => {
     const denied = adminDenied(c);
@@ -511,7 +611,7 @@ export function createApp(db: Db, opts: AppOptions) {
     const body = (await readJson(c)) as Record<string, unknown>;
     if (body?.confirm !== 'ZERAR TUDO') throw new HttpError(400, 'confirmação ausente');
     await db.transaction(async (tx) => {
-      await tx.exec('truncate collectibles, signups, events, sessions, units, returns restart identity cascade');
+      await tx.exec('truncate game_runs, collectibles, signups, events, sessions, units, returns restart identity cascade');
     });
     const r = await db.query<Record<string, string>>(
       `select (select count(*) from signups) as signups, (select count(*) from collectibles) as collectibles,

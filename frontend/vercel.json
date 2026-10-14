@@ -26,11 +26,15 @@
       "destination": "/admin.html"
     },
     {
+      "source": "/jogo",
+      "destination": "/jogo.html"
+    },
+    {
       "source": "/privacidade",
       "destination": "/privacidade.html"
     },
     {
-      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade|admin).*)",
+      "source": "/((?!assets/|models/|innovation-week/|ar/|membro|telao|privacidade|admin|jogo).*)",
       "destination": "/index.html"
     }
   ],

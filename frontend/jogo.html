@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR" data-state="loading">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#020306" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Innovation Week · Astronaut Jetpack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" href="/models/astronaut-rig.glb" as="fetch" type="model/gltf-binary" crossorigin />
+  </head>
+  <body class="jg">
+    <main class="jg-frame" id="jg-frame">
+      <canvas id="jg-canvas" aria-label="Astronaut Jetpack"></canvas>
+      <!-- Superfície de toque: segurar liga o jetpack. Fica abaixo do HUD. -->
+      <div class="jg-surface" id="jg-surface" aria-hidden="true"></div>
+
+      <header class="jg-hud">
+        <div class="jg-dist">
+          <span class="jg-lbl">DISTÂNCIA</span>
+          <div class="jg-dist-num"><b id="jg-dist">000000</b><i>m</i></div>
+          <small id="jg-best"></small>
+        </div>
+        <div class="jg-right">
+          <div class="jg-fuel" id="jg-fuel">
+            <span class="jg-lbl">COMBUSTÍVEL <b id="jg-fuel-pct">100%</b></span>
+            <div class="jg-bar"><i id="jg-fuel-bar"></i></div>
+          </div>
+          <div class="jg-tools">
+            <button type="button" class="jg-icon" id="jg-pause" aria-label="Pausar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" /></svg>
+            </button>
+            <button type="button" class="jg-icon" data-sound aria-label="Som">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9h4l5-4v14l-5-4H4z" />
+                <path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" />
+                <path class="off" d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <p class="jg-hint" id="jg-hint"><b>SEGURE</b> para ligar o jetpack · <b>SOLTE</b> para cair</p>
+      <div class="jg-toast" id="jg-toast" role="status" aria-live="polite"></div>
+      <div class="jg-net mono" id="jg-net"></div>
+      <div class="jg-offline">SEM CONEXÃO · RECORDE SALVO NO APARELHO</div>
+
+      <!-- carregando -->
+      <section class="jg-panel" data-panel="loading">
+        <p class="jg-kicker">INNOVATION WEEK</p>
+        <h1 class="jg-title">ASTRONAUT<br /><span>JETPACK</span></h1>
+        <div class="jg-load"><i id="jg-progress"></i></div>
+        <p class="jg-sub">Preparando o traje…</p>
+      </section>
+
+      <!-- menu -->
+      <section class="jg-panel" data-panel="menu">
+        <p class="jg-kicker">INNOVATION WEEK · MISSÃO</p>
+        <h1 class="jg-title">ASTRONAUT<br /><span>JETPACK</span></h1>
+        <p class="jg-sub" id="jg-menu-best">Segure para subir. Solte para cair.</p>
+        <ul class="jg-rules">
+          <li><i class="c-red"></i>Desvie das estruturas e não encoste no chão nem no teto.</li>
+          <li><i class="c-fuel"></i>Pegue cápsulas: o combustível do jetpack acaba.</li>
+        </ul>
+        <button type="button" class="jg-btn" id="jg-play">JOGAR</button>
+        <div class="jg-row">
+          <button type="button" class="jg-link" id="jg-menu-back">← VOLTAR</button>
+          <button type="button" class="jg-link" data-sound><span class="on">SOM: LIGADO</span><span class="off">SOM: DESLIGADO</span></button>
+        </div>
+      </section>
+
+      <!-- pausa -->
+      <section class="jg-panel" data-panel="paused">
+        <p class="jg-kicker">MISSÃO</p>
+        <h2 class="jg-title sm">PAUSADO</h2>
+        <button type="button" class="jg-btn" id="jg-resume">CONTINUAR</button>
+        <div class="jg-row">
+          <button type="button" class="jg-link" id="jg-restart">REINICIAR</button>
+          <button type="button" class="jg-link" id="jg-quit">SAIR</button>
+        </div>
+      </section>
+
+      <div class="jg-count mono" id="jg-count" aria-hidden="true">3</div>
+
+      <!-- fim de partida -->
+      <section class="jg-panel" data-panel="over">
+        <p class="jg-kicker">FIM DA MISSÃO</p>
+        <p class="jg-record" id="jg-over-record" hidden>NOVO RECORDE</p>
+        <div class="jg-big mono" id="jg-over-dist">0 m</div>
+        <dl class="jg-stats">
+          <div><dt>MELHOR RECORDE</dt><dd class="mono" id="jg-over-best">0 m</dd></div>
+          <div><dt>COMBUSTÍVEL COLETADO</dt><dd class="mono" id="jg-over-fuel">0</dd></div>
+        </dl>
+        <p class="jg-sub small" id="jg-over-net"></p>
+        <ol class="jg-top" id="jg-over-top"></ol>
+        <button type="button" class="jg-btn" id="jg-again">JOGAR DE NOVO</button>
+        <button type="button" class="jg-link" id="jg-back">← VOLTAR</button>
+      </section>
+
+      <!-- erro -->
+      <section class="jg-panel" data-panel="error">
+        <p class="jg-kicker">FALHA NA DECOLAGEM</p>
+        <p class="jg-sub" id="jg-error-msg">Não foi possível iniciar o jogo.</p>
+        <button type="button" class="jg-btn" id="jg-retry">TENTAR DE NOVO</button>
+        <a class="jg-link" href="/">← VOLTAR AO SITE</a>
+      </section>
+
+      <div class="jg-flash" aria-hidden="true"></div>
+    </main>
+
+    <div class="jg-rotate" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 3v14h10V5z" /></svg>
+      <p>Gire o celular para a vertical</p>
+    </div>
+
+    <script type="module" src="/src/game/main.ts"></script>
+  </body>
+</html>

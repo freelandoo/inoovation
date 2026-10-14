@@ -7,6 +7,9 @@ Node 24 (TypeScript executado direto, sem build) + Hono + Postgres.
 | `GET /api/health` | Saúde e ping no banco (healthcheck da Railway) |
 | `POST /api/scan` | Abertura da página: `{ sessionId, productId, lotId, unitId, source, campaign, origin, tier }` |
 | `POST /api/events` | Evento ou lote (até 20): `{ sessionId, name, data }` |
+| `POST /api/game/start` | Início de partida do jogo: `{ sessionId, member? }` → `{ runId, seed }` |
+| `POST /api/game/finish` | Fim: `{ runId, distance, fuel, pickups }` → `{ ok, best, rank }`. Uma vez por partida; 422 se a distância não cabe no tempo (6,8 m/s) |
+| `GET /api/game/top` | Ranking do jogo: melhor de cada tripulante (nº e primeiro nome) |
 | `GET /api/stats` | Métricas. Header `Authorization: Bearer <ADMIN_TOKEN>` |
 | `POST /api/admin/registry?batch=<nome>` | Importa a lista de IDs (corpo = o arquivo). Header `Authorization: Bearer <ADMIN_TOKEN>` |
 

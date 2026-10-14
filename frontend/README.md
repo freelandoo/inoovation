@@ -91,3 +91,33 @@ do quadro). Nada do rótulo é desenhado por cima do vídeo. Sem câmera (negada
 - Alvos: `public/ar/label.mind`, gerado de `label-2048.jpg` (rótulo inteiro + 4 faixas sobrepostas, para o
   rótulo curvo no pote; QR e número de série mascarados porque mudam por unidade).
 - Regerar depois de trocar a arte: `node scripts/build_ar_target.mjs`.
+
+## Jogo: Astronaut Jetpack (`/jogo`)
+
+Endless runner lateral em 3D, vertical 9:16, feito em Three.js no mesmo projeto (abre na hora pelo QR, sem
+motor extra). Segurar (toque, mouse, Espaço/↑/W ou A/gatilho do controle) liga o jetpack; soltar, cai. Entrada
+pela área do membro (botão JOGAR) ou direto em `/jogo`. `?debug` mostra a caixa de colisão e o FPS.
+
+- `src/game/sim/`: simulação pura (sem DOM/Three), passo fixo de 1/120 s — física, combustível, gerador com
+  seed, dificuldade por distância. Ajustes em `tuning.ts` e `difficulty.ts`.
+- `src/game/render/`: câmera (largura de mundo fixa: o tempo de reação é igual em qualquer celular), cenário,
+  obstáculos e cápsulas com pool, astronauta + jetpack, partículas.
+- `src/game/main.ts`: estados da página, HUD, pausa, fim de partida, ranking.
+- Gerador: cada obstáculo tem uma linha segura; a mudança entre linhas nunca passa do alcance vertical no tempo
+  disponível (descontando reação e obstáculos móveis). Cápsulas só onde pegar não condena a partida, e nunca
+  mais de 30 m sem uma. Teste: um autopiloto atravessa 2000 m em 30 seeds (`tests/game.test.ts`).
+- Recorde: local sempre; com API e link de membro no aparelho, vai para o ranking (`/api/game/*`). O servidor
+  sorteia a seed e recusa distância impossível para o tempo decorrido.
+
+### Personagem (`public/models/astronaut-rig.glb`)
+
+Gerado das FBX do Mixamo em `../animações` (o astronauta oficial riggado): `npm run assets:rig` (Blender 4.4+
+no PATH, ou rode o `blender.exe` com `-b --factory-startup -P scripts/build_astronaut_rig.py`). Clipes: `idle`
+(Floating), `fly` (Flying), `impact` (Falling Flat Impact). O script corrige os pesos do capacete: o auto-rig do
+Mixamo ligou ~22% dos vértices dele ao pescoço/tronco, e o capacete esticava nas animações.
+
+### Testes
+
+- `npm test`: inclui a simulação (`tests/game.test.ts`).
+- `npm run test:game-e2e [url]`: Chromium real com toque (CDP), mouse e teclado contra o `vite` rodando —
+  menu, toque, jetpack, coleta, pausa, colisão, fim, reinício sem duplicar objetos, foco perdido.
