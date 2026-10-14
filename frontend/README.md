@@ -113,8 +113,8 @@ pela área do membro (botão JOGAR) ou direto em `/jogo`. `?debug` mostra a caix
   sorteia a seed e recusa distância impossível para o tempo decorrido.
 
 - Visual: bloom (luzes HDR: neon dos obstáculos, trilhos, fogo, cápsulas, pote) em aparelhos com WebGL2
-  bom; desliga sozinho se o FPS ficar abaixo de 40 (`?bloom=0`/`?bloom=1` força). Nebulosa, estrelas
-  cintilando e riscos de velocidade no cenário.
+  bom; desliga sozinho se o FPS ficar abaixo de 40 (`?bloom=0`/`?bloom=1` força). Estrelas cintilando no
+  fundo e luzes de pista nos trilhos.
 
 ### Ranking (`/ranking`)
 

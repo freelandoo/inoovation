@@ -475,7 +475,7 @@ function frameLoop(now: number) {
   }
   obstacles.update(world.obstacles, world.t, time);
   pickups.update(world.pickups, time, frozen ? 0 : dt);
-  env.update(stage.camera.position.x, time, state === 'playing' ? (world.speed - 4.2) / (6.8 - 4.2) * 0.7 + 0.3 : 0);
+  env.update(stage.camera.position.x, time);
   stage.render(x, dt, time);
   updateHud();
 
